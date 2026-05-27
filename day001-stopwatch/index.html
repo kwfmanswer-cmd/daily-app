@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stopwatch</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+    user-select: none;
+  }
+  #display {
+    font-size: clamp(64px, 14vw, 144px);
+    font-weight: 200;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+  #ms {
+    font-size: 0.5em;
+    opacity: 0.55;
+    margin-left: 0.1em;
+  }
+  .controls {
+    display: flex;
+    gap: 16px;
+  }
+  button {
+    background: transparent;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 999px;
+    padding: 14px 32px;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    min-width: 96px;
+  }
+  button:hover { border-color: #666; }
+  button:active { background: #111; }
+  button.primary { border-color: #fff; }
+  button.primary:hover { background: #fff; color: #000; }
+</style>
+</head>
+<body>
+  <div id="display">00:00<span id="ms">.00</span></div>
+  <div class="controls">
+    <button id="startStop" class="primary">START</button>
+    <button id="reset">RESET</button>
+  </div>
+
+<script>
+  const display = document.getElementById('display');
+  const msEl = document.getElementById('ms');
+  const startStopBtn = document.getElementById('startStop');
+  const resetBtn = document.getElementById('reset');
+
+  let startTime = 0;
+  let elapsed = 0;
+  let rafId = null;
+  let running = false;
+
+  function format(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const m = String(Math.floor(totalSec / 60)).padStart(2, '0');
+    const s = String(totalSec % 60).padStart(2, '0');
+    const cs = String(Math.floor((ms % 1000) / 10)).padStart(2, '0');
+    return { main: `${m}:${s}`, ms: `.${cs}` };
+  }
+
+  function render(ms) {
+    const f = format(ms);
+    display.firstChild.nodeValue = f.main;
+    msEl.textContent = f.ms;
+  }
+
+  function tick() {
+    const now = performance.now();
+    render(elapsed + (now - startTime));
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function start() {
+    startTime = performance.now();
+    running = true;
+    startStopBtn.textContent = 'STOP';
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    elapsed += performance.now() - startTime;
+    running = false;
+    startStopBtn.textContent = 'START';
+    cancelAnimationFrame(rafId);
+    render(elapsed);
+  }
+
+  function reset() {
+    cancelAnimationFrame(rafId);
+    running = false;
+    elapsed = 0;
+    startStopBtn.textContent = 'START';
+    render(0);
+  }
+
+  startStopBtn.addEventListener('click', () => {
+    if (running) stop(); else start();
+  });
+  resetBtn.addEventListener('click', reset);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { e.preventDefault(); running ? stop() : start(); }
+    if (e.key === 'r' || e.key === 'R') reset();
+  });
+
+  render(0);
+</script>
+</body>
+</html>
