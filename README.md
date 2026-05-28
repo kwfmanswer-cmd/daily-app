@@ -7,6 +7,7 @@
 | Day | アプリ | フォルダ |
 | --- | --- | --- |
 | 001 | ストップウォッチ | [day001-stopwatch](./day001-stopwatch/) |
+| 002 | ラッキーカラー診断 | [day002-luckycolor](./day002-luckycolor/) |
 
 ## ルール
 
