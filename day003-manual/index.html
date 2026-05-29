@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あなたの取扱説明書ジェネレーター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700;900&family=Shippori+Mincho+B1:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================
+   Color & Typography Tokens
+=========================================================== */
+:root {
+  --bg: #0e0f12;
+  --bg-grad-1: #15171c;
+  --bg-grad-2: #0a0b0e;
+  --ink: #f5f3ee;
+  --ink-soft: #c2bfb6;
+  --ink-faint: #7a786f;
+  --accent: #d9b380;
+  --danger: #e26a55;
+  --line: rgba(245, 243, 238, 0.12);
+
+  --paper: #fbf8f1;
+  --paper-2: #f3ecdd;
+  --paper-ink: #1c1b18;
+  --paper-soft: #6a6760;
+  --paper-faint: #b1aea4;
+  --paper-line: #d8d0bd;
+  --paper-accent: #b13a2f;
+  --paper-warn: #b13a2f;
+
+  --serif-jp: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif;
+  --sans-jp: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  --mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  --shadow-paper:
+    0 1px 0 rgba(0,0,0,0.04),
+    0 2px 6px rgba(0,0,0,0.10),
+    0 16px 48px -12px rgba(0,0,0,0.55),
+    0 40px 80px -30px rgba(0,0,0,0.65);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--sans-jp);
+  color: var(--ink);
+  background: radial-gradient(1200px 800px at 70% 10%, #1a1c22 0%, transparent 60%),
+              radial-gradient(900px 600px at 10% 90%, #14161b 0%, transparent 55%),
+              linear-gradient(160deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+button { font-family: inherit; cursor: pointer; }
+input, textarea { font-family: inherit; }
+
+/* ===========================================================
+   Phases
+=========================================================== */
+.phase {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 22px 60px;
+  animation: phaseFade 0.7s ease both;
+}
+@keyframes phaseFade {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.phase[hidden] { display: none; }
+
+/* ===========================================================
+   Form phase
+=========================================================== */
+.app-header {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 38px;
+}
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+}
+.brand-mark .logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  position: relative;
+}
+.brand-mark .logo::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+.phase-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 640px;
+  margin-top: 18px;
+}
+
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 44px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--ink-faint);
+}
+.progress {
+  flex: 1;
+  height: 2px;
+  background: rgba(245,243,238,0.07);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  width: 14%;
+  background: linear-gradient(90deg, var(--accent), #f0d4a9);
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.step {
+  display: none;
+  animation: stepIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.step.active { display: block; }
+@keyframes stepIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.step-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.32em;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.step-question {
+  font-family: var(--serif-jp);
+  font-weight: 500;
+  font-size: clamp(24px, 4.4vw, 32px);
+  line-height: 1.55;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+.step-hint {
+  color: var(--ink-faint);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  margin-bottom: 32px;
+}
+
+.field {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+  transition: border-color 0.3s ease;
+}
+.field:focus-within { border-color: var(--accent); }
+.field input, .field textarea {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--serif-jp);
+  font-weight: 500;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  padding: 8px 0;
+  resize: none;
+}
+.field input::placeholder, .field textarea::placeholder {
+  color: rgba(245,243,238,0.22);
+  font-weight: 400;
+}
+.field textarea {
+  min-height: 78px;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.field-count {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--ink-faint);
+  text-align: right;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.chip {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  background: rgba(245,243,238,0.03);
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 42px;
+  gap: 16px;
+}
+.btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--sans-jp);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  padding: 12px 22px;
+  border-radius: 999px;
+  transition: transform 0.2s ease, opacity 0.2s ease, background 0.3s ease, color 0.3s ease;
+}
+.btn-back {
+  color: var(--ink-faint);
+  letter-spacing: 0.24em;
+}
+.btn-back:hover { color: var(--ink-soft); }
+.btn-next {
+  background: var(--ink);
+  color: #15171c;
+  padding: 14px 28px;
+  font-weight: 700;
+  border-radius: 999px;
+}
+.btn-next:hover:not(:disabled) { transform: translateY(-2px); }
+.btn-next:disabled { opacity: 0.28; cursor: not-allowed; }
+.btn-next .arrow { margin-left: 10px; }
+
+.hint-row {
+  margin-top: 18px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+.form-foot {
+  margin-top: 60px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+/* ===========================================================
+   Result phase
+=========================================================== */
+.result-toolbar {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.toolbar-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.action {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: rgba(245,243,238,0.04);
+  color: var(--ink-soft);
+  font-family: var(--sans-jp);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  padding: 10px 16px;
+  border-radius: 999px;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.action:hover { color: var(--ink); border-color: rgba(245,243,238,0.3); }
+.action.primary { background: var(--accent); color: #15171c; border-color: var(--accent); }
+.action.primary:hover { background: #f0d4a9; border-color: #f0d4a9; }
+.action svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+.paper-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 32px;
+}
+
+/* === The paper === */
+.paper {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  background:
+    linear-gradient(180deg, var(--paper) 0%, var(--paper) 50%, var(--paper-2) 100%);
+  color: var(--paper-ink);
+  padding: 56px 56px 70px;
+  box-shadow: var(--shadow-paper);
+  border-radius: 2px;
+  overflow: hidden;
+  isolation: isolate;
+}
+/* paper grain */
+.paper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 10% 12%, rgba(0,0,0,0.018) 0%, transparent 38%),
+    radial-gradient(circle at 90% 80%, rgba(0,0,0,0.025) 0%, transparent 42%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 100% 100%, 100% 100%, 160px 160px;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 0;
+}
+/* corner fold */
+.paper::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 42px;
+  height: 42px;
+  background:
+    linear-gradient(135deg, transparent 50%, var(--paper-2) 50%, #e6dec9 100%);
+  box-shadow: -3px -3px 8px rgba(0,0,0,0.08);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.paper > * { position: relative; z-index: 1; }
+
+/* Manual header */
+.m-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 22px;
+  border-bottom: 3px double var(--paper-line);
+  margin-bottom: 28px;
+  gap: 18px;
+}
+.m-head-left .h-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.m-head-left .h-logo {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--paper-ink);
+  position: relative;
+}
+.m-head-left .h-logo::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: var(--paper);
+}
+.m-head-left .h-brand-text {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: var(--paper-soft);
+  text-transform: uppercase;
+}
+.m-head-left .h-cat {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.36em;
+  color: var(--paper-faint);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.m-head-left .h-title {
+  font-family: var(--serif-jp);
+  font-weight: 600;
+  font-size: clamp(22px, 3.6vw, 30px);
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+.m-head-left .h-subtitle {
+  font-family: var(--serif-jp);
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  color: var(--paper-soft);
+}
+
+.m-head-right {
+  text-align: right;
+  min-width: 140px;
+}
+.m-head-right .pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  background: var(--paper-ink);
+  color: var(--paper);
+  padding: 5px 10px;
+  border-radius: 2px;
+  margin-bottom: 10px;
+}
+.m-head-right .model-no {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  color: var(--paper-ink);
+  font-weight: 700;
+}
+.m-head-right .issued {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--paper-faint);
+}
+
+/* Spec table */
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-bottom: 28px;
+  background: rgba(255,255,255,0.4);
+}
+.spec-table th, .spec-table td {
+  border: 1px solid var(--paper-line);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+.spec-table th {
+  background: #ede5d0;
+  font-family: var(--serif-jp);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  width: 28%;
+  color: var(--paper-ink);
+}
+.spec-table td {
+  font-family: var(--sans-jp);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--paper-ink);
+}
+.spec-table td.mono {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+/* Section block */
+.section {
+  margin-bottom: 24px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--paper-line);
+}
+.section-head .num {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--paper-accent);
+  font-weight: 700;
+}
+.section-head .ja {
+  font-family: var(--serif-jp);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  color: var(--paper-ink);
+}
+.section-head .en {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: var(--paper-faint);
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+.section p, .section li {
+  font-family: var(--sans-jp);
+  font-weight: 400;
+  font-size: 12.5px;
+  line-height: 1.95;
+  letter-spacing: 0.04em;
+  color: var(--paper-ink);
+}
+.section ul { padding-left: 0; list-style: none; }
+.section ul li {
+  position: relative;
+  padding-left: 22px;
+  margin-bottom: 6px;
+}
+.section ul li::before {
+  content: "■";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--paper-accent);
+  font-size: 9px;
+  line-height: 2.2;
+}
+
+.callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(177, 58, 47, 0.05);
+  border-left: 3px solid var(--paper-accent);
+  margin: 8px 0 12px;
+}
+.callout .mark {
+  flex-shrink: 0;
+  font-family: var(--serif-jp);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--paper-accent);
+  letter-spacing: 0.2em;
+  width: 36px;
+}
+.callout .text {
+  font-family: var(--sans-jp);
+  font-size: 12px;
+  line-height: 1.85;
+  color: var(--paper-ink);
+}
+
+/* Two column */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+/* Warranty */
+.warranty {
+  border: 1.5px solid var(--paper-ink);
+  padding: 18px 20px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+  background: rgba(255,255,255,0.45);
+}
+.warranty-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--paper-line);
+  margin-bottom: 14px;
+}
+.warranty-head .ja {
+  font-family: var(--serif-jp);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+}
+.warranty-head .en {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: var(--paper-faint);
+  text-transform: uppercase;
+}
+.warranty-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 22px;
+}
+.warranty-grid .cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.warranty-grid .label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--paper-faint);
+  text-transform: uppercase;
+}
+.warranty-grid .value {
+  font-family: var(--serif-jp);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--paper-ink);
+}
+.warranty-grid .value.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
+
+/* Footer */
+.m-foot {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 2px solid var(--paper-ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+}
+.m-foot .barcode-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 60%;
+}
+.m-foot .barcode {
+  height: 44px;
+  width: 100%;
+}
+.m-foot .barcode-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-align: center;
+  color: var(--paper-ink);
+}
+.m-foot .stamp {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--paper-soft);
+  text-transform: uppercase;
+  line-height: 1.7;
+}
+.m-foot .stamp .big {
+  display: block;
+  font-family: var(--serif-jp);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--paper-ink);
+  text-transform: none;
+  margin-top: 4px;
+}
+
+/* Result reveal animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.reveal.in {
+  animation: revealIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes revealIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translate(-50%, 16px);
+  background: #15171c;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s ease;
+  z-index: 30;
+  font-family: var(--sans-jp);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ===========================================================
+   Responsive
+=========================================================== */
+@media (max-width: 720px) {
+  .paper { padding: 32px 24px 50px; border-radius: 2px; }
+  .paper::after { width: 30px; height: 30px; }
+  .m-head { flex-direction: column; align-items: flex-start; }
+  .m-head-right { text-align: left; min-width: 0; }
+  .two-col { grid-template-columns: 1fr; gap: 14px; }
+  .warranty-grid { grid-template-columns: 1fr; }
+  .spec-table th { width: 38%; }
+  .spec-table th, .spec-table td { padding: 7px 8px; font-size: 11px; }
+  .m-foot { flex-direction: column; align-items: stretch; gap: 14px; }
+  .m-foot .barcode-wrap { max-width: 100%; }
+  .m-foot .stamp { text-align: left; }
+  .section p, .section li { font-size: 12px; }
+  .app-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+@media (max-width: 460px) {
+  .phase { padding: 18px 14px 50px; }
+  .paper { padding: 26px 18px 40px; }
+  .step-question { font-size: 22px; }
+  .field input { font-size: 19px; }
+  .field textarea { font-size: 16px; }
+  .toolbar-actions { width: 100%; justify-content: stretch; }
+  .toolbar-actions .action { flex: 1; justify-content: center; padding: 10px 8px; font-size: 11px; letter-spacing: 0.12em; }
+}
+
+/* ===========================================================
+   Print
+=========================================================== */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #fff !important; }
+  .phase { min-height: 0; padding: 0; }
+  .result-toolbar, .toolbar-title, .toolbar-actions, .footer-note, .toast { display: none !important; }
+  .paper {
+    box-shadow: none;
+    max-width: 100%;
+    padding: 0;
+    background: #fff;
+  }
+  .paper::before, .paper::after { display: none; }
+  .section { page-break-inside: avoid; }
+}
+
+.footer-note {
+  width: 100%;
+  max-width: 760px;
+  text-align: center;
+  margin-top: 18px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+  <!-- =========================================================
+       FORM PHASE
+  ========================================================= -->
+  <section class="phase phase-form" id="phaseForm">
+    <header class="app-header">
+      <div class="brand-mark">
+        <div class="logo"></div>
+        <span>Personal Manual Generator</span>
+      </div>
+      <div class="phase-meta">100 days · day 003</div>
+    </header>
+
+    <div class="form-container">
+      <div class="progress-wrap">
+        <span id="progressLabel">01 / 07</span>
+        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+        <span>STEP</span>
+      </div>
+
+      <!-- Step 1: 名前 -->
+      <div class="step active" data-step="1">
+        <div class="step-num">QUESTION 01</div>
+        <h2 class="step-question">あなたが呼ばれたい<br>名前を教えてください</h2>
+        <p class="step-hint">この名前が取扱説明書の製品名になります</p>
+        <div class="field">
+          <input type="text" id="q1" placeholder="例：ふみ" maxlength="14" autocomplete="off">
+        </div>
+        <div class="field-count"><span id="c1">0</span> / 14</div>
+        <div class="step-actions">
+          <span></span>
+          <button class="btn btn-next" data-next="1" disabled>次へ<span class="arrow">→</span></button>
+        </div>
+        <div class="hint-row">Enter キーで次へ</div>
+      </div>
+
+      <!-- Step 2: 一言で -->
+      <div class="step" data-step="2">
+        <div class="step-num">QUESTION 02</div>
+        <h2 class="step-question">あなたを一言で表すと？</h2>
+        <p class="step-hint">短いフレーズで。製品カテゴリとして使われます</p>
+        <div class="field">
+          <input type="text" id="q2" placeholder="例：好奇心駆動型のおしゃべり" maxlength="40" autocomplete="off">
+        </div>
+        <div class="field-count"><span id="c2">0</span> / 40</div>
+        <div class="chips" data-target="q2">
+          <span class="chip">穏やかな夜型</span>
+          <span class="chip">好奇心旺盛</span>
+          <span class="chip">繊細で内向的</span>
+          <span class="chip">明るくおせっかい</span>
+          <span class="chip">マイペース職人</span>
+        </div>
+        <div class="step-actions">
+          <button class="btn btn-back" data-back="2">← 戻る</button>
+          <button class="btn btn-next" data-next="2" disabled>次へ<span class="arrow">→</span></button>
+        </div>
+      </div>
+
+      <!-- Step 3: 元気が出る瞬間 -->
+      <div class="step" data-step="3">
+        <div class="step-num">QUESTION 03</div>
+        <h2 class="step-question">一番元気が出る<br>瞬間はいつですか？</h2>
+        <p class="step-hint">取扱説明書の「最適な使用方法」になります</p>
+        <div class="field">
+          <textarea id="q3" placeholder="例：朝の散歩で日差しを浴びている時" maxlength="80"></textarea>
+        </div>
+        <div class="field-count"><span id="c3">0</span> / 80</div>
+        <div class="step-actions">
+          <button class="btn btn-back" data-back="3">← 戻る</button>
+          <button class="btn btn-next" data-next="3" disabled>次へ<span class="arrow">→</span></button>
+        </div>
+      </div>
+
+      <!-- Step 4: やる気が出ない時 -->
+      <div class="step" data-step="4">
+        <div class="step-num">QUESTION 04</div>
+        <h2 class="step-question">やる気が出ない時の<br>対処法は？</h2>
+        <p class="step-hint">「故障時の対処法」として記載されます</p>
+        <div class="field">
+          <textarea id="q4" placeholder="例：温かいお風呂に浸かって早めに寝る" maxlength="80"></textarea>
+        </div>
+        <div class="field-count"><span id="c4">0</span> / 80</div>
+        <div class="step-actions">
+          <button class="btn btn-back" data-back="4">← 戻る</button>
+          <button class="btn btn-next" data-next="4" disabled>次へ<span class="arrow">→</span></button>
+        </div>
+      </div>
+
+      <!-- Step 5: 嬉しいご褒美 -->
+      <div class="step" data-step="5">
+        <div class="step-num">QUESTION 05</div>
+        <h2 class="step-question">嬉しいご褒美は？</h2>
+        <p class="step-hint">「充電方法」のエネルギー源になります</p>
+        <div class="field">
+          <textarea id="q5" placeholder="例：好きなカフェで読書、甘いケーキ" maxlength="80"></textarea>
+        </div>
+        <div class="field-count"><span id="c5">0</span> / 80</div>
+        <div class="step-actions">
+          <button class="btn btn-back" data-back="5">← 戻る</button>
+          <button class="btn btn-next" data-next="5" disabled>次へ<span class="arrow">→</span></button>
+        </div>
+      </div>
+
+      <!-- Step 6: してほしくないこと -->
+      <div class="step" data-step="6">
+        <div class="step-num">QUESTION 06</div>
+        <h2 class="step-question">してほしくないことは？</h2>
+        <p class="step-hint">「使用上の注意」として強調表示されます</p>
+        <div class="field">
+          <textarea id="q6" placeholder="例：大勢の前で急に意見を求められる" maxlength="80"></textarea>
+        </div>
+        <div class="field-count"><span id="c6">0</span> / 80</div>
+        <div class="step-actions">
+          <button class="btn btn-back" data-back="6">← 戻る</button>
+          <button class="btn btn-next" data-next="6" disabled>次へ<span class="arrow">→</span></button>
+        </div>
+      </div>
+
+      <!-- Step 7: サブタイトル -->
+      <div class="step" data-step="7">
+        <div class="step-num">QUESTION 07</div>
+        <h2 class="step-question">取扱説明書の<br>サブタイトルを決めてください</h2>
+        <p class="step-hint">あなたの個性を一行で。製品名の下に印字されます</p>
+        <div class="field">
+          <input type="text" id="q7" placeholder="例：コーヒー駆動・夜型ハイブリッド仕様" maxlength="30" autocomplete="off">
+        </div>
+        <div class="field-count"><span id="c7">0</span> / 30</div>
+        <div class="chips" data-target="q7">
+          <span class="chip">高感度センサー搭載</span>
+          <span class="chip">省電力モデル</span>
+          <span class="chip">ナイトモード優先</span>
+          <span class="chip">手動充電式</span>
+          <span class="chip">日光稼働タイプ</span>
+        </div>
+        <div class="step-actions">
+          <button class="btn btn-back" data-back="7">← 戻る</button>
+          <button class="btn btn-next" data-next="7" disabled>取扱説明書を生成<span class="arrow">→</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-foot">入力内容は自動的に端末に保存されます</div>
+  </section>
+
+  <!-- =========================================================
+       RESULT PHASE
+  ========================================================= -->
+  <section class="phase phase-result" id="phaseResult" hidden>
+    <div class="result-toolbar">
+      <div class="toolbar-title">PERSONAL MANUAL · GENERATED</div>
+      <div class="toolbar-actions">
+        <button class="action" data-act="again">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          もう一度作る
+        </button>
+        <button class="action primary" data-act="save">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          画像として保存
+        </button>
+        <button class="action" data-act="share">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l7.5 9L4 20h3l6-7.2L18 20h3l-7.7-9.3L20 4h-3l-5.3 6.4L7 4z"/></svg>
+          シェア
+        </button>
+      </div>
+    </div>
+
+    <div class="paper-wrap">
+      <article class="paper" id="paper">
+        <!-- header -->
+        <div class="m-head">
+          <div class="m-head-left">
+            <div class="h-brand">
+              <div class="h-logo"></div>
+              <span class="h-brand-text">DAILY HUMAN CO., LTD.</span>
+            </div>
+            <div class="h-cat" id="hCat">PERSONAL EDITION</div>
+            <h1 class="h-title" id="hTitle">FUMI-2026 標準モデル</h1>
+            <div class="h-subtitle" id="hSubtitle">コーヒー駆動・夜型ハイブリッド仕様</div>
+          </div>
+          <div class="m-head-right">
+            <span class="pill">取扱説明書</span>
+            <div class="model-no" id="hModelNo">DH-2026-XXXX-A</div>
+            <div class="issued" id="hIssued">ISSUED 2026.05.29</div>
+          </div>
+        </div>
+
+        <!-- spec table -->
+        <table class="spec-table">
+          <tbody id="specBody"></tbody>
+        </table>
+
+        <!-- 1. 主な特徴 -->
+        <div class="section">
+          <div class="section-head">
+            <span class="num">01</span>
+            <span class="ja">主な特徴</span>
+            <span class="en">FEATURES</span>
+          </div>
+          <ul id="featuresList"></ul>
+        </div>
+
+        <!-- 2. 使用上の注意 -->
+        <div class="section">
+          <div class="section-head">
+            <span class="num">02</span>
+            <span class="ja">使用上の注意</span>
+            <span class="en">PRECAUTIONS</span>
+          </div>
+          <div class="callout">
+            <div class="mark">警告</div>
+            <div class="text" id="warnText">本機の安全な動作のため、以下の行為は絶対に避けてください。</div>
+          </div>
+          <ul id="precautionList"></ul>
+        </div>
+
+        <!-- 3. 最適な使用方法 -->
+        <div class="section">
+          <div class="section-head">
+            <span class="num">03</span>
+            <span class="ja">最適な使用方法</span>
+            <span class="en">OPTIMAL USE</span>
+          </div>
+          <p id="usageText"></p>
+        </div>
+
+        <!-- 4 & 5: two col -->
+        <div class="two-col">
+          <div class="section" style="margin-bottom:0;">
+            <div class="section-head">
+              <span class="num">04</span>
+              <span class="ja">充電方法</span>
+              <span class="en">CHARGING</span>
+            </div>
+            <p id="chargeText"></p>
+          </div>
+          <div class="section" style="margin-bottom:0;">
+            <div class="section-head">
+              <span class="num">05</span>
+              <span class="ja">故障時の対処法</span>
+              <span class="en">TROUBLESHOOT</span>
+            </div>
+            <p id="troubleText"></p>
+          </div>
+        </div>
+
+        <!-- 6. 保証書 -->
+        <div class="section">
+          <div class="section-head">
+            <span class="num">06</span>
+            <span class="ja">保証書</span>
+            <span class="en">WARRANTY</span>
+          </div>
+          <div class="warranty">
+            <div class="warranty-head">
+              <span class="ja">無期限保証書</span>
+              <span class="en">UNLIMITED WARRANTY</span>
+            </div>
+            <div class="warranty-grid">
+              <div class="cell"><span class="label">Product Name</span><span class="value" id="wName">—</span></div>
+              <div class="cell"><span class="label">Model Number</span><span class="value mono" id="wModel">—</span></div>
+              <div class="cell"><span class="label">Serial Number</span><span class="value mono" id="wSerial">—</span></div>
+              <div class="cell"><span class="label">Manufactured</span><span class="value mono" id="wMfg">—</span></div>
+              <div class="cell"><span class="label">Warranty Period</span><span class="value" id="wPeriod">本人の生涯</span></div>
+              <div class="cell"><span class="label">Issued By</span><span class="value" id="wIssuer">DAILY HUMAN CO., LTD.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- footer -->
+        <div class="m-foot">
+          <div class="barcode-wrap">
+            <svg class="barcode" id="barcode" viewBox="0 0 200 44" preserveAspectRatio="none"></svg>
+            <div class="barcode-num" id="barcodeNum">0 0000 00000 0</div>
+          </div>
+          <div class="stamp">
+            DAILY HUMAN CO., LTD.
+            <span class="big">取扱説明書</span>
+            ver. 1.0 · printed in your room
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="footer-note">PCの方は「画像として保存」ボタンから PDF として保存できます · スマホは画面を長押しで画像保存</div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   Storage keys
+========================================================= */
+const STORAGE_KEY = "day003-manual:answers";
+const QUESTION_IDS = ["q1","q2","q3","q4","q5","q6","q7"];
+const TOTAL_STEPS = 7;
+
+/* =========================================================
+   State & utilities
+========================================================= */
+const state = {
+  step: 1,
+  answers: { q1:"", q2:"", q3:"", q4:"", q5:"", q6:"", q7:"" }
+};
+
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+
+function loadAnswers() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    QUESTION_IDS.forEach(k => {
+      if (typeof data[k] === "string") state.answers[k] = data[k];
+    });
+  } catch {}
+}
+function saveAnswers() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.answers)); } catch {}
+}
+
+/* deterministic hash from inputs */
+function fnv1a(s) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function mulberry32(seed) {
+  let s = seed >>> 0;
+  return function() {
+    s = (s + 0x6D2B79F5) | 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function pick(rng, arr) { return arr[Math.floor(rng() * arr.length)]; }
+function pad(n, w) { return String(n).padStart(w, "0"); }
+
+/* =========================================================
+   Form interactions
+========================================================= */
+function bindForm() {
+  QUESTION_IDS.forEach((qid, idx) => {
+    const el = $(qid);
+    const counter = $("c" + (idx + 1));
+    el.value = state.answers[qid] || "";
+    counter.textContent = el.value.length;
+    updateNextBtn(idx + 1);
+
+    el.addEventListener("input", () => {
+      state.answers[qid] = el.value;
+      counter.textContent = el.value.length;
+      saveAnswers();
+      updateNextBtn(idx + 1);
+    });
+    el.addEventListener("keydown", e => {
+      if (e.key === "Enter" && (el.tagName === "INPUT" || (e.metaKey || e.ctrlKey))) {
+        e.preventDefault();
+        const btn = document.querySelector(`.btn-next[data-next="${idx+1}"]`);
+        if (btn && !btn.disabled) btn.click();
+      }
+    });
+  });
+
+  $$(".chips").forEach(group => {
+    const target = group.getAttribute("data-target");
+    group.querySelectorAll(".chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        const el = $(target);
+        el.value = chip.textContent.trim();
+        el.dispatchEvent(new Event("input"));
+        el.focus();
+      });
+    });
+  });
+
+  $$(".btn-next").forEach(b => {
+    b.addEventListener("click", () => {
+      const n = parseInt(b.getAttribute("data-next"), 10);
+      if (n < TOTAL_STEPS) goToStep(n + 1);
+      else generateManual();
+    });
+  });
+  $$(".btn-back").forEach(b => {
+    b.addEventListener("click", () => {
+      const n = parseInt(b.getAttribute("data-back"), 10);
+      goToStep(n - 1);
+    });
+  });
+}
+
+function updateNextBtn(stepNo) {
+  const qid = "q" + stepNo;
+  const val = (state.answers[qid] || "").trim();
+  const btn = document.querySelector(`.btn-next[data-next="${stepNo}"]`);
+  if (btn) btn.disabled = val.length === 0;
+}
+
+function goToStep(n) {
+  if (n < 1 || n > TOTAL_STEPS) return;
+  state.step = n;
+  $$(".step").forEach(s => s.classList.remove("active"));
+  const target = document.querySelector(`.step[data-step="${n}"]`);
+  if (target) target.classList.add("active");
+  updateProgress();
+  setTimeout(() => {
+    const input = target.querySelector("input, textarea");
+    if (input) input.focus();
+  }, 50);
+}
+
+function updateProgress() {
+  const pct = (state.step / TOTAL_STEPS) * 100;
+  $("progressBar").style.width = pct + "%";
+  $("progressLabel").textContent = pad(state.step, 2) + " / " + pad(TOTAL_STEPS, 2);
+}
+
+/* =========================================================
+   Toast
+========================================================= */
+let toastTimer;
+function toast(msg, ms = 3400) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), ms);
+}
+
+/* =========================================================
+   Manual generation
+========================================================= */
+const CATEGORY_LIST = [
+  "PERSONAL EDITION", "STANDARD MODEL", "DELUXE EDITION",
+  "LIMITED SERIES", "PREMIUM MODEL", "SIGNATURE EDITION"
+];
+const COLORS_LIST = ["カームグレー","ウォームベージュ","ミッドナイトブルー","シダーグリーン","アンバーゴールド","スレートブラック","ペールクリーム"];
+const ENERGY_LIST = ["人との会話","静かな時間","美味しい食事","適度な睡眠","小さな達成感","新しい刺激"];
+const TEMP_RANGES = ["18〜26 ℃","16〜24 ℃","20〜28 ℃","15〜22 ℃","17〜25 ℃"];
+const BATTERY_LIST = ["6時間（連続稼働時）","8〜10時間","半日（要昼休憩）","12時間（フル充電時）","1日（要中間補給）"];
+const OUTPUT_LIST = ["低〜中（省電力モード時）","中〜高（通常モード）","可変（状況依存）","ピーク時 100%","安定供給型"];
+
+const FEATURE_TEMPLATES = [
+  n => `本機 ${n} は、観察と感受性に優れた一点ものの個体です。`,
+  n => `${n} は工場出荷時より、独自の感性ファームウェアを搭載しています。`,
+  n => `他の同型機と互換性はなく、${n} 専用の運用が推奨されます。`,
+  n => `定期的なご褒美補給により、長期にわたり高い稼働率を維持します。`,
+  n => `感情センサーが繊細なため、扱う際は穏やかな声かけを推奨します。`,
+  n => `${n} は、ひとりの時間を確保することで自己再起動が可能です。`,
+  n => `想定外の入力を受けた際は、自動でスリープモードに移行します。`
+];
+
+const PRECAUTION_BASE = [
+  "急な大声・命令口調での操作は故障の原因となります。",
+  "睡眠不足・水分不足の状態での連続稼働は推奨されません。",
+  "他者との性能比較は、回路に深刻なダメージを与える可能性があります。",
+  "予期しないスケジュール変更は、内部温度を急上昇させます。"
+];
+
+function makeModelNumber(rng, name) {
+  const letters = "ABCDEFGHJKMNPQRSTUVWXYZ";
+  const ascii = name.replace(/[^A-Za-z]/g, "").toUpperCase();
+  const base = ascii.length >= 2 ? ascii.slice(0, 2) : "DH";
+  const num = pad(Math.floor(rng() * 10000), 4);
+  const tail = letters[Math.floor(rng() * letters.length)] + letters[Math.floor(rng() * letters.length)];
+  return `${base}-2026-${num}-${tail}`;
+}
+
+function makeSerial(rng) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+  let s = "SN";
+  for (let i = 0; i < 10; i++) s += chars[Math.floor(rng() * chars.length)];
+  return s;
+}
+
+function formatDate(d) {
+  return `${d.getFullYear()}.${pad(d.getMonth()+1, 2)}.${pad(d.getDate(), 2)}`;
+}
+
+function pickList(rng, arr, n) {
+  const copy = arr.slice();
+  const out = [];
+  while (out.length < n && copy.length) {
+    const i = Math.floor(rng() * copy.length);
+    out.push(copy.splice(i, 1)[0]);
+  }
+  return out;
+}
+
+function buildBarcode(seedInt) {
+  const svg = $("barcode");
+  svg.innerHTML = "";
+  const rng = mulberry32(seedInt);
+  let x = 0;
+  const W = 200, H = 44;
+  // edge guard bars
+  const pushBar = (w) => {
+    if (x + w > W) return false;
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", x);
+    rect.setAttribute("y", 0);
+    rect.setAttribute("width", w);
+    rect.setAttribute("height", H);
+    rect.setAttribute("fill", "#1c1b18");
+    svg.appendChild(rect);
+    x += w;
+    return true;
+  };
+  while (x < W) {
+    const barW = 1 + Math.floor(rng() * 3);
+    const gapW = 1 + Math.floor(rng() * 3);
+    if (!pushBar(barW)) break;
+    x += gapW;
+  }
+}
+
+function generateManual() {
+  // ensure all required answered
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    if (!state.answers["q"+i] || !state.answers["q"+i].trim()) {
+      goToStep(i);
+      toast("質問 " + i + " が空欄です");
+      return;
+    }
+  }
+
+  const a = state.answers;
+  const today = new Date();
+  const seed = fnv1a(QUESTION_IDS.map(k => a[k]).join("|") + "|" + formatDate(today));
+  const rng = mulberry32(seed);
+
+  const name = a.q1.trim();
+  const oneliner = a.q2.trim();
+  const cheer = a.q3.trim();
+  const recover = a.q4.trim();
+  const reward = a.q5.trim();
+  const avoid = a.q6.trim();
+  const subtitle = a.q7.trim();
+
+  const modelNo = makeModelNumber(rng, name);
+  const serial = makeSerial(rng);
+  const category = pick(rng, CATEGORY_LIST);
+  const color = pick(rng, COLORS_LIST);
+  const energy = pick(rng, ENERGY_LIST);
+  const temp = pick(rng, TEMP_RANGES);
+  const battery = pick(rng, BATTERY_LIST);
+  const output = pick(rng, OUTPUT_LIST);
+  const weight = (40 + Math.floor(rng() * 41)) + " kg ± 個体差";
+
+  // header
+  $("hCat").textContent = category;
+  $("hTitle").textContent = `${name}-2026 標準モデル`;
+  $("hSubtitle").textContent = subtitle;
+  $("hModelNo").textContent = modelNo;
+  $("hIssued").textContent = "ISSUED " + formatDate(today);
+
+  // spec
+  const specs = [
+    ["製品名 / Product",        `${name}-2026 標準モデル`,  false],
+    ["型番 / Model No.",        modelNo,                      true],
+    ["カテゴリ / Category",     oneliner,                     false],
+    ["カラー / Color",          color,                        false],
+    ["出力 / Output",           output,                       false],
+    ["重量 / Weight",           weight,                       false],
+    ["推奨動作温度 / Temp.",    temp,                         false],
+    ["連続稼働時間 / Battery",  battery,                      false],
+    ["主な動力源 / Power",      energy,                       false]
+  ];
+  const sb = $("specBody");
+  sb.innerHTML = "";
+  specs.forEach(([th, td, mono]) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<th>${th}</th><td class="${mono?'mono':''}">${escapeHtml(td)}</td>`;
+    sb.appendChild(tr);
+  });
+
+  // features
+  const featuresEl = $("featuresList");
+  featuresEl.innerHTML = "";
+  const featCount = 4;
+  const featTemplates = pickList(rng, FEATURE_TEMPLATES, featCount);
+  featTemplates.forEach(fn => {
+    const li = document.createElement("li");
+    li.textContent = fn(name);
+    featuresEl.appendChild(li);
+  });
+
+  // precautions (use avoid text + extras)
+  const precaution = $("precautionList");
+  precaution.innerHTML = "";
+  const userAvoid = document.createElement("li");
+  userAvoid.innerHTML = `<strong>${escapeHtml(avoid)}</strong> — 本機にとって最も避けるべき状況です。回路に深刻な負荷がかかります。`;
+  precaution.appendChild(userAvoid);
+  pickList(rng, PRECAUTION_BASE, 3).forEach(t => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    precaution.appendChild(li);
+  });
+  $("warnText").textContent = `本機 ${name} を安全にご使用いただくため、以下の行為は絶対に避けてください。`;
+
+  // usage
+  $("usageText").textContent = `本機 ${name} は、${cheer}という状況下で最高のパフォーマンスを発揮します。日々の運用にあたっては、この瞬間を意識的に組み込むことで、出力の安定と表情の柔らかさを長く維持できます。`;
+
+  // charge
+  $("chargeText").textContent = `${reward}を定期的に与えることで、本機のエネルギー残量が回復します。週に最低1回の補給を推奨します。`;
+
+  // trouble
+  $("troubleText").textContent = `動作が鈍化した場合、${recover}を実施してください。ほとんどの不具合はこの手順で改善されます。改善が見られない場合は、無理に再起動を試みず、休止モードに移行してください。`;
+
+  // warranty
+  $("wName").textContent = `${name}-2026 標準モデル`;
+  $("wModel").textContent = modelNo;
+  $("wSerial").textContent = serial;
+  $("wMfg").textContent = formatDate(today);
+
+  // barcode
+  buildBarcode(seed);
+  const bn = `${pad(seed % 10, 1)} ${pad((seed >> 4) % 10000, 4)} ${pad((seed >> 8) % 100000, 5)} ${pad(seed % 10, 1)}`;
+  $("barcodeNum").textContent = bn;
+
+  // reveal
+  showResult();
+  saveLastModel(modelNo);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+let lastModel = "DH-0000";
+function saveLastModel(m) {
+  lastModel = m;
+  try { localStorage.setItem("day003-manual:lastModel", m); } catch {}
+}
+function loadLastModel() {
+  try {
+    const v = localStorage.getItem("day003-manual:lastModel");
+    if (v) lastModel = v;
+  } catch {}
+}
+
+/* =========================================================
+   Scene transition
+========================================================= */
+function showResult() {
+  $("phaseForm").hidden = true;
+  $("phaseResult").hidden = false;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  // reveal animations on paper sections
+  const targets = document.querySelectorAll("#paper .section, #paper .spec-table, #paper .m-head, #paper .m-foot");
+  targets.forEach(el => el.classList.remove("in"));
+  targets.forEach((el, i) => {
+    el.classList.add("reveal");
+    setTimeout(() => el.classList.add("in"), 60 + i * 90);
+  });
+}
+
+function backToForm() {
+  $("phaseResult").hidden = true;
+  $("phaseForm").hidden = false;
+  goToStep(1);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* =========================================================
+   Toolbar actions
+========================================================= */
+function bindToolbar() {
+  document.querySelectorAll(".action").forEach(b => {
+    b.addEventListener("click", () => {
+      const act = b.getAttribute("data-act");
+      if (act === "again") backToForm();
+      else if (act === "save") handleSave();
+      else if (act === "share") handleShare();
+    });
+  });
+}
+
+function handleSave() {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (isMobile) {
+    toast("画面を長押しして「画像を保存」を選んでください");
+  } else {
+    toast("印刷ダイアログから「PDFに保存」を選択してください");
+    setTimeout(() => window.print(), 600);
+  }
+}
+
+function handleShare() {
+  const name = (state.answers.q1 || "").trim() || "わたし";
+  const sub = (state.answers.q7 || "").trim();
+  const text = `${name} の取扱説明書ができました📕\n型番 ${lastModel}\n${sub ? "サブ：" + sub + "\n" : ""}#取扱説明書ジェネレーター #100日チャレンジ`;
+  const url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
+  window.open(url, "_blank", "noopener");
+}
+
+/* =========================================================
+   Init
+========================================================= */
+window.addEventListener("DOMContentLoaded", () => {
+  loadAnswers();
+  loadLastModel();
+  bindForm();
+  bindToolbar();
+  updateProgress();
+  setTimeout(() => $("q1").focus(), 80);
+});
+</script>
+</body>
+</html>

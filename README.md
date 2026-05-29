@@ -8,6 +8,7 @@
 | --- | --- | --- |
 | 001 | ストップウォッチ | [day001-stopwatch](./day001-stopwatch/) |
 | 002 | ラッキーカラー診断 | [day002-luckycolor](./day002-luckycolor/) |
+| 003 | あなたの取扱説明書ジェネレーター | [day003-manual](./day003-manual/) |
 
 ## ルール
 
