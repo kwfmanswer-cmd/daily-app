@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>心の天気予報 — Mind Weather</title>
+<meta name="description" content="5つの質問に答えると、あなたの今日の心模様が動く天気予報になります。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   心の天気予報  —  Mind Weather Forecast
+   Day 004 / 100-day web app challenge
+   ============================================================ */
+
+:root{
+  --ink:#1a2233;
+  --ink-soft:#465069;
+  --paper:#f4f7fc;
+  --glass:rgba(255,255,255,.18);
+  --glass-strong:rgba(255,255,255,.30);
+  --glass-line:rgba(255,255,255,.45);
+  --shadow:0 18px 50px rgba(20,30,60,.30);
+  --mincho:'Shippori Mincho', serif;
+  --sans:'Noto Sans JP', sans-serif;
+  /* sky palette — overwritten live by JS */
+  --sky-1:#9bc7f0;
+  --sky-2:#bfd9f2;
+  --sky-3:#e8f1fb;
+  --sun:#fff3c4;
+  --accent:#3d6ea5;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:var(--sans);
+  color:var(--ink);
+  background:#0e1422;
+  overflow-x:hidden;
+  line-height:1.8;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::selection{background:rgba(120,170,230,.35)}
+
+/* ====== scrollbar ====== */
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25);border-radius:10px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ============================================================
+   INTRO / INPUT  (welcome + 5 step questions)
+   ============================================================ */
+#app{position:relative;min-height:100%;}
+
+.screen{display:none}
+.screen.active{display:block}
+
+/* --- shared input-stage background --- */
+.stage{
+  position:fixed;inset:0;
+  background:
+    radial-gradient(120% 120% at 50% -10%, #2b3d63 0%, #1a2238 45%, #0d1322 100%);
+  overflow:hidden;
+}
+.stage::before{ /* drifting soft glow */
+  content:"";position:absolute;inset:-20%;
+  background:
+    radial-gradient(40% 40% at 20% 30%, rgba(120,160,240,.18), transparent 70%),
+    radial-gradient(45% 45% at 80% 70%, rgba(200,150,240,.14), transparent 70%);
+  animation:glowDrift 22s ease-in-out infinite alternate;
+}
+@keyframes glowDrift{from{transform:translate3d(-3%,-2%,0) scale(1)}to{transform:translate3d(4%,3%,0) scale(1.1)}}
+
+/* faint stars in intro stage */
+.stage-stars{position:absolute;inset:0;pointer-events:none}
+.stage-stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.5;animation:twinkle 4s infinite ease-in-out}
+
+.wrap{
+  position:relative;z-index:2;
+  max-width:680px;margin:0 auto;
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:32px 22px;
+}
+
+/* ---- welcome ---- */
+.welcome{text-align:center;color:#eaf1fb}
+.welcome .emblem{
+  width:104px;height:104px;margin:0 auto 26px;position:relative;
+}
+.welcome .emblem svg{width:100%;height:100%;filter:drop-shadow(0 6px 22px rgba(120,170,255,.45))}
+.welcome .kicker{
+  font-family:var(--mincho);letter-spacing:.5em;font-size:.72rem;
+  color:#9fb6da;margin-bottom:18px;padding-left:.5em;
+}
+.welcome h1{
+  font-family:var(--mincho);font-weight:800;
+  font-size:clamp(2.1rem,7vw,3.1rem);letter-spacing:.06em;line-height:1.4;
+  margin-bottom:20px;
+}
+.welcome h1 .small{display:block;font-size:.42em;letter-spacing:.4em;color:#9fb6da;font-weight:500;margin-top:14px}
+.welcome p{color:#b9c8e2;font-weight:300;font-size:.98rem;max-width:30em;margin:0 auto 38px}
+.btn-primary{
+  font-family:var(--mincho);font-weight:600;
+  font-size:1.05rem;letter-spacing:.18em;padding-left:.18em;
+  color:#16243c;
+  background:linear-gradient(135deg,#fff,#dfeaff);
+  padding:16px 46px;border-radius:999px;
+  box-shadow:0 14px 34px rgba(120,160,255,.4),inset 0 1px 0 rgba(255,255,255,.8);
+  transition:transform .25s cubic-bezier(.2,1.4,.4,1),box-shadow .25s;
+}
+.btn-primary:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 22px 44px rgba(120,160,255,.55)}
+.btn-primary:active{transform:translateY(0) scale(.98)}
+
+.fade-up{opacity:0;transform:translateY(22px);animation:fadeUp .9s forwards}
+.fade-up.d1{animation-delay:.12s}
+.fade-up.d2{animation-delay:.28s}
+.fade-up.d3{animation-delay:.46s}
+.fade-up.d4{animation-delay:.64s}
+@keyframes fadeUp{to{opacity:1;transform:none}}
+
+/* ---- progress ---- */
+.progress{position:relative;margin-bottom:34px}
+.progress-track{height:4px;background:rgba(255,255,255,.14);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;width:20%;border-radius:4px;
+  background:linear-gradient(90deg,#8fb6ff,#d8c4ff);
+  box-shadow:0 0 16px rgba(150,180,255,.7);
+  transition:width .6s cubic-bezier(.6,0,.2,1)}
+.progress-meta{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.progress-meta .step-no{font-family:var(--mincho);color:#cdd9f0;font-size:.8rem;letter-spacing:.25em}
+.progress-meta .step-no b{font-size:1.3rem;color:#fff;font-weight:600}
+.progress-meta .label{font-family:var(--mincho);color:#8ea4c8;font-size:.72rem;letter-spacing:.3em}
+
+/* ---- question card ---- */
+.qcard{
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:26px;
+  padding:34px 28px 30px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:var(--shadow);
+  color:#eef3fb;
+}
+.q{display:none}
+.q.show{display:block;animation:qIn .7s cubic-bezier(.2,.9,.3,1)}
+@keyframes qIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+.q.leaving{animation:qOut .4s forwards}
+@keyframes qOut{to{opacity:0;transform:translateX(-40px)}}
+
+.q .num{font-family:var(--mincho);font-size:.8rem;letter-spacing:.3em;color:#9db4dc;margin-bottom:8px}
+.q h2{font-family:var(--mincho);font-weight:600;font-size:clamp(1.3rem,5vw,1.7rem);letter-spacing:.04em;line-height:1.5;margin-bottom:6px}
+.q .hint{font-size:.82rem;color:#a7b8d6;font-weight:300;margin-bottom:30px}
+
+/* ---- Q1 thermometer slider ---- */
+.thermo-readout{text-align:center;margin-bottom:26px}
+.thermo-readout .big{font-family:var(--mincho);font-weight:800;font-size:3.4rem;line-height:1;letter-spacing:.02em;
+  background:linear-gradient(180deg,#fff,#cfe0ff);-webkit-background-clip:text;background-clip:text;color:transparent;
+  transition:color .3s}
+.thermo-readout .unit{font-size:1.2rem;opacity:.7;margin-left:.1em}
+.thermo-readout .word{margin-top:8px;font-family:var(--mincho);font-size:.95rem;letter-spacing:.2em;color:#cdd9f0;min-height:1.4em}
+.slider-rail{position:relative;padding:6px 4px}
+.range-scale{display:flex;justify-content:space-between;font-size:.66rem;color:#8ea4c8;margin-top:14px;letter-spacing:.1em}
+input[type=range].thermo{
+  -webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:14px;
+  background:linear-gradient(90deg,#4f8bff 0%,#7fb8ff 22%,#dfeefc 45%,#ffe6a8 65%,#ff9d5c 84%,#ff5d4d 100%);
+  outline:none;box-shadow:inset 0 1px 4px rgba(0,0,0,.3)}
+input[type=range].thermo::-webkit-slider-thumb{
+  -webkit-appearance:none;width:34px;height:34px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,#dce8ff);
+  border:3px solid #fff;cursor:grab;
+  box-shadow:0 6px 18px rgba(0,0,0,.35),0 0 0 6px rgba(255,255,255,.12);
+  transition:transform .15s}
+input[type=range].thermo::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.18)}
+input[type=range].thermo::-moz-range-thumb{width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+
+/* ---- Q2 energy icons ---- */
+.energy-row{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+.energy{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;
+  padding:18px 6px 14px;text-align:center;transition:transform .25s cubic-bezier(.2,1.5,.4,1),background .25s,border-color .25s;position:relative}
+.energy:hover{transform:translateY(-4px)}
+.energy .bars{display:flex;justify-content:center;align-items:flex-end;gap:3px;height:34px;margin-bottom:8px}
+.energy .bars span{width:5px;border-radius:3px;background:rgba(255,255,255,.3);transition:background .25s,box-shadow .25s}
+.energy .cap{font-family:var(--mincho);font-size:.72rem;letter-spacing:.15em;color:#b9c8e2}
+.energy.sel{background:rgba(140,180,255,.22);border-color:rgba(180,205,255,.6);transform:translateY(-6px) scale(1.03);
+  box-shadow:0 12px 26px rgba(90,130,220,.4)}
+.energy.sel .bars span{background:linear-gradient(180deg,#fff,#a9caff);box-shadow:0 0 10px rgba(170,200,255,.8)}
+.energy.sel .cap{color:#fff}
+.energy.bump{animation:bump .5s}
+@keyframes bump{0%,100%{transform:translateY(-6px) scale(1.03)}40%{transform:translateY(-12px) scale(1.07)}}
+
+/* ---- Q3 cloud grid ---- */
+.cloud-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.cloud-opt{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;
+  padding:20px 8px 16px;text-align:center;transition:transform .25s cubic-bezier(.2,1.4,.4,1),background .25s,border-color .25s}
+.cloud-opt:hover{transform:translateY(-4px)}
+.cloud-opt .ico{font-size:1.7rem;line-height:1;margin-bottom:8px;display:block;filter:drop-shadow(0 4px 10px rgba(0,0,0,.3))}
+.cloud-opt .nm{font-family:var(--mincho);font-size:.9rem;letter-spacing:.18em;color:#cdd9f0}
+.cloud-opt.sel{background:rgba(140,180,255,.22);border-color:rgba(180,205,255,.6);
+  transform:translateY(-5px) scale(1.04);box-shadow:0 12px 26px rgba(90,130,220,.4)}
+.cloud-opt.sel .nm{color:#fff}
+.cloud-opt.sel .ico{animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* ---- Q4 wind ---- */
+.wind-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.wind-opt{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;
+  padding:18px 6px 14px;text-align:center;overflow:hidden;position:relative;
+  transition:transform .25s cubic-bezier(.2,1.4,.4,1),background .25s,border-color .25s}
+.wind-opt:hover{transform:translateY(-4px)}
+.wind-opt svg{width:42px;height:30px;margin-bottom:8px}
+.wind-opt .nm{font-family:var(--mincho);font-size:.78rem;letter-spacing:.14em;color:#cdd9f0}
+.wind-opt .ln{stroke:#cdd9f0;stroke-width:2.4;fill:none;stroke-linecap:round}
+.wind-opt.sel{background:rgba(140,180,255,.22);border-color:rgba(180,205,255,.6);
+  transform:translateY(-5px) scale(1.04);box-shadow:0 12px 26px rgba(90,130,220,.4)}
+.wind-opt.sel .nm{color:#fff}
+.wind-opt.sel .ln{stroke:#fff;animation:gust 1.1s linear infinite}
+@keyframes gust{from{stroke-dashoffset:60}to{stroke-dashoffset:0}}
+
+/* ---- Q5 text ---- */
+.word-input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);
+  border-radius:16px;padding:18px 18px;color:#fff;font-family:var(--mincho);font-size:1.15rem;letter-spacing:.08em;
+  text-align:center;outline:none;transition:border-color .25s,box-shadow .25s}
+.word-input::placeholder{color:#7e93b8;font-size:.95rem;letter-spacing:.1em}
+.word-input:focus{border-color:rgba(180,205,255,.7);box-shadow:0 0 0 4px rgba(140,180,255,.18)}
+.char-count{text-align:right;font-size:.72rem;color:#8ea4c8;margin-top:8px;letter-spacing:.1em}
+
+/* ---- nav buttons ---- */
+.qnav{display:flex;justify-content:space-between;align-items:center;margin-top:26px}
+.btn-ghost{font-family:var(--mincho);letter-spacing:.18em;font-size:.82rem;color:#9fb6da;padding:12px 18px;border-radius:999px;
+  transition:color .2s,background .2s}
+.btn-ghost:hover{color:#fff;background:rgba(255,255,255,.07)}
+.btn-ghost[disabled]{opacity:.25;pointer-events:none}
+.btn-next{font-family:var(--mincho);font-weight:600;letter-spacing:.16em;font-size:.92rem;color:#16243c;
+  background:linear-gradient(135deg,#fff,#dfeaff);padding:13px 32px;border-radius:999px;
+  box-shadow:0 10px 26px rgba(120,160,255,.4);
+  transition:transform .2s cubic-bezier(.2,1.4,.4,1),box-shadow .2s,opacity .2s}
+.btn-next:hover{transform:translateY(-2px) scale(1.03)}
+.btn-next[disabled]{opacity:.4;pointer-events:none;filter:grayscale(.4)}
+
+/* ============================================================
+   DRAMATIC TRANSITION (sky opening)
+   ============================================================ */
+#reveal{position:fixed;inset:0;z-index:90;pointer-events:none;display:none}
+#reveal.run{display:block}
+#reveal .curtain{position:absolute;left:0;right:0;height:51%;background:#0d1322;transition:transform 1.5s cubic-bezier(.7,0,.2,1)}
+#reveal .top{top:0;transform-origin:top}
+#reveal .bot{bottom:0;transform-origin:bottom}
+#reveal.go .top{transform:translateY(-100%)}
+#reveal.go .bot{transform:translateY(100%)}
+#reveal .flash{position:absolute;inset:0;background:radial-gradient(circle,#fff,transparent 60%);opacity:0}
+#reveal.go .flash{animation:revFlash 1.4s ease-out}
+@keyframes revFlash{0%{opacity:0}15%{opacity:.9}100%{opacity:0}}
+
+/* ============================================================
+   RESULT
+   ============================================================ */
+#result{position:relative;z-index:2}
+
+/* ---- live sky background (full page) ---- */
+.sky{position:fixed;inset:0;z-index:-2;
+  background:linear-gradient(180deg,var(--sky-1) 0%,var(--sky-2) 50%,var(--sky-3) 100%);
+  transition:background 1.4s ease}
+.sky-fx{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+
+/* sun */
+.sun{position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,#fff 0%,var(--sun) 40%,rgba(255,220,140,0) 72%);
+  filter:blur(2px)}
+.sun .core{position:absolute;inset:18%;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#fff,var(--sun));
+  box-shadow:0 0 60px 18px rgba(255,235,170,.65);animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.95}50%{transform:scale(1.07);opacity:1}}
+.sun .rays{position:absolute;inset:-30%;animation:spin 60s linear infinite}
+.sun .rays span{position:absolute;left:50%;top:50%;width:3px;height:50%;transform-origin:bottom center;
+  background:linear-gradient(180deg,rgba(255,240,190,.55),transparent);border-radius:3px}
+
+/* moon */
+.moon{position:absolute;border-radius:50%;background:radial-gradient(circle at 38% 32%,#fdfbff,#cdd6ee 70%,#b6c0dd);
+  box-shadow:0 0 50px 14px rgba(210,225,255,.45),inset -8px -6px 18px rgba(120,135,180,.5);animation:pulse 7s ease-in-out infinite}
+.moon::after{content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 65% 55%,rgba(160,175,210,.35) 6%,transparent 9%),
+             radial-gradient(circle at 40% 70%,rgba(160,175,210,.3) 5%,transparent 8%)}
+
+/* stars */
+.stars{position:absolute;inset:0}
+.stars i{position:absolute;background:#fff;border-radius:50%;animation:twinkle 3s infinite ease-in-out}
+@keyframes twinkle{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.25)}}
+.shoot{position:absolute;width:130px;height:2px;background:linear-gradient(90deg,#fff,transparent);opacity:0;
+  border-radius:2px;animation:shoot 9s linear infinite}
+@keyframes shoot{0%{opacity:0;transform:translate(0,0) rotate(18deg)}3%{opacity:1}10%{opacity:0;transform:translate(-340px,150px) rotate(18deg)}100%{opacity:0}}
+
+/* cloud layers */
+.cloud{position:absolute;opacity:.9;will-change:transform}
+.cloud svg{display:block;filter:drop-shadow(0 12px 24px rgba(60,80,120,.18))}
+@keyframes drift{from{transform:translateX(110vw)}to{transform:translateX(-60vw)}}
+
+/* rain */
+.rain{position:absolute;inset:0;overflow:hidden}
+.rain i{position:absolute;top:-12%;width:2px;height:84px;border-radius:2px;
+  background:linear-gradient(180deg,rgba(220,235,255,0),rgba(200,225,255,.75));
+  animation:fall linear infinite}
+@keyframes fall{from{transform:translateY(-20vh) translateX(0)}to{transform:translateY(120vh) translateX(-90px)}}
+
+/* thunder flash */
+.thunder{position:absolute;inset:0;background:rgba(255,255,255,.0);mix-blend-mode:screen}
+.thunder.on{animation:bolt 7s infinite}
+@keyframes bolt{0%,100%{background:rgba(255,255,255,0)}1%{background:rgba(255,255,255,.55)}2%{background:rgba(255,255,255,.1)}3%{background:rgba(255,255,255,.7)}5%{background:rgba(255,255,255,0)}}
+
+/* rainbow */
+.rainbow{position:absolute;left:50%;top:8%;width:140vw;height:140vw;transform:translateX(-50%);
+  border-radius:50%;opacity:0;animation:rbIn 2.5s 1s forwards;
+  background:
+   radial-gradient(circle, transparent 47.5%,
+     rgba(255,120,120,.40) 48%,rgba(255,200,110,.40) 50%,rgba(255,240,140,.40) 52%,
+     rgba(150,225,150,.40) 54%,rgba(140,200,255,.40) 56%,rgba(170,150,235,.40) 58%, transparent 59%)}
+@keyframes rbIn{to{opacity:.8}}
+
+/* drifting leaves / particles (wind) */
+.leaf{position:absolute;top:-6%;font-size:1.1rem;opacity:.8;will-change:transform;animation:leafFly linear infinite}
+@keyframes leafFly{from{transform:translate(0,-10vh) rotate(0)}to{transform:translate(-70vw,110vh) rotate(540deg)}}
+
+/* fog */
+.fog{position:absolute;inset:0;background:
+   radial-gradient(60% 40% at 30% 60%,rgba(230,235,245,.5),transparent 70%),
+   radial-gradient(60% 40% at 70% 40%,rgba(230,235,245,.45),transparent 70%);
+   animation:fogMove 18s ease-in-out infinite alternate}
+@keyframes fogMove{from{transform:translateX(-4%)}to{transform:translateX(4%)}}
+
+/* ---- result content ---- */
+.result-inner{max-width:760px;margin:0 auto;padding:0 18px 90px}
+
+/* hero */
+.hero{height:100vh;height:100dvh;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  text-align:center;padding-bottom:7vh;position:relative}
+.hero .stamp{font-family:var(--mincho);letter-spacing:.5em;font-size:.7rem;padding-left:.5em;
+  color:rgba(20,30,55,.55);margin-bottom:14px;animation:fadeUp 1s .4s both}
+.hero .verdict{font-family:var(--mincho);font-weight:800;font-size:clamp(2.4rem,11vw,4.6rem);letter-spacing:.04em;
+  color:#1a2440;text-shadow:0 4px 30px rgba(255,255,255,.4);line-height:1.25;animation:fadeUp 1.1s .55s both}
+.hero .verdict .em{display:inline-block;animation:float 4s ease-in-out infinite}
+.hero .one-word{font-family:var(--mincho);font-size:clamp(1rem,4vw,1.3rem);color:#26324f;margin-top:18px;
+  letter-spacing:.12em;animation:fadeUp 1.1s .75s both}
+.hero .one-word .mark{opacity:.5}
+.scroll-cue{margin-top:34px;color:rgba(20,30,55,.5);font-size:.7rem;letter-spacing:.3em;
+  animation:fadeUp 1.2s 1s both}
+.scroll-cue .arr{display:block;margin:8px auto 0;width:18px;height:18px;border-right:2px solid;border-bottom:2px solid;
+  transform:rotate(45deg);animation:bob 1.8s infinite}
+@keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0);opacity:.4}50%{transform:rotate(45deg) translate(4px,4px);opacity:1}}
+
+/* glass card base */
+.glass{background:var(--glass);border:1px solid var(--glass-line);border-radius:24px;
+  backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);
+  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.45);
+  padding:28px 26px;margin-bottom:24px}
+.section-title{font-family:var(--mincho);font-weight:600;letter-spacing:.22em;font-size:.82rem;
+  color:var(--accent);margin-bottom:18px;display:flex;align-items:center;gap:10px;padding-left:.2em}
+.section-title::before{content:"";width:22px;height:1px;background:currentColor;opacity:.6}
+
+.reveal-on-scroll{opacity:0;transform:translateY(40px)}
+.reveal-on-scroll.in{opacity:1;transform:none;transition:opacity 1s cubic-bezier(.2,.8,.3,1),transform 1s cubic-bezier(.2,.8,.3,1)}
+
+/* weather data grid */
+.data-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:6px}
+.data-head .cur{font-family:var(--mincho);font-weight:700;font-size:1.5rem;letter-spacing:.06em;color:#1a2440}
+.data-head .time{font-size:.74rem;letter-spacing:.18em;color:var(--ink-soft)}
+.data-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.data-cell{background:var(--glass-strong);border:1px solid rgba(255,255,255,.4);border-radius:16px;
+  padding:16px 16px;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden}
+.data-cell .k{font-size:.72rem;letter-spacing:.16em;color:var(--ink-soft)}
+.data-cell .v{font-family:var(--mincho);font-weight:700;font-size:1.7rem;letter-spacing:.02em;color:#172037;line-height:1.1}
+.data-cell .v small{font-size:.55em;font-weight:500;opacity:.7;margin-left:2px}
+.data-cell .sub{font-size:.68rem;color:var(--ink-soft)}
+.data-cell.wide{grid-column:1 / -1;flex-direction:row;align-items:center;justify-content:space-between}
+.data-cell.wide .v{font-size:1.2rem}
+.compass{width:52px;height:52px;flex:none;position:relative}
+.compass svg{width:100%;height:100%}
+.compass .needle{transform-origin:50% 50%;transition:transform 1s cubic-bezier(.3,1.4,.4,1)}
+
+/* alert banner */
+.alert{display:flex;gap:12px;align-items:flex-start;border-radius:16px;padding:14px 16px;margin-bottom:20px;
+  border:1px solid;font-size:.86rem;line-height:1.7}
+.alert .ic{font-size:1.2rem;line-height:1.4;flex:none}
+.alert.warn{background:rgba(255,170,80,.18);border-color:rgba(255,160,60,.55);color:#7a4410}
+.alert.danger{background:rgba(255,90,90,.16);border-color:rgba(230,70,70,.5);color:#8a1f1f}
+.alert.fine{background:rgba(255,220,90,.2);border-color:rgba(240,200,60,.55);color:#7a5a08}
+.alert b{font-family:var(--mincho);letter-spacing:.1em}
+
+/* caster report */
+.caster{position:relative}
+.caster .avatar{width:54px;height:54px;border-radius:50%;flex:none;
+  background:radial-gradient(circle at 38% 32%,#fff,#cfe0ff 70%,#a9c4f0);
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;
+  box-shadow:0 8px 20px rgba(90,130,220,.35),inset 0 1px 0 rgba(255,255,255,.7)}
+.caster .top{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+.caster .who{font-family:var(--mincho);font-weight:600;letter-spacing:.1em;color:#1a2440}
+.caster .role{font-size:.7rem;letter-spacing:.2em;color:var(--ink-soft)}
+.caster .report{font-family:var(--mincho);font-size:1.05rem;line-height:2.15;letter-spacing:.04em;color:#1d2742}
+.caster .report .hl{font-weight:600;color:var(--accent);border-bottom:2px solid rgba(80,130,200,.35);padding-bottom:1px}
+
+/* weekly forecast */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.day{background:var(--glass-strong);border:1px solid rgba(255,255,255,.4);border-radius:14px;
+  padding:14px 4px 12px;text-align:center;transition:transform .3s}
+.day:hover{transform:translateY(-4px)}
+.day.today{background:rgba(120,165,240,.28);border-color:rgba(150,190,255,.7);
+  box-shadow:0 8px 18px rgba(90,130,220,.3)}
+.day .dow{font-size:.64rem;letter-spacing:.1em;color:var(--ink-soft);margin-bottom:2px}
+.day .date{font-family:var(--mincho);font-size:.74rem;color:#2a3858;margin-bottom:8px}
+.day .ic{font-size:1.4rem;line-height:1;margin-bottom:8px;display:block}
+.day .wd{font-size:.6rem;color:var(--ink-soft);letter-spacing:.04em;line-height:1.5;min-height:2.4em}
+.day.today .dow,.day.today .wd{color:#1a2440}
+
+/* advice */
+.umbrella{background:var(--glass-strong);border:1px solid rgba(255,255,255,.45);border-radius:18px;
+  padding:20px 20px;margin-bottom:20px;display:flex;gap:16px;align-items:center}
+.umbrella .em{font-size:2.2rem;flex:none;animation:float 4s ease-in-out infinite}
+.umbrella .tx .lab{font-size:.72rem;letter-spacing:.18em;color:var(--ink-soft);margin-bottom:4px}
+.umbrella .tx .main{font-family:var(--mincho);font-weight:600;font-size:1.12rem;letter-spacing:.04em;color:#1a2440;line-height:1.6}
+.todo{list-style:none;display:flex;flex-direction:column;gap:12px}
+.todo li{display:flex;gap:14px;align-items:flex-start;background:var(--glass-strong);
+  border:1px solid rgba(255,255,255,.4);border-radius:14px;padding:14px 16px}
+.todo li .no{font-family:var(--mincho);font-weight:700;font-size:1.1rem;color:var(--accent);flex:none;
+  width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.todo li .tx{font-size:.92rem;color:#22304d;line-height:1.7}
+
+/* share */
+.share{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:8px}
+.share button{font-family:var(--mincho);letter-spacing:.12em;font-size:.86rem;padding:14px 24px;border-radius:999px;
+  display:inline-flex;align-items:center;gap:8px;transition:transform .2s cubic-bezier(.2,1.4,.4,1),box-shadow .2s,background .2s}
+.share .s-x{background:#111;color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.3)}
+.share .s-save{background:linear-gradient(135deg,#fff,#dfeaff);color:#16243c;box-shadow:0 10px 24px rgba(120,160,255,.4)}
+.share .s-again{background:var(--glass);color:#1a2440;border:1px solid var(--glass-line)}
+.share button:hover{transform:translateY(-3px) scale(1.03)}
+.share button:active{transform:translateY(0) scale(.98)}
+
+.footer{text-align:center;margin-top:36px;font-size:.7rem;letter-spacing:.2em;color:rgba(20,30,55,.45)}
+.footer .mincho{font-family:var(--mincho)}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(120%);z-index:120;
+  background:rgba(20,28,46,.92);color:#eaf1fb;padding:13px 24px;border-radius:999px;font-size:.84rem;letter-spacing:.08em;
+  backdrop-filter:blur(8px);box-shadow:0 12px 30px rgba(0,0,0,.4);transition:transform .5s cubic-bezier(.2,1.3,.4,1)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media (max-width:560px){
+  .glass{padding:24px 18px}
+  .data-grid{gap:10px}
+  .data-cell .v{font-size:1.45rem}
+  .week{gap:5px}
+  .day .ic{font-size:1.2rem}
+  .day .date{font-size:.66rem}
+  .cloud-grid{gap:9px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.2s!important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===================== STAGE BG (intro/input) ===================== -->
+  <div class="stage" id="stage">
+    <div class="stage-stars" id="stageStars"></div>
+  </div>
+
+  <!-- ===================== WELCOME ===================== -->
+  <section class="screen active" id="screen-welcome">
+    <div class="wrap welcome">
+      <div class="emblem fade-up">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <defs>
+            <radialGradient id="g-sun" cx="50%" cy="42%" r="55%">
+              <stop offset="0%" stop-color="#fff"/><stop offset="55%" stop-color="#ffe9a8"/><stop offset="100%" stop-color="#ffce6b"/>
+            </radialGradient>
+          </defs>
+          <g style="transform-origin:50px 44px;animation:spin 24s linear infinite">
+            <g stroke="#ffe5a0" stroke-width="3" stroke-linecap="round">
+              <line x1="50" y1="6" x2="50" y2="16"/><line x1="50" y1="72" x2="50" y2="82"/>
+              <line x1="6" y1="44" x2="16" y2="44"/><line x1="72" y1="44" x2="82" y2="44"/>
+              <line x1="19" y1="13" x2="26" y2="20"/><line x1="74" y1="68" x2="81" y2="75"/>
+              <line x1="81" y1="13" x2="74" y2="20"/><line x1="26" y1="68" x2="19" y2="75"/>
+            </g>
+          </g>
+          <circle cx="50" cy="44" r="20" fill="url(#g-sun)"/>
+          <path d="M34 74 a13 13 0 0 1 2 -25 a17 17 0 0 1 33 4 a12 12 0 0 1 -3 23 z"
+                fill="rgba(255,255,255,.92)" />
+        </svg>
+      </div>
+      <div class="kicker fade-up d1">MIND&nbsp;WEATHER&nbsp;FORECAST</div>
+      <h1 class="fade-up d1">心の天気予報<span class="small">あなたの今日の心模様を、お伝えします</span></h1>
+      <p class="fade-up d2">空模様がうつろうように、心にも晴れや曇りがあります。<br>5つの質問に答えると、いまのあなたの「心の天気」が動く予報になります。</p>
+      <button class="btn-primary fade-up d3" id="startBtn">予報をはじめる</button>
+    </div>
+  </section>
+
+  <!-- ===================== QUESTIONS ===================== -->
+  <section class="screen" id="screen-q">
+    <div class="wrap">
+      <div class="progress">
+        <div class="progress-meta">
+          <span class="step-no">Q<b id="stepNo">1</b> <span style="opacity:.5">/ 5</span></span>
+          <span class="label" id="stepLabel">体感温度</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <div class="qcard">
+        <!-- Q1 thermometer -->
+        <div class="q show" data-q="1">
+          <div class="num">QUESTION 01</div>
+          <h2>今、心の中の体感温度は？</h2>
+          <p class="hint">あたまではなく、こころで感じている温度を。</p>
+          <div class="thermo-readout">
+            <span class="big" id="tempVal">20</span><span class="unit">℃</span>
+            <div class="word" id="tempWord">ちょうどいい、おだやかな温度</div>
+          </div>
+          <div class="slider-rail">
+            <input type="range" class="thermo" id="tempRange" min="-10" max="40" value="20" step="1">
+            <div class="range-scale"><span>-10℃ 凍える</span><span>40℃ 灼ける</span></div>
+          </div>
+        </div>
+
+        <!-- Q2 energy -->
+        <div class="q" data-q="2">
+          <div class="num">QUESTION 02</div>
+          <h2>今日のエネルギーレベルは？</h2>
+          <p class="hint">からだとこころの、燃料の残量。</p>
+          <div class="energy-row" id="energyRow"></div>
+        </div>
+
+        <!-- Q3 cloud -->
+        <div class="q" data-q="3">
+          <div class="num">QUESTION 03</div>
+          <h2>心の中で一番大きい雲は？</h2>
+          <p class="hint">いま、心の空をいちばん占めているもの。</p>
+          <div class="cloud-grid" id="cloudGrid"></div>
+        </div>
+
+        <!-- Q4 wind -->
+        <div class="q" data-q="4">
+          <div class="num">QUESTION 04</div>
+          <h2>心で吹いている風の強さは？</h2>
+          <p class="hint">気持ちを揺らす、感情の風速。</p>
+          <div class="wind-row" id="windRow"></div>
+        </div>
+
+        <!-- Q5 word -->
+        <div class="q" data-q="5">
+          <div class="num">QUESTION 05</div>
+          <h2>一言で、今日の自分を表すと？</h2>
+          <p class="hint">完璧じゃなくていい。ふと浮かんだ言葉を。</p>
+          <input type="text" class="word-input" id="wordInput" maxlength="20" placeholder="例：なんとかやってる" autocomplete="off">
+          <div class="char-count"><span id="charCount">0</span> / 20</div>
+        </div>
+
+        <div class="qnav">
+          <button class="btn-ghost" id="prevBtn" disabled>← もどる</button>
+          <button class="btn-next" id="nextBtn">つぎへ →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== REVEAL TRANSITION ===================== -->
+  <div id="reveal">
+    <div class="curtain top"></div>
+    <div class="curtain bot"></div>
+    <div class="flash"></div>
+  </div>
+
+  <!-- ===================== RESULT ===================== -->
+  <section class="screen" id="screen-result">
+    <div class="sky" id="sky"></div>
+    <div class="sky-fx" id="skyFx"></div>
+
+    <div id="result">
+      <!-- hero -->
+      <div class="hero">
+        <div class="stamp" id="heroStamp">MIND WEATHER · TODAY</div>
+        <div class="verdict" id="heroVerdict"><span class="em">☀</span> 心晴れ</div>
+        <div class="one-word" id="heroWord"><span class="mark">「</span>—<span class="mark">」</span></div>
+        <div class="scroll-cue">SCROLL<span class="arr"></span></div>
+      </div>
+
+      <div class="result-inner">
+
+        <!-- alert -->
+        <div id="alertSlot"></div>
+
+        <!-- weather data -->
+        <div class="glass reveal-on-scroll">
+          <div class="section-title">現在の心模様 / OBSERVATION</div>
+          <div class="data-head">
+            <span class="cur" id="curWeather">心晴れ</span>
+            <span class="time" id="curTime">—</span>
+          </div>
+          <div class="data-grid" id="dataGrid"></div>
+        </div>
+
+        <!-- caster report -->
+        <div class="glass caster reveal-on-scroll">
+          <div class="section-title">気象キャスターレポート / FORECAST</div>
+          <div class="top">
+            <div class="avatar">🎙️</div>
+            <div>
+              <div class="who">心象気象台 キャスター・空野</div>
+              <div class="role">SORANO · MIND WEATHER STATION</div>
+            </div>
+          </div>
+          <div class="report" id="casterReport"></div>
+        </div>
+
+        <!-- weekly -->
+        <div class="glass reveal-on-scroll">
+          <div class="section-title">心の週間予報 / 7-DAY OUTLOOK</div>
+          <div class="week" id="weekRow"></div>
+        </div>
+
+        <!-- advice -->
+        <div class="glass reveal-on-scroll">
+          <div class="section-title">今日のすごし方 / ADVICE</div>
+          <div class="umbrella">
+            <div class="em" id="umbEmoji">🌂</div>
+            <div class="tx">
+              <div class="lab">今日の心の傘</div>
+              <div class="main" id="umbText">—</div>
+            </div>
+          </div>
+          <ul class="todo" id="todoList"></ul>
+        </div>
+
+        <!-- share -->
+        <div class="glass reveal-on-scroll" style="text-align:center">
+          <div class="section-title" style="justify-content:center">予報を持ち帰る / SHARE</div>
+          <div class="share">
+            <button class="s-x" id="shareX">𝕏 でシェア</button>
+            <button class="s-save" id="saveImg">画像として保存</button>
+            <button class="s-again" id="againBtn">もう一度診断する</button>
+          </div>
+        </div>
+
+        <div class="footer">
+          <span class="mincho">心象気象台</span> ・ Mind Weather Forecast<br>
+          Day 004 / 100-day app challenge
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   DATA
+   ============================================================ */
+const CLOUDS = {
+  anxiety:{key:'anxiety', nm:'不安', ico:'🌧️', humid:82, vis:6,  mood:-2, fog:false},
+  hope:   {key:'hope',    nm:'期待', ico:'🌤️', humid:48, vis:14, mood:+2, fog:false},
+  haste:  {key:'haste',   nm:'焦り', ico:'🌬️', humid:64, vis:9,  mood:-1, fog:false},
+  calm:   {key:'calm',    nm:'穏やか',ico:'☀️', humid:40, vis:18, mood:+2, fog:false},
+  chaos:  {key:'chaos',   nm:'混乱', ico:'🌫️', humid:70, vis:2,  mood:-1, fog:true},
+  empty:  {key:'empty',   nm:'空っぽ',ico:'☁️', humid:55, vis:11, mood:0,  fog:false},
+};
+const ENERGY = [
+  {v:1, cap:'ほぼ無', hpa:996},
+  {v:2, cap:'ひかえめ',hpa:1004},
+  {v:3, cap:'ふつう', hpa:1013},
+  {v:4, cap:'軽快',  hpa:1020},
+  {v:5, cap:'満タン', hpa:1028},
+];
+const WINDS = [
+  {v:1, nm:'無風', kmh:1,  paths:['M6 15 H30']},
+  {v:2, nm:'そよ風',kmh:8,  paths:['M4 11 H28','M6 19 H22']},
+  {v:3, nm:'強風', kmh:21, paths:['M3 9 H30','M5 15 H34','M3 21 H26']},
+  {v:4, nm:'暴風', kmh:38, paths:['M2 8 H32','M4 13 H38 Q40 13 38 18','M2 19 H30','M4 24 H24']},
+];
+
+const TEMP_WORDS = [
+  {max:-3, t:'凍てつくほど冷えきっている'},
+  {max:4,  t:'かじかむような、つめたい心'},
+  {max:11, t:'ひんやりと張りつめている'},
+  {max:17, t:'すこし涼しい、澄んだ空気'},
+  {max:24, t:'ちょうどいい、おだやかな温度'},
+  {max:30, t:'ほどよく あたたかい'},
+  {max:35, t:'熱を帯びて、ほてっている'},
+  {max:99, t:'灼けつくほど高ぶっている'},
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {temp:20, energy:3, cloud:null, wind:2, word:''};
+let step = 1;
+const LABELS = ['体感温度','エネルギー','心の雲','心の風','今日の言葉'];
+
+/* ============================================================
+   ELEMENT SHORTHAND
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const screens = {
+  welcome:$('screen-welcome'), q:$('screen-q'), result:$('screen-result')
+};
+function show(name){
+  Object.values(screens).forEach(s=>s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
+
+/* ============================================================
+   INTRO STARS
+   ============================================================ */
+(function buildStageStars(){
+  const box = $('stageStars'); let h='';
+  for(let i=0;i<46;i++){
+    h+=`<i style="left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;animation-delay:${(Math.random()*4).toFixed(1)}s"></i>`;
+  }
+  box.innerHTML=h;
+})();
+
+/* ============================================================
+   BUILD INPUTS
+   ============================================================ */
+// Q2 energy
+(function(){
+  const row=$('energyRow');
+  ENERGY.forEach(e=>{
+    const bars=[1,2,3,4,5].map(i=>`<span style="height:${8+i*5}px;opacity:${i<=e.v?1:.3}"></span>`).join('');
+    const d=document.createElement('button');
+    d.className='energy'; d.dataset.v=e.v;
+    d.innerHTML=`<div class="bars">${bars}</div><div class="cap">${e.cap}</div>`;
+    d.onclick=()=>{
+      state.energy=e.v;
+      [...row.children].forEach(c=>c.classList.remove('sel'));
+      d.classList.add('sel','bump');
+      setTimeout(()=>d.classList.remove('bump'),500);
+      refreshNext();
+    };
+    row.appendChild(d);
+  });
+})();
+// Q3 clouds
+(function(){
+  const g=$('cloudGrid');
+  Object.values(CLOUDS).forEach(c=>{
+    const d=document.createElement('button');
+    d.className='cloud-opt'; d.dataset.k=c.key;
+    d.innerHTML=`<span class="ico">${c.ico}</span><span class="nm">${c.nm}</span>`;
+    d.onclick=()=>{
+      state.cloud=c.key;
+      [...g.children].forEach(x=>x.classList.remove('sel'));
+      d.classList.add('sel');
+      refreshNext();
+    };
+    g.appendChild(d);
+  });
+})();
+// Q4 wind
+(function(){
+  const r=$('windRow');
+  WINDS.forEach(w=>{
+    const paths=w.paths.map(p=>`<path class="ln" d="${p}" stroke-dasharray="60" stroke-dashoffset="0"/>`).join('');
+    const d=document.createElement('button');
+    d.className='wind-opt'; d.dataset.v=w.v;
+    d.innerHTML=`<svg viewBox="0 0 42 30">${paths}</svg><div class="nm">${w.nm}</div>`;
+    d.onclick=()=>{
+      state.wind=w.v;
+      [...r.children].forEach(x=>x.classList.remove('sel'));
+      d.classList.add('sel');
+      refreshNext();
+    };
+    r.appendChild(d);
+  });
+})();
+
+// Q1 slider
+const tempRange=$('tempRange'), tempVal=$('tempVal'), tempWord=$('tempWord');
+function tempColor(v){
+  // cold blue -> warm red
+  const t=(v+10)/50;
+  const hue = 210 - t*210; // 210(blue) -> 0(red)
+  return `hsl(${hue},85%,72%)`;
+}
+function updateTemp(){
+  const v=+tempRange.value; state.temp=v;
+  tempVal.textContent=v;
+  tempVal.style.color=tempColor(v);
+  tempWord.textContent=(TEMP_WORDS.find(w=>v<=w.max)||TEMP_WORDS[4]).t;
+}
+tempRange.addEventListener('input',updateTemp);
+updateTemp();
+
+// Q5 text
+const wordInput=$('wordInput'), charCount=$('charCount');
+wordInput.addEventListener('input',()=>{
+  state.word=wordInput.value;
+  charCount.textContent=wordInput.value.length;
+  refreshNext();
+});
+
+/* ============================================================
+   STEP NAVIGATION
+   ============================================================ */
+const qEls=[...document.querySelectorAll('.q')];
+function refreshNext(){
+  const ok=
+    step===1 ? true :
+    step===2 ? !!$('energyRow').querySelector('.sel') :
+    step===3 ? !!state.cloud :
+    step===4 ? !!$('windRow').querySelector('.sel') :
+    step===5 ? wordInput.value.trim().length>0 : false;
+  $('nextBtn').textContent = step===5 ? '予報を見る ✦' : 'つぎへ →';
+  $('nextBtn').disabled=!ok;
+  $('prevBtn').disabled = step===1;
+}
+function goStep(n,dir){
+  const cur=qEls[step-1], nextEl=qEls[n-1];
+  cur.classList.add('leaving');
+  setTimeout(()=>{cur.classList.remove('show','leaving');},380);
+  setTimeout(()=>{
+    nextEl.classList.add('show');
+    step=n;
+    $('stepNo').textContent=n;
+    $('stepLabel').textContent=LABELS[n-1];
+    $('progressFill').style.width=(n*20)+'%';
+    refreshNext();
+    if(n===5) setTimeout(()=>wordInput.focus(),200);
+  },380);
+}
+$('nextBtn').onclick=()=>{
+  if($('nextBtn').disabled) return;
+  if(step<5){ goStep(step+1); }
+  else { saveLocal(); runReveal(); }
+};
+$('prevBtn').onclick=()=>{ if(step>1) goStep(step-1); };
+wordInput.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!$('nextBtn').disabled){$('nextBtn').click();} });
+
+$('startBtn').onclick=()=>{
+  show('q');
+  $('progressFill').style.width='20%';
+  refreshNext();
+};
+
+/* ============================================================
+   LOCALSTORAGE
+   ============================================================ */
+const LS_KEY='mindweather_v1';
+function saveLocal(){ try{ localStorage.setItem(LS_KEY,JSON.stringify(state)); }catch(e){} }
+(function loadLocal(){
+  try{
+    const raw=localStorage.getItem(LS_KEY); if(!raw) return;
+    const s=JSON.parse(raw);
+    if(typeof s.temp==='number'){ tempRange.value=s.temp; updateTemp(); }
+    if(s.energy){ const el=$('energyRow').querySelector(`[data-v="${s.energy}"]`); if(el){state.energy=s.energy; el.classList.add('sel');} }
+    if(s.cloud){ const el=$('cloudGrid').querySelector(`[data-k="${s.cloud}"]`); if(el){state.cloud=s.cloud; el.classList.add('sel');} }
+    if(s.wind){ const el=$('windRow').querySelector(`[data-v="${s.wind}"]`); if(el){state.wind=s.wind; el.classList.add('sel');} }
+    if(s.word){ wordInput.value=s.word; state.word=s.word; charCount.textContent=s.word.length; }
+  }catch(e){}
+})();
+
+/* ============================================================
+   TIME OF DAY
+   ============================================================ */
+function timeOfDay(){
+  const h=new Date().getHours();
+  if(h>=5&&h<8)  return 'dawn';
+  if(h>=8&&h<16) return 'day';
+  if(h>=16&&h<19)return 'dusk';
+  return 'night';
+}
+const TIME_LABEL={dawn:'夜明け',day:'日中',dusk:'夕暮れ',night:'夜'};
+
+/* ============================================================
+   COMPUTE SCENE  (the heart)
+   ============================================================ */
+function computeScene(){
+  const c=CLOUDS[state.cloud];
+  const e=ENERGY[state.energy-1];
+  const w=WINDS[state.wind-1];
+  const tod=timeOfDay();
+
+  // derived metrics
+  const hpa = e.hpa - (c.mood<0? -c.mood*4 : 0) - (w.v>=3?5:0); // 心圧
+  const humidity = Math.min(98, Math.max(20, c.humid + (state.temp< -2?10:0) + (w.v>=3?6:0)));
+  const visibility = Math.max(0.5, c.vis - (w.v>=3?2:0) - (state.energy<=2?2:0));
+  const moodScore = c.mood + (state.energy-3)*0.6 + (w.v>=3?-0.6:0); // overall positivity
+
+  // weather type flags
+  const scene={tod, hpa, humidity, visibility, moodScore,
+    sun:false, moon:false, stars:false, clouds:2, rain:0, thunder:false, rainbow:false, leaves:0, fog:c.fog};
+
+  // clouds amount by type
+  const cloudAmount={anxiety:5,hope:2,haste:4,calm:1,chaos:6,empty:5}[c.key];
+  scene.clouds=cloudAmount;
+
+  // sun vs moon vs stars
+  if(tod==='night'){ scene.moon=true; scene.stars=true; }
+  else if(tod==='dawn'||tod==='dusk'){ scene.sun = (c.key==='calm'||c.key==='hope'); scene.stars=(tod==='dawn'); }
+  else { scene.sun = (cloudAmount<=3); }
+
+  // rain (anxiety/haste/chaos & cold/low energy)
+  if(c.key==='anxiety') scene.rain=3;
+  else if(c.key==='chaos') scene.rain=2;
+  else if(c.key==='haste' && state.energy<=2) scene.rain=1;
+  if(state.temp<=2 && scene.rain<1 && cloudAmount>=5) scene.rain=1;
+
+  // thunder: strong anxiety + strong wind, or high energy + anxiety
+  if(c.key==='anxiety' && (w.v>=3 || state.energy>=4)) scene.thunder=true;
+  if(c.key==='chaos' && w.v>=3 && state.energy>=4) scene.thunder=true;
+
+  // rainbow: high energy + calm/hope + not much rain
+  if(state.energy>=4 && (c.key==='calm'||c.key==='hope') && scene.rain<=1) scene.rainbow=true;
+
+  // wind leaves
+  scene.leaves = w.v>=2 ? (w.v*4) : 0;
+
+  // verdict label + emoji
+  scene.verdict = pickVerdict(scene,c,e,w);
+  scene.curWeather = scene.verdict.nm;
+  scene.palette = pickPalette(scene,tod);
+  scene.windDir = windDir(scene,c,w);
+  return scene;
+}
+
+function pickVerdict(scene,c,e,w){
+  if(scene.thunder) return {nm:'心の雷雨', em:'⛈️'};
+  if(scene.rainbow) return {nm:'虹のち晴れ', em:'🌈'};
+  if(scene.rain>=3) return {nm:'心しとしと雨', em:'🌧️'};
+  if(scene.fog)     return {nm:'心に深い霧', em:'🌫️'};
+  if(scene.rain>=1) return {nm:'ときどき小雨', em:'🌦️'};
+  if(scene.clouds>=5)return {nm:'どんより曇り', em:'☁️'};
+  if(scene.sun && scene.clouds<=2) return {nm:'心、快晴', em:'☀️'};
+  if(scene.sun) return {nm:'晴れときどき雲', em:'🌤️'};
+  if(scene.moon) return {nm:'澄んだ星月夜', em:'🌙'};
+  return {nm:'おだやかな曇り', em:'⛅'};
+}
+
+function pickPalette(scene,tod){
+  // returns {s1,s2,s3,sun,accent}
+  const stormy = scene.thunder || scene.rain>=3;
+  if(stormy){
+    return tod==='night'
+      ? {s1:'#28304a',s2:'#3a4360',s3:'#525b78',sun:'#aeb8d6',accent:'#5b6da0'}
+      : {s1:'#5a6378',s2:'#737c91',s3:'#9aa1b3',sun:'#c8cedd',accent:'#4a5878'};
+  }
+  if(tod==='night'){
+    return scene.clouds>=5
+      ? {s1:'#1c2336',s2:'#2c3450',s3:'#454d6b',sun:'#d6def2',accent:'#7d8cc0'}
+      : {s1:'#0e1430',s2:'#1e2a55',s3:'#3a4a82',sun:'#dfe7ff',accent:'#8aa0e0'};
+  }
+  if(tod==='dawn'){
+    return {s1:'#3a4a7a',s2:'#9a86c0',s3:'#ffc9a8',sun:'#fff0d0',accent:'#7a6aa8'};
+  }
+  if(tod==='dusk'){
+    return {s1:'#43508c',s2:'#c66f8a',s3:'#ffb877',sun:'#ffe2a8',accent:'#b5607f'};
+  }
+  // day
+  if(scene.clouds>=5) return {s1:'#7e8aa2',s2:'#a4b0c4',s3:'#d2dae6',sun:'#eef2f8',accent:'#5a6b8c'};
+  return {s1:'#5fa0e0',s2:'#9bc7f0',s3:'#e4f1fc',sun:'#fff3c4',accent:'#2f6aa8'};
+}
+
+function windDir(scene,c,w){
+  const dirs=['北','北東','東','南東','南','南西','西','北西'];
+  const idx=(state.energy*2 + state.wind + (c.mood>0?0:3))%8;
+  const d=dirs[idx];
+  if(w.v<=1) return {label:'ほぼ無風 ・ 凪', deg:idx*45};
+  if(c.mood>0) return {label:`${d}からの 追い風`, deg:idx*45};
+  if(scene.thunder) return {label:`${d}から 低気圧が接近中`, deg:idx*45};
+  return {label:`${d}寄りの 不安定な風`, deg:idx*45};
+}
+
+/* ============================================================
+   REVEAL + RENDER
+   ============================================================ */
+function runReveal(){
+  const scene=computeScene();
+  renderResult(scene);           // build result in background
+  const rev=$('reveal');
+  rev.classList.add('run');
+  // force reflow then animate
+  requestAnimationFrame(()=>requestAnimationFrame(()=>rev.classList.add('go')));
+  setTimeout(()=>{
+    show('result');
+    window.scrollTo(0,0);
+    startScrollObserver();
+    parallaxBind();
+  },900);
+  setTimeout(()=>{ rev.classList.remove('run','go'); },1700);
+}
+
+let LAST_SCENE=null;
+function renderResult(scene){
+  LAST_SCENE=scene;
+  const p=scene.palette;
+  const root=document.documentElement.style;
+  root.setProperty('--sky-1',p.s1);
+  root.setProperty('--sky-2',p.s2);
+  root.setProperty('--sky-3',p.s3);
+  root.setProperty('--sun',p.sun);
+  root.setProperty('--accent',p.accent);
+
+  buildSkyFx(scene);
+
+  // hero
+  const word=(state.word||'').trim();
+  $('heroVerdict').innerHTML=`<span class="em">${scene.verdict.em}</span> ${scene.verdict.nm}`;
+  $('heroWord').innerHTML=`<span class="mark">「</span>${esc(word)||'今日の私'}<span class="mark">」</span>`;
+  $('curWeather').textContent=scene.curWeather;
+  const now=new Date();
+  $('curTime').textContent=`${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())} ・ ${TIME_LABEL[scene.tod]}`;
+
+  // data grid
+  $('dataGrid').innerHTML=`
+    <div class="data-cell">
+      <span class="k">体感温度</span>
+      <span class="v">${state.temp}<small>℃</small></span>
+      <span class="sub">${(TEMP_WORDS.find(w=>state.temp<=w.max)||TEMP_WORDS[4]).t}</span>
+    </div>
+    <div class="data-cell">
+      <span class="k">心圧</span>
+      <span class="v">${scene.hpa}<small>hPa</small></span>
+      <span class="sub">${scene.hpa>=1018?'高気圧 ・ 安定':scene.hpa<=1004?'低気圧 ・ だるさ注意':'平常'}</span>
+    </div>
+    <div class="data-cell">
+      <span class="k">視界</span>
+      <span class="v">${scene.visibility.toFixed(1)}<small>km</small></span>
+      <span class="sub">${scene.visibility<3?'先が見えづらい':scene.visibility<8?'やや かすみがち':'見通し良好'}</span>
+    </div>
+    <div class="data-cell">
+      <span class="k">心湿度</span>
+      <span class="v">${scene.humidity}<small>%</small></span>
+      <span class="sub">${scene.humidity>=75?'じめじめ ・ 涙雨ぎみ':scene.humidity<=45?'からっと乾いた心':'ほどほど'}</span>
+    </div>
+    <div class="data-cell wide">
+      <div>
+        <span class="k">風向き ・ 気圧配置</span>
+        <span class="v">${scene.windDir.label}</span>
+      </div>
+      <div class="compass">
+        <svg viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="23" fill="rgba(255,255,255,.35)" stroke="rgba(255,255,255,.6)"/>
+          <text x="26" y="11" text-anchor="middle" font-size="7" fill="#3a4868" font-family="serif">北</text>
+          <g class="needle" style="transform:rotate(${scene.windDir.deg}deg)">
+            <path d="M26 8 L30 28 L26 24 L22 28 Z" fill="#d9544c"/>
+            <path d="M26 44 L22 24 L26 28 L30 24 Z" fill="#5a6b8c"/>
+          </g>
+        </svg>
+      </div>
+    </div>`;
+
+  // alert
+  $('alertSlot').innerHTML=buildAlert(scene);
+
+  // caster report
+  $('casterReport').innerHTML=buildReport(scene);
+
+  // weekly
+  buildWeek(scene);
+
+  // advice
+  const adv=buildAdvice(scene);
+  $('umbEmoji').textContent=adv.umbEmoji;
+  $('umbText').textContent=adv.umbrella;
+  $('todoList').innerHTML=adv.todos.map((t,i)=>`<li><span class="no">${i+1}</span><span class="tx">${t}</span></li>`).join('');
+}
+
+/* ---- sky fx builder ---- */
+function buildSkyFx(scene){
+  const fx=$('skyFx'); let h='';
+
+  // stars
+  if(scene.stars){
+    h+='<div class="stars">';
+    for(let i=0;i<70;i++){
+      const s=(Math.random()*2+1).toFixed(1);
+      h+=`<i style="left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*70).toFixed(1)}%;width:${s}px;height:${s}px;animation-delay:${(Math.random()*3).toFixed(1)}s"></i>`;
+    }
+    h+='<div class="shoot" style="left:70%;top:8%"></div>';
+    h+='<div class="shoot" style="left:30%;top:18%;animation-delay:4.5s"></div>';
+    h+='</div>';
+  }
+
+  // sun
+  if(scene.sun){
+    const rays=Array.from({length:12}).map((_,i)=>`<span style="transform:translate(-50%,-100%) rotate(${i*30}deg)"></span>`).join('');
+    const sz=Math.min(window.innerWidth*0.36,230);
+    h+=`<div class="sun" style="width:${sz}px;height:${sz}px;left:62%;top:9%">
+          <div class="rays">${rays}</div><div class="core"></div></div>`;
+  }
+  // moon
+  if(scene.moon){
+    const sz=Math.min(window.innerWidth*0.26,160);
+    h+=`<div class="moon" style="width:${sz}px;height:${sz}px;left:66%;top:10%"></div>`;
+  }
+
+  // rainbow
+  if(scene.rainbow){ h+='<div class="rainbow"></div>'; }
+
+  // clouds (multi-layer depth)
+  const layers=Math.min(scene.clouds,7);
+  for(let i=0;i<layers;i++){
+    const depth=Math.random();
+    const scale=(0.55+depth*0.9).toFixed(2);
+    const top=(4+Math.random()*52).toFixed(0);
+    const dur=(38+Math.random()*46 - depth*10).toFixed(0);
+    const delay=(-Math.random()*dur).toFixed(0);
+    const op=(0.55+depth*0.4).toFixed(2);
+    const tint = (scene.thunder||scene.rain>=3) ? '#6c778a' : '#ffffff';
+    h+=`<div class="cloud" style="top:${top}%;transform:scale(${scale});opacity:${op};animation:drift ${dur}s linear ${delay}s infinite">
+          ${cloudSVG(tint)}</div>`;
+  }
+
+  // rain
+  if(scene.rain>0){
+    const count=scene.rain*40;
+    let r='<div class="rain">';
+    for(let i=0;i<count;i++){
+      const dur=(0.5+Math.random()*0.5).toFixed(2);
+      r+=`<i style="left:${(Math.random()*110-5).toFixed(1)}%;height:${(50+Math.random()*50).toFixed(0)}px;animation-duration:${dur}s;animation-delay:${(-Math.random()*1).toFixed(2)}s;opacity:${(0.4+Math.random()*0.5).toFixed(2)}"></i>`;
+    }
+    r+='</div>'; h+=r;
+  }
+
+  // thunder
+  if(scene.thunder){ h+='<div class="thunder on"></div>'; }
+
+  // wind leaves
+  if(scene.leaves>0){
+    const glyphs=['🍃','🌿','✦','·','🍂'];
+    for(let i=0;i<scene.leaves;i++){
+      const dur=(4+Math.random()*5 - scene.leaves*0.05).toFixed(1);
+      h+=`<div class="leaf" style="left:${(Math.random()*100).toFixed(0)}%;animation-duration:${dur}s;animation-delay:${(-Math.random()*dur).toFixed(1)}s;font-size:${(0.7+Math.random()*0.9).toFixed(2)}rem;opacity:${(0.5+Math.random()*0.4).toFixed(2)}">${glyphs[i%glyphs.length]}</div>`;
+    }
+  }
+
+  // fog
+  if(scene.fog){ h+='<div class="fog"></div>'; }
+
+  fx.innerHTML=h;
+}
+
+function cloudSVG(tint){
+  return `<svg width="220" height="120" viewBox="0 0 220 120">
+    <path d="M40 96 Q12 96 14 72 Q14 52 40 52 Q44 24 78 28 Q98 8 128 24 Q160 18 168 50 Q200 50 200 76 Q200 96 172 96 Z"
+      fill="${tint}"/></svg>`;
+}
+
+/* ---- alert ---- */
+function buildAlert(scene){
+  const c=CLOUDS[state.cloud];
+  if(scene.thunder){
+    return `<div class="alert danger"><span class="ic">⚠️</span><span><b>心の雷雨注意報</b>　強い不安と感情の風が同時に発生しています。今日は大きな決断や難しい連絡を避け、安全な場所で雷雨が過ぎるのを待ちましょう。</span></div>`;
+  }
+  if(c.key==='anxiety' || scene.humidity>=80){
+    return `<div class="alert warn"><span class="ic">☔</span><span><b>心湿度 注意報</b>　心の湿り気が高まっています。涙雨が降っても自然なこと。無理に乾かそうとせず、心の傘を忘れずに。</span></div>`;
+  }
+  if(scene.fog){
+    return `<div class="alert warn"><span class="ic">🌫️</span><span><b>濃霧注意報</b>　視界が悪く、先が見通しづらい一日です。遠くを見ようとせず、足もとの一歩だけに集中しましょう。</span></div>`;
+  }
+  if(state.energy>=5 && (c.key==='calm'||c.key==='hope')){
+    return `<div class="alert fine"><span class="ic">🌞</span><span><b>晴天注意報</b>　エネルギーが満ちあふれています。気持ちのいい快晴ですが、はりきりすぎて熱中症にご注意を。こまめな休息を。</span></div>`;
+  }
+  if(scene.hpa<=1000){
+    return `<div class="alert warn"><span class="ic">📉</span><span><b>低気圧 接近中</b>　心の気圧が下がっています。だるさや重さは気圧のせい。今日は省エネ運転で十分です。</span></div>`;
+  }
+  return '';
+}
+
+/* ---- caster report ---- */
+function buildReport(scene){
+  const c=CLOUDS[state.cloud];
+  const name=(state.word||'').trim();
+  const lead = name ? `「${esc(name)}」と綴った あなた` : 'あなた';
+  const hl=t=>`<span class="hl">${t}</span>`;
+
+  // sentence 1: current sky
+  const skyByCloud={
+    anxiety:`心の空には ${hl('厚い雨雲')} が広がり、ぽつりぽつりと雨が落ちています`,
+    hope:   `東の空が明るみ、雲のすきまから ${hl('期待の光')} がさし込んでいます`,
+    haste:  `${hl('せわしない風')} に雲が流され、空が落ち着かない様子です`,
+    calm:   `空はおだやかに澄みわたり、${hl('やわらかな晴れ間')} が広がっています`,
+    chaos:  `心の上空は ${hl('深い霧')} に包まれ、輪郭がぼやけて見えます`,
+    empty:  `${hl('色のうすい雲')} が一面に広がり、しずかに空をおおっています`,
+  };
+  let s1=`${lead}の心の天気をお伝えします。現在、${skyByCloud[c.key]}。`;
+
+  // sentence 2: temp + energy
+  const tw=(TEMP_WORDS.find(w=>state.temp<=w.max)||TEMP_WORDS[4]).t;
+  const eDesc=state.energy>=4?`エネルギーは ${hl('高気圧に覆われ活発')}`:state.energy<=2?`エネルギーは ${hl('低気圧でひかえめ')}`:`エネルギーは ${hl('平年並み')}`;
+  let s2=`体感温度は ${hl(state.temp+'℃')}、${tw}一日。${eDesc}で、心圧は${scene.hpa}ヘクトパスカルを観測しています。`;
+
+  // sentence 3: wind
+  let s3=`${hl(scene.windDir.label)}。${scene.visibility<3?'視界はわるく、先のことは見えづらいでしょう。':scene.visibility>12?'見通しはよく、遠くまで見渡せそうです。':'視界はほどほどに保たれています。'}`;
+
+  // sentence 4: forecast / outlook
+  let s4;
+  if(scene.rainbow) s4=`このあと雨はあがり、午後には ${hl('心に虹')} がかかる予報です。`;
+  else if(scene.thunder) s4=`日中は雷雨が続きますが、${hl('夜には必ず静けさ')} が戻ってきます。`;
+  else if(scene.rain>=2) s4=`雨はしばらく続きますが、${hl('明日の朝には弱まる')} 見込みです。`;
+  else if(c.key==='calm'||c.key==='hope') s4=`この穏やかな天気は ${hl('夕方まで続く')} 見込みです。`;
+  else s4=`午後にかけて、雲の切れ間から ${hl('晴れ間がのぞく')} 予報です。`;
+
+  return `<p>${s1}</p><p style="margin-top:.6em">${s2}</p><p style="margin-top:.6em">${s3}${s4}</p>`;
+}
+
+/* ---- weekly ---- */
+function buildWeek(scene){
+  const c=CLOUDS[state.cloud];
+  const icons={sunny:'☀️',part:'🌤️',cloud:'☁️',rain:'🌧️',storm:'⛈️',rainbow:'🌈',fog:'🌫️',moon:'🌙'};
+  const words={
+    sunny:'すっきり快晴',part:'晴れ間あり',cloud:'くもりがち',rain:'ぐずつき',
+    storm:'荒れ模様',rainbow:'雨のち虹',fog:'もやもや',moon:'静かな夜'
+  };
+  // today's key
+  const todayKey = scene.thunder?'storm':scene.rainbow?'rainbow':scene.fog?'fog':scene.rain>=2?'rain':scene.rain>=1?'part':scene.sun&&scene.clouds<=2?'sunny':scene.clouds>=5?'cloud':scene.moon?'moon':'part';
+
+  // a gentle improving narrative around today
+  const seq=['cloud','rain','part','TODAY','part','sunny','rainbow'];
+  // shuffle past slightly by mood
+  const dow=['日','月','火','水','木','金','土'];
+  const today=new Date();
+  let html='';
+  for(let i=0;i<7;i++){
+    const offset=i-3;
+    const d=new Date(today); d.setDate(today.getDate()+offset);
+    const isToday=offset===0;
+    let key=seq[i];
+    if(key==='TODAY') key=todayKey;
+    // bias past based on mood
+    if(offset<0 && scene.moodScore>1) key=['part','cloud','sunny'][i];
+    html+=`<div class="day${isToday?' today':''}">
+      <div class="dow">${dow[d.getDay()]}</div>
+      <div class="date">${d.getMonth()+1}/${d.getDate()}</div>
+      <div class="ic">${icons[key]}</div>
+      <div class="wd">${isToday?'<b>今日</b>':words[key]}</div>
+    </div>`;
+  }
+  $('weekRow').innerHTML=html;
+}
+
+/* ---- advice ---- */
+function buildAdvice(scene){
+  const c=CLOUDS[state.cloud];
+  let umbrella, umbEmoji, todos;
+
+  const byCloud={
+    anxiety:{e:'☔',u:'「最悪を想像しても、たいてい雨はそこまで強くならない」という心の傘',
+      t:['頭の中の不安を、3つだけ紙に書き出してみる','温かい飲み物を、両手で包むようにゆっくり飲む','今夜は早めに、自分をやさしく寝かせてあげる']},
+    hope:{e:'🌤️',u:'「期待はふくらませてOK。叶わなくても、わくわくした時間は本物」という心の傘',
+      t:['楽しみにしていることを、誰かに話してみる','その期待に向けて、今日できる小さな一歩を踏む','うまくいった未来を、5分だけ思いきり妄想する']},
+    haste:{e:'🌬️',u:'「急いでも、今日できることの量は変わらない」という心の傘',
+      t:['やることを書き出して、上から1つだけ選ぶ','5分でいいので、立ち止まって深呼吸する','「まあいっか」を、今日3回つぶやいてみる']},
+    calm:{e:'🍃',u:'「この穏やかさは、あなたがちゃんと整えてきた証」という心の傘',
+      t:['この心地よさを、五感でしっかり味わう','穏やかな今のうちに、少し先の準備をしておく','近くの人に、ひとつ親切をおすそ分けする']},
+    chaos:{e:'🧭',u:'「全部を一度に分かろうとしなくていい」という心の傘',
+      t:['考えるのを一旦やめて、体を動かしてみる','今ここで見えるものだけ、3つ口に出す','信頼できる人に、整理を手伝ってもらう']},
+    empty:{e:'🫖',u:'「空っぽは、これから何でも入れられる余白」という心の傘',
+      t:['無理に埋めず、ぼーっとする時間を許す','好きだったものに、ひとつだけ触れてみる','温かいお風呂で、体の輪郭を思い出す']},
+  };
+  const base=byCloud[c.key];
+  umbrella=base.u; umbEmoji=base.e; todos=base.t.slice();
+
+  // tweak for energy/temp
+  if(state.energy<=2) todos[2]='今日は「何もしない」を、いちばんの予定にする';
+  if(state.temp<=2)   todos[1]='冷えた心を、温かいもので物理的にあたためる';
+  if(state.temp>=33)  todos[1]='高ぶった熱を、深呼吸とお水でクールダウンする';
+
+  return {umbrella, umbEmoji, todos};
+}
+
+/* ============================================================
+   SCROLL REVEAL + PARALLAX
+   ============================================================ */
+let scrollObs=null;
+function startScrollObserver(){
+  const els=document.querySelectorAll('.reveal-on-scroll');
+  if(scrollObs) scrollObs.disconnect();
+  scrollObs=new IntersectionObserver(es=>{
+    es.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('in'); } });
+  },{threshold:0.12});
+  els.forEach(e=>scrollObs.observe(e));
+}
+let parallaxBound=false;
+function parallaxBind(){
+  if(parallaxBound) return; parallaxBound=true;
+  const fx=$('skyFx');
+  window.addEventListener('scroll',()=>{
+    if(!screens.result.classList.contains('active')) return;
+    const y=window.scrollY;
+    fx.style.transform=`translateY(${y*0.18}px)`;
+    fx.style.opacity=Math.max(0.35,1 - y/1400);
+  },{passive:true});
+}
+
+/* ============================================================
+   SHARE
+   ============================================================ */
+$('shareX').onclick=()=>{
+  const s=LAST_SCENE; if(!s) return;
+  const word=(state.word||'').trim();
+  const txt=`今日の私の心の天気は【${s.curWeather}】${s.verdict.em}\n体感${state.temp}℃ / 心圧${s.hpa}hPa\n${word?`「${word}」\n`:''}#心の天気予報`;
+  const url='https://twitter.com/intent/tweet?text='+encodeURIComponent(txt);
+  window.open(url,'_blank','noopener');
+};
+$('saveImg').onclick=()=>{
+  toast('印刷ダイアログから「PDFで保存」を選べます');
+  setTimeout(()=>window.print(),650);
+};
+$('againBtn').onclick=()=>{
+  show('welcome'); window.scrollTo(0,0);
+  // reset to step 1 view but keep stored values
+  qEls.forEach(q=>q.classList.remove('show','leaving'));
+  qEls[0].classList.add('show');
+  step=1; $('stepNo').textContent=1; $('stepLabel').textContent=LABELS[0];
+  $('progressFill').style.width='20%';
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function pad(n){return String(n).padStart(2,'0');}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+let toastTimer=null;
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// rebuild sky fx sizes on resize (sun/moon scale)
+let rzT=null;
+window.addEventListener('resize',()=>{
+  clearTimeout(rzT);
+  rzT=setTimeout(()=>{ if(LAST_SCENE && screens.result.classList.contains('active')) buildSkyFx(LAST_SCENE); },300);
+});
+
+refreshNext();
+</script>
+</body>
+</html>
