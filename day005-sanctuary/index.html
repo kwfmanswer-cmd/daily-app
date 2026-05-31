@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sanctuary of Light — あなたの色を捧げる祭壇</title>
+<meta name="description" content="7つの問いに答えると、あなたの魂が一つの光になる。Sanctuary of Light.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Shippori+Mincho:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Sanctuary of Light  —  あなたの色を捧げる祭壇
+   Day 005 / 100-day web app challenge
+   ============================================================ */
+:root{
+  --garamond:'Cormorant Garamond', serif;
+  --mincho:'Shippori Mincho', serif;
+  --void-0:#05030a;
+  --void-1:#0c0816;
+  --void-2:#160f29;
+  --gold:#e8d8a8;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+  /* live soul color — driven by JS */
+  --soul-h:265;
+  --soul-s:70%;
+  --soul-l:62%;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:var(--mincho);
+  background:#05030a;
+  color:#e9e4f2;
+  overflow-x:hidden;
+  line-height:1.9;
+  -webkit-font-smoothing:antialiased;
+  position:relative;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::selection{background:hsla(var(--soul-h),70%,60%,.4)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ============================================================
+   COSMIC BACKGROUND (fixed, behind everything)
+   ============================================================ */
+.cosmos{position:fixed;inset:0;z-index:-3;
+  background:
+    radial-gradient(120% 90% at 50% 12%, #1a1230 0%, #0c0816 42%, #05030a 100%);
+}
+.cosmos::before{ /* slow nebula */
+  content:"";position:absolute;inset:-25%;
+  background:
+    radial-gradient(38% 38% at 28% 30%, hsla(265,60%,40%,.22), transparent 70%),
+    radial-gradient(42% 42% at 75% 68%, hsla(210,60%,40%,.18), transparent 70%),
+    radial-gradient(30% 30% at 60% 18%, hsla(320,55%,45%,.14), transparent 70%);
+  animation:nebula 34s ease-in-out infinite alternate;
+}
+@keyframes nebula{from{transform:translate3d(-2%,-1%,0) scale(1)}to{transform:translate3d(3%,2%,0) scale(1.12)}}
+.starfield{position:fixed;inset:0;z-index:-2;pointer-events:none}
+.starfield i{position:absolute;border-radius:50%;background:#fff;animation:starTwinkle 4s infinite ease-in-out}
+@keyframes starTwinkle{0%,100%{opacity:.12;transform:scale(.7)}50%{opacity:.75;transform:scale(1.1)}}
+
+/* particle layer (DOM particles) */
+#particles{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.pt{position:absolute;border-radius:50%;will-change:transform,opacity;
+  background:radial-gradient(circle at 40% 40%, hsla(var(--soul-h),90%,80%,.95), hsla(var(--soul-h),80%,60%,0) 70%);
+  filter:blur(.3px)}
+
+/* ============================================================
+   STAGES
+   ============================================================ */
+.stage{position:relative;min-height:100vh;min-height:100dvh;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 22px;text-align:center;
+  opacity:0;transform:scale(.985);
+  transition:opacity .9s var(--ease), transform .9s var(--ease)}
+.stage.active{display:flex;opacity:1;transform:none}
+.stage.leaving{opacity:0;transform:scale(1.02)}
+
+/* ============================================================
+   THE ORB  (shared, lives in a fixed central plane)
+   ============================================================ */
+.orb-plane{position:relative;display:flex;align-items:center;justify-content:center;
+  width:min(64vw,320px);height:min(64vw,320px);margin:0 auto}
+.orb-plane.big{width:min(82vw,420px);height:min(82vw,420px)}
+.orb{
+  position:relative;width:54px;height:54px;border-radius:50%;
+  transition:width 1.1s var(--ease),height 1.1s var(--ease),filter 1.1s var(--ease);
+  will-change:transform;
+}
+.orb .nucleus{position:absolute;inset:0;border-radius:50%;
+  background:
+    radial-gradient(circle at 38% 34%, #fff 0%, hsla(var(--soul-h),95%,82%,1) 18%,
+      hsla(var(--soul-h),var(--soul-s),var(--soul-l),1) 52%,
+      hsla(var(--soul-h),80%,38%,1) 80%, hsla(var(--soul-h),85%,22%,1) 100%);
+  box-shadow:
+    0 0 24px 4px hsla(var(--soul-h),90%,65%,.7),
+    0 0 60px 12px hsla(var(--soul-h),85%,58%,.5),
+    0 0 130px 30px hsla(var(--soul-h),80%,52%,.35),
+    inset 0 0 24px rgba(255,255,255,.45);
+  animation:orbPulse 4.2s var(--ease) infinite;
+}
+.orb .halo{position:absolute;inset:-40%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle, hsla(var(--soul-h),85%,65%,.30) 0%, transparent 62%);
+  filter:blur(8px);animation:haloBreath 5.5s var(--ease) infinite}
+.orb .swirl{position:absolute;inset:-8%;border-radius:50%;pointer-events:none;mix-blend-mode:screen;
+  background:conic-gradient(from 0deg,
+    hsla(var(--soul-h),90%,70%,0),
+    hsla(var(--soul-h),90%,78%,.5),
+    hsla(calc(var(--soul-h) + 40),90%,72%,.15),
+    hsla(var(--soul-h),90%,70%,0));
+  filter:blur(6px);animation:spin 14s linear infinite}
+.orb .ring{position:absolute;border-radius:50%;border:1px solid hsla(var(--soul-h),80%,75%,.25);
+  inset:-18%;animation:spin 26s linear infinite}
+.orb .ring.r2{inset:-30%;border-color:hsla(var(--soul-h),80%,75%,.14);animation-duration:40s;animation-direction:reverse}
+
+@keyframes orbPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes haloBreath{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:.9;transform:scale(1.12)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* radial light rays (climax) */
+.rays{position:absolute;inset:-120%;pointer-events:none;opacity:0}
+.rays span{position:absolute;left:50%;top:50%;width:2px;height:60%;transform-origin:top center;
+  background:linear-gradient(180deg, hsla(var(--soul-h),95%,82%,.85), transparent);border-radius:2px}
+.rays.fire{animation:raysFire 2.6s var(--ease) forwards}
+@keyframes raysFire{0%{opacity:0;transform:scale(.4) rotate(0)}30%{opacity:.9}100%{opacity:0;transform:scale(1.4) rotate(50deg)}}
+
+/* white flash */
+#flash{position:fixed;inset:0;z-index:120;background:#fff;opacity:0;pointer-events:none}
+#flash.fire{animation:whiteFlash 1.6s var(--ease) forwards}
+@keyframes whiteFlash{0%{opacity:0}10%{opacity:1}55%{opacity:.65}100%{opacity:0}}
+
+/* ============================================================
+   STAGE 1 — ENTRANCE
+   ============================================================ */
+.altar{position:relative;display:flex;flex-direction:column;align-items:center}
+.altar .dais{position:relative;width:min(76vw,360px);height:90px;margin-top:-10px;perspective:600px}
+.altar .dais .slab{position:absolute;left:50%;top:0;transform:translateX(-50%) rotateX(64deg);
+  width:100%;height:100%;border-radius:50%;
+  background:radial-gradient(ellipse at center, hsla(var(--soul-h),40%,30%,.55), transparent 70%);
+  box-shadow:0 0 60px hsla(var(--soul-h),60%,45%,.3)}
+.altar .dais .ringline{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotateX(64deg);
+  width:74%;height:74%;border-radius:50%;border:1px solid hsla(var(--soul-h),70%,70%,.3)}
+
+.kicker{font-family:var(--garamond);letter-spacing:.62em;font-size:.74rem;text-transform:uppercase;
+  color:hsla(var(--soul-h),50%,78%,.8);margin-bottom:18px;padding-left:.6em}
+.title{font-family:var(--garamond);font-weight:400;font-size:clamp(2.6rem,11vw,5rem);
+  letter-spacing:.04em;line-height:1.05;margin-bottom:18px;
+  background:linear-gradient(180deg,#fff,hsla(var(--soul-h),60%,80%,1) 60%,hsla(var(--soul-h),60%,60%,1));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 50px hsla(var(--soul-h),70%,60%,.3)}
+.subtitle{font-family:var(--mincho);font-weight:400;font-size:clamp(.95rem,3.6vw,1.15rem);
+  letter-spacing:.28em;color:#c8bfe0;margin-bottom:46px;padding-left:.28em}
+
+.enter-btn{font-family:var(--garamond);font-weight:500;letter-spacing:.28em;text-transform:uppercase;
+  font-size:1rem;color:#0c0816;
+  background:linear-gradient(135deg,#fff,hsla(var(--soul-h),50%,82%,1));
+  padding:16px 50px;border-radius:999px;position:relative;
+  box-shadow:0 0 0 1px hsla(var(--soul-h),60%,80%,.5),
+    0 14px 40px hsla(var(--soul-h),70%,55%,.45),
+    inset 0 1px 0 rgba(255,255,255,.8);
+  transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
+.enter-btn:hover{transform:translateY(-3px) scale(1.04);
+  box-shadow:0 0 0 1px hsla(var(--soul-h),60%,85%,.7),0 22px 54px hsla(var(--soul-h),75%,60%,.6),inset 0 1px 0 rgba(255,255,255,.9)}
+.enter-btn:active{transform:translateY(0) scale(.99)}
+.enter-jp{display:block;font-family:var(--mincho);font-size:.62rem;letter-spacing:.4em;margin-top:6px;opacity:.6}
+
+.fade-seq{opacity:0;transform:translateY(20px);animation:fadeUp 1.4s var(--ease) forwards}
+.d1{animation-delay:.3s}.d2{animation-delay:.7s}.d3{animation-delay:1.1s}.d4{animation-delay:1.6s}.d5{animation-delay:2.2s}
+@keyframes fadeUp{to{opacity:1;transform:none}}
+
+/* sound toggle */
+.sound-toggle{position:fixed;top:16px;right:16px;z-index:60;
+  width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px);
+  color:#cfc6e6;transition:background .3s,transform .3s,color .3s}
+.sound-toggle:hover{background:rgba(255,255,255,.12);transform:scale(1.08)}
+.sound-toggle svg{width:20px;height:20px}
+.sound-toggle .wave{opacity:0;transition:opacity .3s}
+.sound-toggle.on{color:var(--gold);border-color:hsla(48,60%,70%,.4)}
+.sound-toggle.on .wave{opacity:1}
+
+/* ============================================================
+   STAGE 2 — RITUAL
+   ============================================================ */
+.ritual-wrap{width:100%;max-width:620px;display:flex;flex-direction:column;align-items:center;gap:30px}
+
+/* circular maturity gauge holds the orb */
+.gauge-holder{position:relative;width:min(64vw,300px);height:min(64vw,300px);display:flex;align-items:center;justify-content:center}
+.gauge-svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.gauge-svg .track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:2}
+.gauge-svg .prog{fill:none;stroke:url(#gaugeGrad);stroke-width:3;stroke-linecap:round;
+  transition:stroke-dashoffset 1.1s var(--ease);filter:drop-shadow(0 0 6px hsla(var(--soul-h),90%,65%,.7))}
+.maturity-label{position:absolute;bottom:-2px;left:50%;transform:translate(-50%,100%);
+  font-family:var(--garamond);letter-spacing:.3em;font-size:.66rem;text-transform:uppercase;color:hsla(var(--soul-h),45%,75%,.75);white-space:nowrap}
+
+.q-block{width:100%;min-height:230px;display:flex;flex-direction:column;align-items:center}
+.q-item{display:none;width:100%}
+.q-item.show{display:block;animation:qFade 1s var(--ease)}
+@keyframes qFade{from{opacity:0;transform:translateY(18px) scale(.99)}to{opacity:1;transform:none}}
+.q-item.leaving{animation:qLeave .5s var(--ease) forwards}
+@keyframes qLeave{to{opacity:0;transform:translateY(-16px) scale(.99)}}
+
+.q-no{font-family:var(--garamond);font-style:italic;letter-spacing:.3em;font-size:.82rem;
+  color:hsla(var(--soul-h),50%,75%,.7);margin-bottom:14px}
+.q-text{font-family:var(--mincho);font-weight:500;font-size:clamp(1.35rem,5.4vw,1.85rem);
+  letter-spacing:.05em;line-height:1.7;color:#f1ecfb;margin-bottom:28px;
+  text-shadow:0 2px 30px hsla(var(--soul-h),60%,50%,.25)}
+
+/* text input */
+.soul-input{width:100%;max-width:440px;margin:0 auto;display:block;
+  background:transparent;border:none;border-bottom:1px solid hsla(var(--soul-h),50%,70%,.4);
+  color:#fff;font-family:var(--mincho);font-size:1.2rem;letter-spacing:.06em;text-align:center;
+  padding:12px 8px;outline:none;transition:border-color .3s,box-shadow .3s}
+.soul-input::placeholder{color:rgba(200,190,225,.35);font-size:.95rem}
+.soul-input:focus{border-color:hsla(var(--soul-h),80%,78%,.9);box-shadow:0 6px 24px -10px hsla(var(--soul-h),85%,60%,.8)}
+.input-hint{font-size:.72rem;letter-spacing:.16em;color:rgba(200,190,225,.4);margin-top:12px}
+
+/* choice options */
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:480px;margin:0 auto}
+.choices.cols2{grid-template-columns:repeat(2,1fr)}
+.choice{position:relative;padding:18px 10px;border-radius:16px;
+  background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.12);
+  font-family:var(--mincho);font-size:1rem;letter-spacing:.12em;color:#d8d0ea;overflow:hidden;
+  transition:transform .35s var(--ease),background .35s,border-color .35s,color .35s}
+.choice .glow{position:absolute;inset:0;opacity:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 120%, hsla(var(--soul-h),85%,65%,.5), transparent 70%);
+  transition:opacity .4s}
+.choice:hover{transform:translateY(-4px);border-color:hsla(var(--soul-h),60%,70%,.5);color:#fff}
+.choice.sel{background:hsla(var(--soul-h),50%,45%,.28);border-color:hsla(var(--soul-h),75%,75%,.8);
+  color:#fff;transform:translateY(-4px) scale(1.03);
+  box-shadow:0 14px 34px hsla(var(--soul-h),70%,50%,.4)}
+.choice.sel .glow{opacity:1}
+.choice .em{display:block;font-size:1.5rem;margin-bottom:6px;line-height:1}
+
+.q-nav{display:flex;align-items:center;gap:20px;margin-top:34px}
+.nav-back{font-family:var(--garamond);letter-spacing:.22em;font-size:.82rem;color:rgba(200,190,225,.55);
+  padding:10px 16px;transition:color .3s}
+.nav-back:hover{color:#fff}
+.nav-back[disabled]{opacity:0;pointer-events:none}
+.nav-next{font-family:var(--garamond);font-weight:500;letter-spacing:.26em;text-transform:uppercase;font-size:.9rem;
+  color:#0c0816;background:linear-gradient(135deg,#fff,hsla(var(--soul-h),50%,82%,1));
+  padding:14px 40px;border-radius:999px;
+  box-shadow:0 12px 30px hsla(var(--soul-h),70%,55%,.4);
+  transition:transform .35s var(--ease),box-shadow .35s,opacity .35s}
+.nav-next:hover{transform:translateY(-3px) scale(1.04)}
+.nav-next[disabled]{opacity:.32;pointer-events:none;filter:grayscale(.4)}
+
+/* ============================================================
+   STAGE 3 — MANIFESTATION (climax) handled mostly by JS+orb
+   ============================================================ */
+#stage-manifest .soul-id-rise{font-family:var(--garamond);font-weight:300;letter-spacing:.36em;
+  font-size:clamp(1.6rem,7vw,2.4rem);color:#fff;margin-top:46px;opacity:0;
+  text-shadow:0 0 40px hsla(var(--soul-h),80%,60%,.6)}
+#stage-manifest .soul-id-rise.rise{animation:idRise 2s var(--ease) forwards}
+@keyframes idRise{from{opacity:0;transform:translateY(24px) scale(.94)}to{opacity:1;transform:none}}
+
+/* ============================================================
+   STAGE 4 — RESULT
+   ============================================================ */
+.result-wrap{width:100%;max-width:560px;display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:20px}
+.result-meta{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:26px;
+  opacity:0;transform:translateY(20px);animation:fadeUp 1.2s var(--ease) .4s forwards}
+.soul-id{font-family:var(--garamond);font-weight:300;letter-spacing:.4em;font-size:1.5rem;color:#fff;
+  text-shadow:0 0 30px hsla(var(--soul-h),80%,60%,.5)}
+.soul-name{font-family:var(--mincho);font-weight:600;font-size:1.7rem;letter-spacing:.1em;color:#f3eeff}
+.color-name{font-family:var(--garamond);font-style:italic;font-size:1.5rem;letter-spacing:.06em;
+  color:hsla(var(--soul-h),70%,80%,1);text-shadow:0 0 24px hsla(var(--soul-h),80%,60%,.5)}
+.color-name .jp{font-family:var(--mincho);font-style:normal;display:block;font-size:1.15rem;letter-spacing:.18em;margin-top:2px;color:#e6def5}
+
+.essence{font-family:var(--mincho);font-size:1.05rem;line-height:2.2;letter-spacing:.06em;color:#dcd5ee;
+  max-width:30em;margin:22px auto 4px;position:relative;padding:0 10px;
+  opacity:0;transform:translateY(20px);animation:fadeUp 1.4s var(--ease) .8s forwards}
+.essence::before,.essence::after{font-family:var(--garamond);color:hsla(var(--soul-h),60%,70%,.5);font-size:1.6em;line-height:0}
+.essence::before{content:"“"}.essence::after{content:"”"}
+
+/* spectrum */
+.spectrum{width:100%;max-width:440px;margin:30px auto 0;display:flex;flex-direction:column;gap:14px;
+  opacity:0;transform:translateY(20px);animation:fadeUp 1.4s var(--ease) 1.2s forwards}
+.spec-title{font-family:var(--garamond);letter-spacing:.3em;text-transform:uppercase;font-size:.7rem;
+  color:hsla(var(--soul-h),45%,75%,.7);text-align:center;margin-bottom:4px}
+.spec-row{display:flex;align-items:center;gap:14px}
+.spec-row .lab{font-family:var(--garamond);font-size:.78rem;letter-spacing:.18em;width:64px;text-align:right;color:#bdb3d6;text-transform:uppercase}
+.spec-bar{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden;position:relative}
+.spec-bar .fill{position:absolute;inset:0 100% 0 0;border-radius:8px;transition:right 1.4s var(--ease)}
+.spec-row .val{font-family:var(--garamond);font-size:.82rem;width:42px;color:#e6def5}
+.spec-bar.hue .fill{background:linear-gradient(90deg,#f44,#fa4,#ff4,#4f4,#4ff,#44f,#f4f,#f44)}
+
+/* result actions */
+.result-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:36px;
+  opacity:0;transform:translateY(20px);animation:fadeUp 1.4s var(--ease) 1.6s forwards}
+.act{font-family:var(--garamond);letter-spacing:.16em;text-transform:uppercase;font-size:.82rem;
+  padding:13px 26px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;
+  transition:transform .3s var(--ease),box-shadow .3s,background .3s}
+.act-x{background:#0a0a0a;color:#fff;border:1px solid rgba(255,255,255,.2);box-shadow:0 10px 26px rgba(0,0,0,.5)}
+.act-save{background:linear-gradient(135deg,#fff,hsla(var(--soul-h),50%,82%,1));color:#0c0816}
+.act-again{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);color:#e6def5}
+.act:hover{transform:translateY(-3px) scale(1.04)}
+.act:active{transform:translateY(0) scale(.98)}
+
+/* ============================================================
+   COLLECTION (altar of souls)
+   ============================================================ */
+.collection{position:relative;width:100%;padding:60px 0 50px;margin-top:40px;
+  border-top:1px solid rgba(255,255,255,.07)}
+.collection .col-title{font-family:var(--garamond);letter-spacing:.34em;text-transform:uppercase;
+  font-size:.78rem;color:hsla(var(--soul-h),45%,75%,.7);text-align:center;margin-bottom:6px}
+.collection .col-sub{font-family:var(--mincho);font-size:.72rem;letter-spacing:.18em;color:rgba(200,190,225,.45);text-align:center;margin-bottom:30px}
+.souls-track{display:flex;gap:26px;overflow-x:auto;padding:30px 24px 36px;scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch}
+.souls-track::-webkit-scrollbar{height:6px}
+.soul-chip{position:relative;flex:0 0 auto;width:64px;height:64px;border-radius:50%;cursor:pointer;
+  scroll-snap-align:center;transition:transform .4s var(--ease)}
+.soul-chip .light{position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%, #fff, hsl(var(--ch),85%,62%) 45%, hsl(var(--ch),85%,30%) 100%);
+  box-shadow:0 0 16px 2px hsla(var(--ch),85%,60%,.6),0 0 40px 8px hsla(var(--ch),80%,55%,.35);
+  animation:chipPulse 4s var(--ease) infinite}
+@keyframes chipPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.soul-chip:hover{transform:translateY(-8px) scale(1.18)}
+.soul-chip .tip{position:absolute;bottom:120%;left:50%;transform:translateX(-50%) translateY(8px);
+  background:rgba(10,8,20,.92);border:1px solid hsla(var(--ch),60%,60%,.4);border-radius:12px;
+  padding:8px 14px;white-space:nowrap;opacity:0;pointer-events:none;
+  transition:opacity .3s,transform .3s;backdrop-filter:blur(8px);z-index:5}
+.soul-chip:hover .tip{opacity:1;transform:translateX(-50%) translateY(0)}
+.soul-chip .tip .n{font-family:var(--mincho);font-size:.82rem;color:#fff;letter-spacing:.08em}
+.soul-chip .tip .i{font-family:var(--garamond);font-size:.68rem;letter-spacing:.16em;color:hsla(var(--ch),60%,78%,1)}
+.collection .empty-note{text-align:center;font-family:var(--garamond);font-style:italic;letter-spacing:.1em;
+  color:rgba(200,190,225,.4);padding:30px}
+
+/* detail modal */
+.modal{position:fixed;inset:0;z-index:130;display:none;align-items:center;justify-content:center;padding:24px;
+  background:rgba(5,3,10,.82);backdrop-filter:blur(12px);opacity:0;transition:opacity .5s var(--ease)}
+.modal.open{display:flex;opacity:1}
+.modal-card{position:relative;max-width:380px;width:100%;text-align:center;
+  background:linear-gradient(180deg,rgba(30,20,50,.7),rgba(12,8,22,.85));
+  border:1px solid hsla(var(--md),60%,60%,.35);border-radius:24px;padding:44px 28px 34px;
+  box-shadow:0 30px 80px rgba(0,0,0,.6);transform:scale(.92);transition:transform .5s var(--ease)}
+.modal.open .modal-card{transform:scale(1)}
+.modal-orb{width:88px;height:88px;border-radius:50%;margin:0 auto 22px;
+  background:radial-gradient(circle at 38% 34%, #fff, hsl(var(--md),88%,64%) 46%, hsl(var(--md),85%,30%) 100%);
+  box-shadow:0 0 30px 6px hsla(var(--md),85%,60%,.6),0 0 70px 18px hsla(var(--md),80%,55%,.35);
+  animation:orbPulse 4s var(--ease) infinite}
+.modal-card .m-id{font-family:var(--garamond);letter-spacing:.34em;font-size:1.2rem;color:#fff}
+.modal-card .m-name{font-family:var(--mincho);font-weight:600;font-size:1.4rem;letter-spacing:.1em;margin:4px 0;color:#f2edff}
+.modal-card .m-color{font-family:var(--garamond);font-style:italic;font-size:1.15rem;color:hsla(var(--md),70%,80%,1);margin-bottom:14px}
+.modal-card .m-color .jp{font-family:var(--mincho);font-style:normal;display:block;font-size:.95rem;letter-spacing:.16em;color:#ded6f0}
+.modal-card .m-essence{font-family:var(--mincho);font-size:.95rem;line-height:2;color:#cfc7e4;margin-top:10px}
+.modal-card .m-close{position:absolute;top:14px;right:18px;font-size:1.3rem;color:rgba(220,210,240,.5);
+  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:color .3s,background .3s}
+.modal-card .m-close:hover{color:#fff;background:rgba(255,255,255,.1)}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(140%);z-index:140;
+  background:rgba(12,8,22,.94);color:#e9e4f2;padding:13px 26px;border-radius:999px;font-size:.84rem;letter-spacing:.08em;
+  border:1px solid hsla(var(--soul-h),50%,60%,.4);box-shadow:0 14px 36px rgba(0,0,0,.5);
+  transition:transform .5s var(--ease)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+.footer{text-align:center;font-family:var(--garamond);letter-spacing:.24em;font-size:.7rem;
+  color:rgba(200,190,225,.35);padding:24px 0 40px}
+
+@media (max-width:480px){
+  .choices{gap:9px}
+  .choice{padding:15px 6px;font-size:.92rem}
+  .choice .em{font-size:1.3rem}
+  .nav-next{padding:13px 30px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important}
+}
+</style>
+</head>
+<body>
+
+<div class="cosmos"></div>
+<div class="starfield" id="starfield"></div>
+<div id="particles"></div>
+<div id="flash"></div>
+
+<!-- sound toggle -->
+<button class="sound-toggle" id="soundToggle" title="環境音 オン/オフ" aria-label="sound toggle">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 9v6h4l5 4V5L8 9H4z"/>
+    <path class="wave" d="M16 9a4 4 0 0 1 0 6"/>
+    <path class="wave" d="M18.5 6.5a8 8 0 0 1 0 11"/>
+  </svg>
+</button>
+
+<!-- ============================================================
+     STAGE 1 — ENTRANCE
+     ============================================================ -->
+<section class="stage active" id="stage-entrance">
+  <div class="altar">
+    <div class="fade-seq d1 kicker">Sanctuary&nbsp;·&nbsp;A&nbsp;Place&nbsp;of&nbsp;Light</div>
+    <h1 class="fade-seq d2 title">Sanctuary of&nbsp;Light</h1>
+    <p class="fade-seq d3 subtitle">あなたの色を、ここに捧げる</p>
+
+    <div class="fade-seq d4 orb-plane" style="margin-bottom:30px">
+      <div class="orb" id="orb-entrance" style="width:64px;height:64px">
+        <div class="halo"></div><div class="swirl"></div>
+        <div class="ring"></div><div class="ring r2"></div>
+        <div class="nucleus"></div>
+      </div>
+    </div>
+
+    <div class="altar dais-host">
+      <div class="dais">
+        <div class="slab"></div>
+        <div class="ringline"></div>
+      </div>
+    </div>
+
+    <button class="fade-seq d5 enter-btn" id="enterBtn">
+      Enter<span class="enter-jp">祭壇に進む</span>
+    </button>
+  </div>
+  <div class="footer fade-seq d5">Day 005 · 100-day app challenge</div>
+</section>
+
+<!-- ============================================================
+     STAGE 2 — RITUAL
+     ============================================================ -->
+<section class="stage" id="stage-ritual">
+  <div class="ritual-wrap">
+
+    <div class="gauge-holder">
+      <svg class="gauge-svg" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fff"/>
+            <stop offset="100%" stop-color="hsl(var(--soul-h),85%,68%)"/>
+          </linearGradient>
+        </defs>
+        <circle class="track" cx="60" cy="60" r="56"/>
+        <circle class="prog" id="gaugeProg" cx="60" cy="60" r="56"
+          stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
+      </svg>
+      <div class="orb-plane" style="width:100%;height:100%">
+        <div class="orb" id="orb-ritual" style="width:54px;height:54px">
+          <div class="halo"></div><div class="swirl"></div>
+          <div class="ring"></div><div class="ring r2"></div>
+          <div class="nucleus"></div>
+        </div>
+      </div>
+      <div class="maturity-label" id="maturityLabel">Maturity &nbsp;0%</div>
+    </div>
+
+    <div class="q-block" id="qBlock"></div>
+
+    <div class="q-nav">
+      <button class="nav-back" id="navBack" disabled>← もどる</button>
+      <button class="nav-next" id="navNext" disabled>次へ</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     STAGE 3 — MANIFESTATION
+     ============================================================ -->
+<section class="stage" id="stage-manifest">
+  <div class="orb-plane big">
+    <div class="rays" id="climaxRays"></div>
+    <div class="orb" id="orb-manifest" style="width:120px;height:120px">
+      <div class="halo"></div><div class="swirl"></div>
+      <div class="ring"></div><div class="ring r2"></div>
+      <div class="nucleus"></div>
+    </div>
+  </div>
+  <div class="soul-id-rise" id="manifestId">Soul #00000</div>
+</section>
+
+<!-- ============================================================
+     STAGE 4 — RESULT
+     ============================================================ -->
+<section class="stage" id="stage-result">
+  <div class="result-wrap">
+    <div class="orb-plane big">
+      <div class="orb" id="orb-result" style="width:200px;height:200px">
+        <div class="halo"></div><div class="swirl"></div>
+        <div class="ring"></div><div class="ring r2"></div>
+        <div class="nucleus"></div>
+      </div>
+    </div>
+
+    <div class="result-meta">
+      <div class="soul-id" id="resId">Soul #00000</div>
+      <div class="soul-name" id="resName">—</div>
+      <div class="color-name" id="resColor"><span class="en">—</span><span class="jp">—</span></div>
+    </div>
+
+    <p class="essence" id="resEssence">—</p>
+
+    <div class="spectrum">
+      <div class="spec-title">Light Spectrum</div>
+      <div class="spec-row">
+        <span class="lab">Hue</span>
+        <div class="spec-bar hue"><div class="fill" id="barHue"></div></div>
+        <span class="val" id="valHue">—</span>
+      </div>
+      <div class="spec-row">
+        <span class="lab">Sat</span>
+        <div class="spec-bar"><div class="fill" id="barSat"></div></div>
+        <span class="val" id="valSat">—</span>
+      </div>
+      <div class="spec-row">
+        <span class="lab">Lum</span>
+        <div class="spec-bar"><div class="fill" id="barLum"></div></div>
+        <span class="val" id="valLum">—</span>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button class="act act-x" id="shareX">𝕏 でシェア</button>
+      <button class="act act-save" id="saveImg">画像として保存</button>
+      <button class="act act-again" id="againBtn">もう一度捧げる</button>
+    </div>
+  </div>
+
+  <!-- collection -->
+  <div class="collection">
+    <div class="col-title">Altar of Souls</div>
+    <div class="col-sub">これまでに顕現した、すべての光</div>
+    <div class="souls-track" id="soulsTrack"></div>
+  </div>
+
+  <div class="footer">Sanctuary of Light · Day 005 / 100-day app challenge</div>
+</section>
+
+<!-- detail modal -->
+<div class="modal" id="modal">
+  <div class="modal-card" id="modalCard">
+    <button class="m-close" id="modalClose">×</button>
+    <div class="modal-orb" id="mOrb"></div>
+    <div class="m-id" id="mId">Soul #00000</div>
+    <div class="m-name" id="mName">—</div>
+    <div class="m-color" id="mColor"><span class="en">—</span><span class="jp">—</span></div>
+    <div class="m-essence" id="mEssence">—</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   Sanctuary of Light — engine
+   ============================================================ */
+const $=id=>document.getElementById(id);
+
+/* ---------- QUESTIONS ---------- */
+const QUESTIONS=[
+  {id:'wake', type:'choice', cols:2,
+   q:'あなたが朝、目を覚ます理由は？',
+   opts:[
+     {em:'🌅', t:'まだ見ぬ何かへの予感', h:38},
+     {em:'🤝', t:'待っている誰かのため', h:8},
+     {em:'🔥', t:'胸の奥でくすぶる衝動', h:0},
+     {em:'🌫️', t:'ただ、続いていくから', h:230},
+   ]},
+  {id:'emotion', type:'choice', cols:3,
+   q:'今、心の奥にある感情は？',
+   opts:[
+     {em:'☀️', t:'喜び', h:48},
+     {em:'🌧️', t:'哀しみ', h:212},
+     {em:'⚡', t:'怒り', h:2},
+     {em:'🌑', t:'恐れ', h:268},
+     {em:'🌸', t:'愛', h:330},
+     {em:'🕳️', t:'虚無', h:240},
+   ]},
+  {id:'energy', type:'text',
+   q:'あなたを動かす、エネルギーの源は？',
+   placeholder:'例：誰かの笑顔、悔しさ、好奇心…', max:24, h:18},
+  {id:'forwhom', type:'choice', cols:3,
+   q:'いま、あなたは誰のためにここにいる？',
+   opts:[
+     {em:'🪞', t:'自分', h:300},
+     {em:'🏠', t:'家族', h:28},
+     {em:'💞', t:'誰か', h:340},
+     {em:'🌍', t:'世界', h:150},
+     {em:'🛤️', t:'未来', h:190},
+     {em:'❔', t:'わからない', h:255},
+   ]},
+  {id:'release', type:'text',
+   q:'あなたが、手放したいものは？',
+   placeholder:'例：過去の後悔、誰かの期待…', max:24, h:255},
+  {id:'protect', type:'text',
+   q:'では。あなたが、守りたいものは？',
+   placeholder:'例：この静けさ、大切な人…', max:24, h:140},
+  {id:'name', type:'text',
+   q:'最後に。あなたの名を、教えてください。',
+   placeholder:'名前 / 呼ばれたい名', max:16, h:null, isName:true},
+];
+
+/* ---------- STATE ---------- */
+const answers={};            // id -> value
+let qIndex=0;
+let baseHue=265, baseSat=70, baseLum=62;
+const STAGES=['stage-entrance','stage-ritual','stage-manifest','stage-result'];
+
+/* ============================================================
+   COLOR ENGINE
+   ============================================================ */
+function setSoulColor(h,s,l){
+  baseHue=(h%360+360)%360; baseSat=s; baseLum=l;
+  const root=document.documentElement.style;
+  root.setProperty('--soul-h',baseHue.toFixed(0));
+  root.setProperty('--soul-s',s.toFixed(0)+'%');
+  root.setProperty('--soul-l',l.toFixed(0)+'%');
+}
+// blend current hue toward a target by t (0..1)
+function blendHue(cur,target,t){
+  let diff=((target-cur+540)%360)-180;
+  return (cur+diff*t+360)%360;
+}
+
+/* ---------- color naming ---------- */
+function colorName(h,s,l){
+  // pick hue family
+  const families=[
+    {max:14,  en:'Ember',   jp:'火種'},
+    {max:38,  en:'Amber',   jp:'琥珀'},
+    {max:55,  en:'Gold',    jp:'黄金'},
+    {max:80,  en:'Verdant', jp:'若葉'},
+    {max:150, en:'Jade',    jp:'翡翠'},
+    {max:185, en:'Aqua',    jp:'水縹'},
+    {max:215, en:'Azure',   jp:'空'},
+    {max:245, en:'Abyss',   jp:'深海'},
+    {max:275, en:'Twilight',jp:'宵闇'},
+    {max:300, en:'Violet',  jp:'菫'},
+    {max:330, en:'Magenta', jp:'紅紫'},
+    {max:348, en:'Rose',    jp:'薔薇'},
+    {max:361, en:'Ember',   jp:'火種'},
+  ];
+  const fam=families.find(f=>h<f.max)||families[0];
+  // modifier by lightness/saturation
+  let modEn, modJp;
+  if(l>=72){ modEn='Luminous'; modJp='煌めく'; }
+  else if(l<=42){ modEn='Deep'; modJp='深き'; }
+  else if(s<=40){ modEn='Faded'; modJp='淡き'; }
+  else if(s>=78){ modEn='Vivid'; modJp='鮮烈な'; }
+  else { modEn='Quiet'; modJp='静かな'; }
+  // poetic JP combos
+  const jpPoetic=[
+    {cond:h>=245&&h<300&&l<55, jp:'夜明けの菫'},
+    {cond:h>=215&&h<245&&l<50, jp:'深海の青'},
+    {cond:h<20&&s>60, jp:'火種の赤'},
+    {cond:h>=38&&h<60&&l>60, jp:'黄昏の金'},
+    {cond:h>=80&&h<150, jp:'芽吹きの緑'},
+    {cond:h>=300&&h<340, jp:'宵の薔薇'},
+  ];
+  const poetic=jpPoetic.find(p=>p.cond);
+  return {
+    en:`${modEn} ${fam.en}`,
+    jp: poetic? poetic.jp : `${modJp}${fam.jp}`
+  };
+}
+
+/* ============================================================
+   PARTICLES (DOM)
+   ============================================================ */
+const particleLayer=$('particles');
+let particles=[];
+let particleTarget=14;
+function spawnParticle(){
+  const el=document.createElement('div');
+  el.className='pt';
+  const size=(Math.random()*4+2);
+  el.style.width=size+'px'; el.style.height=size+'px';
+  const p={
+    el,
+    x:Math.random()*window.innerWidth,
+    y:Math.random()*window.innerHeight,
+    vx:(Math.random()-.5)*.25,
+    vy:(Math.random()-.5)*.25,
+    life:Math.random(),
+    base:Math.random()*.5+.3
+  };
+  particleLayer.appendChild(el);
+  particles.push(p);
+}
+function setParticleCount(n){
+  particleTarget=n;
+  while(particles.length<n) spawnParticle();
+  while(particles.length>n){ const p=particles.pop(); p.el.remove(); }
+}
+let cx=window.innerWidth/2, cy=window.innerHeight/2;
+let attract=0; // pull strength toward center
+function particleLoop(){
+  for(const p of particles){
+    // gentle drift
+    p.x+=p.vx; p.y+=p.vy;
+    // attraction to center
+    if(attract>0){
+      const dx=cx-p.x, dy=cy-p.y;
+      p.x+=dx*attract*0.012; p.y+=dy*attract*0.012;
+    }
+    // wrap
+    if(p.x<-20)p.x=window.innerWidth+20; if(p.x>window.innerWidth+20)p.x=-20;
+    if(p.y<-20)p.y=window.innerHeight+20; if(p.y>window.innerHeight+20)p.y=-20;
+    p.life+=0.008;
+    const op=(Math.sin(p.life)*0.35+0.5)*p.base;
+    p.el.style.transform=`translate(${p.x}px,${p.y}px)`;
+    p.el.style.opacity=op.toFixed(2);
+  }
+  requestAnimationFrame(particleLoop);
+}
+particleLoop();
+setParticleCount(14);
+
+/* burst of particles (climax) */
+function particleBurst(count){
+  cx=window.innerWidth/2; cy=window.innerHeight/2;
+  for(let i=0;i<count;i++){
+    const el=document.createElement('div');
+    el.className='pt';
+    const size=(Math.random()*5+2);
+    el.style.width=size+'px'; el.style.height=size+'px';
+    const ang=Math.random()*Math.PI*2;
+    const p={el,x:cx,y:cy,vx:Math.cos(ang)*(Math.random()*6+2),vy:Math.sin(ang)*(Math.random()*6+2),
+      life:Math.random(),base:Math.random()*.5+.5};
+    particleLayer.appendChild(el); particles.push(p);
+    // decay these back to ambient later
+    setTimeout(()=>{ if(particles.includes(p) && particles.length>particleTarget){ const i=particles.indexOf(p); if(i>-1){particles.splice(i,1);} p.el.remove(); } }, 4000+Math.random()*2000);
+  }
+}
+
+/* ============================================================
+   STARFIELD
+   ============================================================ */
+(function(){
+  let h='';
+  for(let i=0;i<90;i++){
+    const s=(Math.random()*1.8+0.6).toFixed(1);
+    h+=`<i style="left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;width:${s}px;height:${s}px;animation-delay:${(Math.random()*4).toFixed(1)}s"></i>`;
+  }
+  $('starfield').innerHTML=h;
+})();
+
+/* ============================================================
+   STAGE SWITCHING
+   ============================================================ */
+function gotoStage(idTo){
+  const cur=document.querySelector('.stage.active');
+  const next=$(idTo);
+  if(cur===next) return;
+  if(cur){
+    cur.classList.add('leaving');
+    setTimeout(()=>{cur.classList.remove('active','leaving');},700);
+  }
+  setTimeout(()=>{
+    next.classList.add('active');
+    window.scrollTo(0,0);
+  }, cur?320:0);
+}
+
+/* ============================================================
+   ORB GROWTH
+   ============================================================ */
+function setOrbSize(orb,px){ orb.style.width=px+'px'; orb.style.height=px+'px'; }
+
+/* ============================================================
+   RITUAL FLOW
+   ============================================================ */
+const qBlock=$('qBlock');
+function renderQuestion(){
+  const Q=QUESTIONS[qIndex];
+  const prev=qBlock.querySelector('.q-item.show');
+  const build=()=>{
+    qBlock.innerHTML='';
+    const item=document.createElement('div');
+    item.className='q-item';
+    let inner=`<div class="q-no">${romanize(qIndex+1)} &nbsp;·&nbsp; ${qIndex+1} / 7</div>
+      <div class="q-text">${Q.q}</div>`;
+    if(Q.type==='text'){
+      const val=answers[Q.id]||'';
+      inner+=`<input class="soul-input" id="qInput" type="text" maxlength="${Q.max}"
+                placeholder="${Q.placeholder}" value="${escAttr(val)}" autocomplete="off">
+              <div class="input-hint">${Q.isName?'名前を入れて、光を顕現させる':'そっと、ことばにしてみる'}</div>`;
+    } else {
+      inner+=`<div class="choices ${Q.cols===2?'cols2':''}" id="qChoices">`;
+      Q.opts.forEach((o,i)=>{
+        const sel=answers[Q.id]&&answers[Q.id].i===i?'sel':'';
+        inner+=`<button class="choice ${sel}" data-i="${i}" data-h="${o.h}">
+                  <span class="glow"></span>
+                  ${o.em?`<span class="em">${o.em}</span>`:''}${o.t}</button>`;
+      });
+      inner+='</div>';
+    }
+    item.innerHTML=inner;
+    qBlock.appendChild(item);
+    requestAnimationFrame(()=>item.classList.add('show'));
+    bindQuestion(Q);
+    updateNav();
+  };
+  if(prev){
+    prev.classList.add('leaving');
+    setTimeout(build,420);
+  } else build();
+}
+function bindQuestion(Q){
+  if(Q.type==='text'){
+    const inp=$('qInput');
+    inp.addEventListener('input',()=>{
+      answers[Q.id]={text:inp.value};
+      // live tint from text length & content for non-name
+      if(Q.h!=null){
+        previewHue(Q.h, Math.min(1, inp.value.length/Q.max));
+      }
+      updateNav();
+    });
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!$('navNext').disabled) advance(); });
+    setTimeout(()=>inp.focus(),460);
+  } else {
+    qBlock.querySelectorAll('.choice').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        qBlock.querySelectorAll('.choice').forEach(b=>b.classList.remove('sel'));
+        btn.classList.add('sel');
+        const i=+btn.dataset.i, h=+btn.dataset.h;
+        answers[Q.id]={i, h, text:Q.opts[i].t};
+        previewHue(h,1);
+        updateNav();
+      });
+    });
+  }
+}
+// preview hue shift while answering current Q
+let committedHue=265, committedSat=70, committedLum=62;
+function previewHue(targetH, strength){
+  const t=0.55*strength;
+  const h=blendHue(committedHue,targetH,t);
+  const s=Math.min(92, committedSat + strength*8);
+  setSoulColor(h,s,committedLum);
+}
+
+function updateNav(){
+  const Q=QUESTIONS[qIndex];
+  let ok=false;
+  if(Q.type==='text'){ ok=(answers[Q.id]&&answers[Q.id].text&&answers[Q.id].text.trim().length>0); }
+  else { ok=!!answers[Q.id]; }
+  $('navNext').disabled=!ok;
+  $('navNext').textContent = qIndex===6 ? '光を顕現する ✦' : '次へ →';
+  $('navBack').disabled=qIndex===0;
+}
+
+function commitAnswerColor(){
+  const Q=QUESTIONS[qIndex];
+  const a=answers[Q.id];
+  if(!a) return;
+  let targetH = (Q.type==='choice') ? a.h : (Q.h!=null?Q.h:committedHue);
+  const t=0.5;
+  committedHue=blendHue(committedHue,targetH,t);
+  committedSat=Math.min(90, committedSat + 2);
+  committedLum=Math.max(48, Math.min(70, committedLum + (Q.type==='choice'?1:0)));
+  setSoulColor(committedHue,committedSat,committedLum);
+}
+
+function growOrb(){
+  const ritOrb=$('orb-ritual');
+  const progress=(qIndex+1)/7;          // after answering
+  const size=54 + progress*150;          // 54 -> ~204
+  setOrbSize(ritOrb,size);
+  // gauge
+  const circ=2*Math.PI*56;
+  $('gaugeProg').style.strokeDashoffset=(circ*(1-progress)).toFixed(2);
+  $('maturityLabel').textContent='Maturity  '+Math.round(progress*100)+'%';
+  // particles grow
+  setParticleCount(14+Math.round(progress*40));
+}
+
+function advance(){
+  if($('navNext').disabled) return;
+  commitAnswerColor();
+  growOrb();
+  if(qIndex<6){
+    qIndex++;
+    renderQuestion();
+  } else {
+    runManifest();
+  }
+}
+function goBack(){
+  if(qIndex===0) return;
+  qIndex--;
+  renderQuestion();
+}
+$('navNext').addEventListener('click',advance);
+$('navBack').addEventListener('click',goBack);
+
+/* ============================================================
+   MANIFESTATION (climax)
+   ============================================================ */
+function runManifest(){
+  // build final soul object
+  const soul=buildSoul();
+  gotoStage('stage-manifest');
+  playChime();
+
+  const orb=$('orb-manifest');
+  setOrbSize(orb,120);
+
+  // sequence
+  setTimeout(()=>{
+    // 1. flash + rays
+    $('flash').classList.add('fire');
+    buildClimaxRays();
+    $('climaxRays').classList.add('fire');
+    // 2. rapid growth + spin + burst
+    orb.style.transition='width 1.4s cubic-bezier(.3,1.6,.4,1),height 1.4s cubic-bezier(.3,1.6,.4,1)';
+    setOrbSize(orb,300);
+    orb.style.filter='brightness(1.4)';
+    particleBurst(80);
+    cx=window.innerWidth/2; cy=window.innerHeight/2; attract=0.0;
+  },200);
+
+  setTimeout(()=>{
+    // 5. contract & settle
+    setOrbSize(orb,200);
+    orb.style.filter='';
+  },1700);
+
+  setTimeout(()=>{
+    // 6. id rises
+    $('manifestId').textContent='Soul #'+pad5(soul.id);
+    $('manifestId').classList.add('rise');
+  },2200);
+
+  setTimeout(()=>{
+    $('flash').classList.remove('fire');
+    showResult(soul);
+  },4600);
+}
+
+function buildClimaxRays(){
+  const box=$('climaxRays');
+  let h='';
+  for(let i=0;i<24;i++){ h+=`<span style="transform:translate(-50%,0) rotate(${i*15}deg)"></span>`; }
+  box.innerHTML=h;
+}
+
+/* ============================================================
+   BUILD SOUL OBJECT + SAVE
+   ============================================================ */
+function nextSoulId(){
+  let n=parseInt(localStorage.getItem('sanctuary_nextId')||'1',10);
+  if(!Number.isFinite(n)||n<1) n=1;
+  return n;
+}
+function buildSoul(){
+  const id=nextSoulId();
+  const name=(answers.name&&answers.name.text||'').trim()||'匿名の光';
+  const cn=colorName(committedHue,committedSat,committedLum);
+  const essence=buildEssence();
+  const soul={
+    id, name,
+    h:Math.round(committedHue), s:Math.round(committedSat), l:Math.round(committedLum),
+    colorEn:cn.en, colorJp:cn.jp,
+    essence,
+    ts:Date.now()
+  };
+  saveSoul(soul);
+  return soul;
+}
+function buildEssence(){
+  const energy=(answers.energy&&answers.energy.text||'').trim();
+  const release=(answers.release&&answers.release.text||'').trim();
+  const protect=(answers.protect&&answers.protect.text||'').trim();
+  const emo=(answers.emotion&&answers.emotion.text)||'';
+  const lines=[];
+  if(energy) lines.push(`${energy}を糧に、今日も燃えるあなた。`);
+  if(release&&protect) lines.push(`${release}を手放し、${protect}を抱きしめながら歩む。`);
+  else if(protect) lines.push(`${protect}を、その手で守りぬくために。`);
+  else if(release) lines.push(`${release}を、そっと夜に還しながら。`);
+  if(emo) lines.push(`心の奥で${emo}が、静かに光っている。`);
+  if(lines.length===0) lines.push('言葉にならない想いが、ひとつの光になった。');
+  return lines.join('\n');
+}
+function saveSoul(soul){
+  try{
+    const arr=loadSouls();
+    arr.unshift(soul);
+    if(arr.length>50) arr.length=50;
+    localStorage.setItem('sanctuary_souls',JSON.stringify(arr));
+    localStorage.setItem('sanctuary_nextId',String(soul.id+1));
+  }catch(e){}
+}
+function loadSouls(){
+  try{ return JSON.parse(localStorage.getItem('sanctuary_souls')||'[]'); }catch(e){ return []; }
+}
+
+/* ============================================================
+   RESULT SCREEN
+   ============================================================ */
+let CURRENT_SOUL=null;
+function showResult(soul){
+  CURRENT_SOUL=soul;
+  setSoulColor(soul.h,soul.s,soul.l);
+  gotoStage('stage-result');
+  setTimeout(()=>setOrbSize($('orb-result'),200),100);
+
+  $('resId').textContent='Soul #'+pad5(soul.id);
+  $('resName').textContent=soul.name;
+  $('resColor').querySelector('.en').textContent=soul.colorEn;
+  $('resColor').querySelector('.jp').textContent=soul.colorJp;
+  $('resEssence').innerHTML=esc(soul.essence).replace(/\n/g,'<br>');
+
+  // spectrum bars
+  const huePct=(soul.h/360*100);
+  $('barHue').style.right=(100-huePct)+'%';
+  $('valHue').textContent=soul.h+'°';
+  $('barSat').style.right=(100-soul.s)+'%';
+  $('barSat').style.background=`linear-gradient(90deg, hsl(${soul.h},10%,55%), hsl(${soul.h},90%,60%))`;
+  $('valSat').textContent=soul.s+'%';
+  $('barLum').style.right=(100-soul.l)+'%';
+  $('barLum').style.background=`linear-gradient(90deg, hsl(${soul.h},60%,12%), hsl(${soul.h},70%,85%))`;
+  $('valLum').textContent=soul.l+'%';
+
+  renderCollection();
+}
+
+/* ============================================================
+   COLLECTION
+   ============================================================ */
+function renderCollection(){
+  const track=$('soulsTrack');
+  const arr=loadSouls();
+  if(arr.length===0){ track.innerHTML='<div class="empty-note">まだ、ひとつも光は捧げられていない。</div>'; return; }
+  track.innerHTML=arr.map(s=>`
+    <div class="soul-chip" style="--ch:${s.h}" data-id="${s.id}">
+      <div class="light"></div>
+      <div class="tip">
+        <div class="n">${esc(s.name)}</div>
+        <div class="i">#${pad5(s.id)} · ${esc(s.colorJp)}</div>
+      </div>
+    </div>`).join('');
+  track.querySelectorAll('.soul-chip').forEach(chip=>{
+    chip.addEventListener('click',()=>openModal(+chip.dataset.id));
+  });
+}
+
+/* ---------- modal ---------- */
+function openModal(id){
+  const s=loadSouls().find(x=>x.id===id); if(!s) return;
+  document.documentElement.style.setProperty('--md',s.h);
+  $('mId').textContent='Soul #'+pad5(s.id);
+  $('mName').textContent=s.name;
+  $('mColor').querySelector('.en').textContent=s.colorEn;
+  $('mColor').querySelector('.jp').textContent=s.colorJp;
+  $('mEssence').innerHTML=esc(s.essence).replace(/\n/g,'<br>');
+  $('modal').classList.add('open');
+}
+$('modalClose').addEventListener('click',()=>$('modal').classList.remove('open'));
+$('modal').addEventListener('click',e=>{ if(e.target===$('modal')) $('modal').classList.remove('open'); });
+
+/* ============================================================
+   SHARE / SAVE / AGAIN
+   ============================================================ */
+$('shareX').addEventListener('click',()=>{
+  if(!CURRENT_SOUL) return;
+  const s=CURRENT_SOUL;
+  const txt=`Soul #${pad5(s.id)}「${s.colorJp} / ${s.colorEn}」を顕現しました。\nわたしの色を、祭壇に捧げる。\n#SanctuaryOfLight #心の天気`;
+  const url='https://twitter.com/intent/tweet?text='+encodeURIComponent(txt);
+  window.open(url,'_blank','noopener');
+});
+$('saveImg').addEventListener('click',()=>{
+  toast('印刷ダイアログから「PDFに保存」を選べます');
+  setTimeout(()=>window.print(),700);
+});
+$('againBtn').addEventListener('click',()=>{
+  // reset
+  qIndex=0;
+  for(const k in answers) delete answers[k];
+  committedHue=265; committedSat=70; committedLum=62;
+  setSoulColor(265,70,62);
+  setOrbSize($('orb-ritual'),54);
+  $('gaugeProg').style.strokeDashoffset='351.86';
+  $('maturityLabel').textContent='Maturity  0%';
+  setParticleCount(14);
+  $('manifestId').classList.remove('rise');
+  $('climaxRays').classList.remove('fire');
+  attract=0;
+  gotoStage('stage-ritual');
+  renderQuestion();
+});
+
+/* ============================================================
+   ENTRANCE
+   ============================================================ */
+$('enterBtn').addEventListener('click',()=>{
+  if(!audioCtx && soundOn) initAudio();
+  gotoStage('stage-ritual');
+  qIndex=0;
+  committedHue=265; committedSat=70; committedLum=62;
+  setSoulColor(265,70,62);
+  setOrbSize($('orb-ritual'),54);
+  renderQuestion();
+});
+
+/* ============================================================
+   WEB AUDIO — ambient heartbeat + chime
+   ============================================================ */
+let audioCtx=null, soundOn=false, ambientNodes=null;
+function initAudio(){
+  try{
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  }catch(e){ return; }
+  startAmbient();
+}
+function startAmbient(){
+  if(!audioCtx) return;
+  // low drone
+  const master=audioCtx.createGain();
+  master.gain.value=0.0;
+  master.connect(audioCtx.destination);
+  master.gain.linearRampToValueAtTime(0.16, audioCtx.currentTime+3);
+
+  const osc1=audioCtx.createOscillator();
+  osc1.type='sine'; osc1.frequency.value=55;
+  const osc2=audioCtx.createOscillator();
+  osc2.type='sine'; osc2.frequency.value=82.5;
+  const droneGain=audioCtx.createGain(); droneGain.gain.value=0.5;
+  osc1.connect(droneGain); osc2.connect(droneGain); droneGain.connect(master);
+  osc1.start(); osc2.start();
+
+  // slow LFO shimmer
+  const lfo=audioCtx.createOscillator(); lfo.frequency.value=0.08;
+  const lfoGain=audioCtx.createGain(); lfoGain.gain.value=0.06;
+  lfo.connect(lfoGain); lfoGain.connect(master.gain); lfo.start();
+
+  // heartbeat
+  const beat=()=>{
+    if(!soundOn||!audioCtx) return;
+    heartThump(0); heartThump(0.28);
+    schedHeart=setTimeout(beat, 2400);
+  };
+  let schedHeart=setTimeout(beat,1200);
+
+  ambientNodes={master,osc1,osc2,lfo,stop(){ try{osc1.stop();osc2.stop();lfo.stop();clearTimeout(schedHeart);}catch(e){} }};
+}
+function heartThump(delay){
+  if(!audioCtx) return;
+  const t=audioCtx.currentTime+delay;
+  const o=audioCtx.createOscillator(); o.type='sine';
+  o.frequency.setValueAtTime(70,t); o.frequency.exponentialRampToValueAtTime(40,t+0.18);
+  const g=audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.32,t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.32);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t+0.36);
+}
+function playChime(){
+  if(!audioCtx||!soundOn) return;
+  const notes=[523.25,659.25,783.99,1046.5];
+  notes.forEach((f,i)=>{
+    const t=audioCtx.currentTime+i*0.12;
+    const o=audioCtx.createOscillator(); o.type='triangle'; o.frequency.value=f;
+    const g=audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.18,t+0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+1.6);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t); o.stop(t+1.7);
+  });
+}
+$('soundToggle').addEventListener('click',()=>{
+  soundOn=!soundOn;
+  $('soundToggle').classList.toggle('on',soundOn);
+  if(soundOn){
+    if(!audioCtx) initAudio();
+    else if(audioCtx.state==='suspended') audioCtx.resume();
+    else if(!ambientNodes) startAmbient();
+    if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume();
+    toast('環境音 ON');
+  } else {
+    if(audioCtx) audioCtx.suspend();
+    toast('環境音 OFF');
+  }
+});
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function pad5(n){ return String(n).padStart(5,'0'); }
+function romanize(n){ return ['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ'][n-1]||n; }
+function esc(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function escAttr(s){ return esc(s); }
+let toastT=null;
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// keep center updated
+window.addEventListener('resize',()=>{ cx=window.innerWidth/2; cy=window.innerHeight/2; });
+
+// pre-render collection on load (for first-time empty note via result only; not shown on entrance)
+</script>
+</body>
+</html>
