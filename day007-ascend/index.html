@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#15102b">
+<title>Ascend - 千の階の塔</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Shippori+Mincho:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#0c0a1a; --bg1:#15102b; --bg2:#1e1640; --ink:#ece6ff; --muted:#a99fd0;
+  --gold:#e9c46a; --gold2:#ffd97a; --red:#e7544c; --red2:#ff7b6e; --blue:#5aa8e8;
+  --blue2:#82c7ff; --green:#6fd08c; --purple:#9b6be0; --rune:#c8a8ff;
+  --rare:#b06bff; --legend:#ffce54; --uncommon:#5aa8e8; --common:#dfe0e8;
+  --line:rgba(200,168,255,.18); --panel:rgba(30,22,64,.72);
+  --shadow:0 10px 40px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{
+  font-family:"Shippori Mincho","Cinzel",serif;color:var(--ink);
+  background:
+    radial-gradient(1200px 700px at 50% -10%, #2a1d57 0%, transparent 60%),
+    radial-gradient(900px 600px at 90% 110%, #2b1240 0%, transparent 55%),
+    linear-gradient(160deg, var(--bg0), var(--bg1) 55%, #120a26);
+  overflow:hidden;position:fixed;inset:0;touch-action:manipulation;
+  user-select:none;
+}
+.app{position:absolute;inset:0;display:flex;flex-direction:column}
+.screen{position:absolute;inset:0;display:none;animation:fade .45s ease}
+.screen.active{display:flex;flex-direction:column}
+@keyframes fade{from{opacity:0;transform:scale(.99)}to{opacity:1;transform:none}}
+.hidden{display:none!important}
+h1,h2,h3{font-family:"Cinzel",serif;letter-spacing:.04em;margin:0}
+button{font-family:inherit;cursor:pointer;color:var(--ink);border:none;background:none}
+.btn{
+  background:linear-gradient(180deg, rgba(155,107,224,.25), rgba(60,40,110,.4));
+  border:1px solid var(--line);border-radius:12px;padding:14px 22px;font-size:16px;
+  font-family:"Cinzel","Shippori Mincho",serif;letter-spacing:.05em;color:var(--gold2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 18px rgba(0,0,0,.4);
+  transition:transform .12s, box-shadow .2s, background .2s;position:relative;overflow:hidden}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(120,80,200,.35)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn.primary{background:linear-gradient(180deg,#b88a3a,#7c5a1e);color:#1a1208;border-color:#e9c46a;font-weight:700}
+.btn.danger{color:var(--red2)}
+.btn.small{padding:8px 14px;font-size:13px;border-radius:9px}
+.rune-divider{height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin:14px 0}
+
+/* scrollbars */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(155,107,224,.35);border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ===== TITLE ===== */
+#title{align-items:center;justify-content:center;text-align:center;padding:24px}
+.title-emblem{font-size:60px;filter:drop-shadow(0 0 22px rgba(233,196,106,.5));margin-bottom:6px;animation:floaty 5s ease-in-out infinite}
+@keyframes floaty{50%{transform:translateY(-10px)}}
+#title h1{font-size:clamp(38px,9vw,78px);font-weight:900;
+  background:linear-gradient(180deg,#fff7e0,var(--gold) 55%,#a9772d);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 40px rgba(233,196,106,.25);line-height:1}
+#title .jp{font-size:clamp(16px,4vw,26px);color:var(--rune);letter-spacing:.5em;margin-top:8px;font-family:"Shippori Mincho"}
+#title .sub{color:var(--muted);margin:18px 0 26px;font-size:15px;letter-spacing:.2em}
+.title-menu{display:flex;flex-direction:column;gap:12px;width:min(330px,86vw)}
+.title-stats{margin-top:20px;color:var(--muted);font-size:12.5px;display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.title-stats b{color:var(--gold2)}
+.soul-badge{position:absolute;top:16px;right:18px;background:var(--panel);border:1px solid var(--line);
+  border-radius:30px;padding:8px 16px;font-size:14px;color:var(--rune);display:flex;align-items:center;gap:7px}
+.bg-runes{position:absolute;inset:0;pointer-events:none;opacity:.10;overflow:hidden}
+.bg-runes span{position:absolute;font-family:"Cinzel";font-size:30px;color:#fff;animation:driftR 22s linear infinite}
+@keyframes driftR{from{transform:translateY(110vh) rotate(0)}to{transform:translateY(-20vh) rotate(360deg)}}
+
+/* ===== generic overlay panel ===== */
+.overlay{position:absolute;inset:0;background:rgba(8,6,18,.82);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;z-index:60;animation:fade .3s}
+.overlay.active{display:flex}
+.panel{background:linear-gradient(180deg,rgba(34,24,70,.96),rgba(20,14,44,.97));
+  border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);
+  max-width:min(940px,94vw);max-height:90vh;overflow:auto;padding:22px;position:relative}
+.panel h2{color:var(--gold2);font-size:24px;margin-bottom:4px;text-align:center}
+.panel .ptag{text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px;letter-spacing:.2em}
+.close-x{position:absolute;top:12px;right:14px;font-size:26px;color:var(--muted);line-height:1}
+
+/* ===== MAP ===== */
+#map{padding:0}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(12,8,26,.7);
+  border-bottom:1px solid var(--line);flex-wrap:wrap;z-index:5}
+.stat-chip{display:flex;align-items:center;gap:6px;background:rgba(40,28,82,.6);border:1px solid var(--line);
+  border-radius:20px;padding:6px 12px;font-size:13px}
+.stat-chip.hpc{min-width:150px}
+.hpbar{position:relative;flex:1;height:14px;background:#2a1530;border-radius:8px;overflow:hidden;border:1px solid rgba(231,84,76,.3)}
+.hpbar>i{position:absolute;inset:0;width:100%;background:linear-gradient(90deg,#b22,#e7544c);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.hpbar>b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-style:normal;color:#fff;text-shadow:0 1px 2px #000}
+.relic-tray{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.relic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;
+  background:radial-gradient(circle at 30% 25%,rgba(233,196,106,.35),rgba(60,40,15,.6));border:1px solid rgba(233,196,106,.4);cursor:help;position:relative}
+.map-scroll{flex:1;overflow-y:auto;position:relative;padding:18px 12px 30px}
+.tower-title{text-align:center;color:var(--rune);letter-spacing:.3em;font-size:13px;margin-bottom:6px}
+.floor-marker{text-align:center;color:var(--muted);font-size:12px;margin:10px 0 4px;letter-spacing:.2em}
+.choice-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px auto;max-width:680px}
+.node{width:150px;background:linear-gradient(180deg,rgba(40,28,82,.85),rgba(22,15,48,.9));
+  border:1px solid var(--line);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;
+  transition:transform .15s,box-shadow .25s,border-color .2s;position:relative}
+.node:hover{transform:translateY(-5px) scale(1.03);box-shadow:0 12px 30px rgba(120,80,200,.4);border-color:var(--rune)}
+.node .ic{font-size:38px;display:block;filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))}
+.node .nm{font-size:15px;color:var(--gold2);margin-top:8px;font-weight:700}
+.node .ds{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.4}
+.node.boss{border-color:var(--red);background:linear-gradient(180deg,rgba(90,20,30,.6),rgba(30,10,20,.9))}
+.node.boss .nm{color:var(--red2)}
+.tower-vis{max-width:340px;margin:6px auto 0;opacity:.9}
+.floor-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);padding:2px 0;justify-content:center}
+.floor-row .seg{width:60px;height:7px;border-radius:4px;background:rgba(120,90,180,.18)}
+.floor-row.done .seg{background:linear-gradient(90deg,#7c5a1e,#e9c46a)}
+.floor-row.cur .seg{background:var(--rune);box-shadow:0 0 10px var(--rune)}
+.floor-row.boss .seg{background:rgba(231,84,76,.4)}
+
+/* ===== COMBAT ===== */
+#combat{padding:0;overflow:hidden}
+.battlefield{flex:1;position:relative;display:flex;flex-direction:column;min-height:0}
+.arena{flex:1;display:flex;justify-content:space-between;align-items:center;padding:10px 16px 0;position:relative;min-height:0;gap:10px}
+.enemy-zone{display:flex;gap:16px;align-items:flex-end;flex:1;justify-content:center;flex-wrap:wrap}
+.entity{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;transition:transform .1s}
+.entity.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+.sprite{width:120px;height:120px;position:relative;cursor:default;transition:filter .2s}
+.sprite svg{width:100%;height:100%;animation:bob 3.4s ease-in-out infinite;overflow:visible}
+.entity.player-e .sprite svg{animation:bob 4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-7px)}}
+.sprite.flash{filter:brightness(2.6) drop-shadow(0 0 14px #fff)}
+.sprite.dead{animation:die .7s forwards}
+@keyframes die{to{opacity:0;transform:scale(.6) rotate(20deg);filter:grayscale(1) brightness(.4)}}
+.drop-hot .sprite{filter:drop-shadow(0 0 16px var(--red2)) brightness(1.2)}
+.entity .ename{font-size:13px;color:var(--gold2);letter-spacing:.05em;font-weight:700}
+.ehp{width:130px}
+.ehpbar{position:relative;height:16px;background:#2a1530;border-radius:8px;overflow:hidden;border:1px solid rgba(231,84,76,.35)}
+.ehpbar>i{position:absolute;inset:0;background:linear-gradient(90deg,#b22,#e7544c);transition:width .45s}
+.ehpbar.player>i{background:linear-gradient(90deg,#2a8f4f,#6fd08c)}
+.ehpbar>b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-style:normal;color:#fff;text-shadow:0 1px 2px #000}
+.block-badge{position:absolute;top:-6px;left:50%;transform:translateX(-50%);background:radial-gradient(circle,#5aa8e8,#274a7a);
+  border:1px solid #9cd0ff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;box-shadow:0 0 12px rgba(90,168,232,.6);z-index:3}
+.intent{display:flex;align-items:center;gap:5px;background:rgba(10,6,20,.8);border:1px solid var(--line);
+  border-radius:18px;padding:4px 12px;font-size:13px;color:var(--gold2);margin-bottom:2px;font-weight:700;min-height:26px}
+.intent.atk{color:var(--red2);border-color:rgba(231,84,76,.5)}
+.intent.def{color:var(--blue2);border-color:rgba(90,168,232,.5)}
+.intent.buf{color:var(--green);border-color:rgba(111,208,140,.5)}
+.intent.deb{color:var(--purple);border-color:rgba(155,107,224,.5)}
+.buffs{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;min-height:22px}
+.buff{font-size:11px;background:rgba(30,20,55,.85);border:1px solid var(--line);border-radius:12px;padding:2px 7px;display:flex;gap:2px;align-items:center}
+.buff.bad{border-color:rgba(155,107,224,.5);color:var(--rune)}
+.buff.good{border-color:rgba(111,208,140,.5);color:var(--green)}
+
+/* combat hud */
+.combat-top{display:flex;align-items:center;gap:10px;padding:8px 14px;background:rgba(12,8,26,.78);border-bottom:1px solid var(--line);flex-wrap:wrap;z-index:6}
+.floor-tag{font-family:"Cinzel";color:var(--gold2);font-size:14px;letter-spacing:.1em}
+.hand-area{position:relative;min-height:230px;display:flex;align-items:flex-end;justify-content:center;padding:0 70px 8px;z-index:8}
+.hand{display:flex;justify-content:center;align-items:flex-end;height:215px;perspective:1100px}
+.energy-orb{position:absolute;left:16px;bottom:14px;width:74px;height:74px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ffe9a0,#e9c46a 40%,#8a5e16);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;box-shadow:0 0 22px rgba(233,196,106,.55),inset 0 -6px 12px rgba(120,80,10,.6);
+  border:2px solid #fff3cf;z-index:9}
+.energy-orb b{font-size:24px;color:#3a2708;font-style:normal;line-height:1;font-family:"Cinzel";font-weight:900}
+.energy-orb span{font-size:9px;color:#5a3f12;letter-spacing:.1em}
+.pile{position:absolute;bottom:16px;width:58px;height:78px;border-radius:9px;border:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--muted);
+  background:linear-gradient(180deg,rgba(40,28,82,.8),rgba(20,14,44,.9));cursor:pointer;z-index:9}
+.pile b{font-size:18px;color:var(--gold2);font-style:normal}
+.pile.draw{right:78px}.pile.disc{right:14px}
+.pile-label{font-size:9px;letter-spacing:.1em}
+.endturn{position:absolute;right:14px;bottom:104px;z-index:9}
+.endturn .btn{background:linear-gradient(180deg,#b88a3a,#7c5a1e);color:#1a1208;border-color:#e9c46a;font-weight:700;padding:12px 18px}
+.endturn .btn:disabled{filter:grayscale(.6)}
+
+/* CARD */
+.card{
+  width:128px;height:188px;border-radius:13px;position:relative;cursor:grab;flex:0 0 auto;
+  margin:0 -20px;transition:transform .18s cubic-bezier(.2,.8,.2,1),margin .18s,box-shadow .2s,filter .2s;
+  transform-origin:bottom center;box-shadow:0 8px 20px rgba(0,0,0,.5);will-change:transform;
+  background:linear-gradient(180deg,#2a2148,#181030);border:2px solid var(--common);overflow:hidden;
+}
+.card:hover{transform:translateY(-46px) scale(1.32);z-index:50;margin:0 6px;box-shadow:0 18px 44px rgba(0,0,0,.7)}
+.card.dragging{opacity:.25}
+.card.attack{border-color:#c9605a}
+.card.skill{border-color:#5aa8e8}
+.card.power{border-color:#6fd08c}
+.card.r-uncommon{box-shadow:0 0 0 1px rgba(90,168,232,.5),0 8px 20px rgba(0,0,0,.5)}
+.card.r-rare{box-shadow:0 0 0 1px rgba(176,107,255,.6),0 8px 22px rgba(120,40,200,.35)}
+.card.r-legendary{box-shadow:0 0 0 1px rgba(255,206,84,.8),0 8px 26px rgba(233,196,106,.4)}
+.card.unplayable{filter:grayscale(.75) brightness(.7)}
+.card .cframe{position:absolute;inset:0;padding:7px 8px;display:flex;flex-direction:column}
+.card .cost{position:absolute;top:-7px;left:-7px;width:30px;height:30px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ffe9a0,#e9c46a 45%,#8a5e16);color:#3a2708;font-family:"Cinzel";
+  font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;border:2px solid #fff3cf;z-index:3}
+.card .cname{font-size:12px;font-weight:700;text-align:center;color:var(--ink);margin-top:6px;line-height:1.15;min-height:28px;display:flex;align-items:center;justify-content:center}
+.card .cart{flex:1;border-radius:8px;margin:4px 0;display:flex;align-items:center;justify-content:center;font-size:34px;
+  background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(0,0,0,.3));position:relative;overflow:hidden}
+.card.attack .cart{background:linear-gradient(160deg,rgba(231,84,76,.22),rgba(60,15,15,.45))}
+.card.skill .cart{background:linear-gradient(160deg,rgba(90,168,232,.2),rgba(15,30,60,.45))}
+.card.power .cart{background:linear-gradient(160deg,rgba(111,208,140,.2),rgba(15,50,30,.45))}
+.card .cdesc{font-size:10px;line-height:1.32;color:var(--muted);text-align:center;min-height:46px;padding:0 1px;font-family:"Shippori Mincho"}
+.card .cdesc b{color:var(--gold2);font-style:normal}
+.card .cdesc .dmg{color:var(--red2)}.card .cdesc .blk{color:var(--blue2)}
+.card .ctype{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-size:8px;color:var(--muted);letter-spacing:.2em}
+.card.upgraded .cname{color:var(--gold2)}
+.card .upg{position:absolute;top:3px;right:5px;color:var(--gold2);font-size:11px}
+
+/* card ghost while dragging */
+#ghost{position:fixed;pointer-events:none;z-index:200;width:128px;height:188px;left:0;top:0;display:none;
+  transform:translate(-50%,-50%) scale(1.05);filter:drop-shadow(0 14px 30px rgba(0,0,0,.7))}
+#trajectory{position:fixed;inset:0;pointer-events:none;z-index:199;display:none}
+
+/* floating damage/heal numbers */
+.fnum{position:fixed;z-index:210;font-family:"Cinzel";font-weight:900;font-size:30px;pointer-events:none;
+  text-shadow:0 2px 6px rgba(0,0,0,.8);animation:fnum 1s ease-out forwards}
+.fnum.dmg{color:#ff7b6e}.fnum.heal{color:#6fd08c}.fnum.block{color:#82c7ff}.fnum.crit{color:#ffce54;font-size:40px}
+@keyframes fnum{0%{opacity:0;transform:translate(-50%,0) scale(.5)}15%{opacity:1;transform:translate(-50%,-26px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-72px) scale(.95)}}
+
+/* reward / shop / rest cards */
+.choice-grid{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:18px 0}
+.rcard-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.rcard-wrap .pricetag{color:var(--gold2);font-size:13px}
+.relic-pick{width:150px;background:linear-gradient(180deg,rgba(40,28,82,.85),rgba(22,15,48,.9));
+  border:1px solid rgba(233,196,106,.4);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;transition:transform .15s}
+.relic-pick:hover{transform:translateY(-4px)}
+.relic-pick .ic{font-size:40px}
+.relic-pick .nm{color:var(--gold2);font-weight:700;font-size:14px;margin-top:6px}
+.relic-pick .ds{color:var(--muted);font-size:11px;margin-top:4px;line-height:1.4}
+
+/* victory / death */
+#result{align-items:center;justify-content:center;text-align:center}
+.result-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:30px 26px;max-width:min(480px,90vw);box-shadow:var(--shadow)}
+.result-card h1{font-size:40px;margin-bottom:10px}
+.victory h1{color:var(--gold2)}
+.defeat h1{color:var(--red2)}
+.result-stat{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.result-stat b{color:var(--gold2)}
+.gold-shower,.gold-shower2{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.spark{position:absolute;top:-20px;font-size:18px;animation:rain linear forwards}
+@keyframes rain{to{transform:translateY(110vh) rotate(360deg);opacity:.2}}
+
+/* soul shop grid */
+.soul-grid,.codex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px}
+.soul-item{background:linear-gradient(180deg,rgba(40,28,82,.7),rgba(22,15,48,.85));border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px}
+.soul-item .si-top{display:flex;justify-content:space-between;align-items:center}
+.soul-item .si-nm{color:var(--gold2);font-weight:700;font-size:14px}
+.soul-item .si-lv{font-size:11px;color:var(--rune)}
+.soul-item .si-ds{color:var(--muted);font-size:11.5px;margin:6px 0 10px;line-height:1.4;min-height:32px}
+.soul-item .btn{width:100%;padding:8px;font-size:13px}
+.pips{display:flex;gap:3px;margin-top:4px}
+.pip{width:13px;height:6px;border-radius:3px;background:rgba(120,90,180,.25)}
+.pip.on{background:var(--rune);box-shadow:0 0 6px var(--rune)}
+
+/* codex */
+.codex-card{border:1px solid var(--line);border-radius:10px;padding:10px;background:rgba(22,15,48,.7);font-size:12px}
+.codex-card.locked{opacity:.45;filter:grayscale(.8)}
+.codex-card .cc-nm{color:var(--gold2);font-weight:700;font-size:13px;display:flex;justify-content:space-between}
+.codex-card .cc-ds{color:var(--muted);margin-top:4px;line-height:1.4}
+.codex-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+.codex-tabs .btn.active{background:linear-gradient(180deg,#b88a3a,#7c5a1e);color:#1a1208}
+.ach-item{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:rgba(22,15,48,.6)}
+.ach-item.got{border-color:rgba(233,196,106,.5);background:rgba(60,45,15,.3)}
+.ach-item .ai-ic{font-size:26px;filter:grayscale(1);opacity:.5}
+.ach-item.got .ai-ic{filter:none;opacity:1}
+.ach-item .ai-nm{color:var(--gold2);font-weight:700;font-size:14px}
+.ach-item .ai-ds{color:var(--muted);font-size:12px}
+
+/* toast */
+#toast{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:rgba(20,14,44,.95);border:1px solid var(--line);border-radius:24px;padding:9px 18px;font-size:13px;color:var(--gold2);
+  box-shadow:var(--shadow);animation:toast 2.6s ease forwards}
+@keyframes toast{0%{opacity:0;transform:translateY(-12px)}10%,80%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-12px)}}
+
+/* event */
+.event-box{max-width:min(540px,92vw)}
+.event-box .ev-art{font-size:60px;text-align:center;margin-bottom:6px}
+.event-box .ev-text{color:var(--muted);font-size:14.5px;line-height:1.7;margin:12px 0 18px;text-align:center;font-family:"Shippori Mincho"}
+.event-box .ev-opts{display:flex;flex-direction:column;gap:10px}
+
+.sound-toggle{position:absolute;top:16px;left:18px;z-index:40}
+.tip{color:var(--muted);font-size:11.5px;text-align:center;margin-top:6px;letter-spacing:.05em}
+.darkflash{position:absolute;inset:0;background:#000;opacity:0;z-index:150;pointer-events:none;transition:opacity .8s}
+
+@media (max-width:640px){
+  .card{width:96px;height:146px;margin:0 -22px}
+  .card .cname{font-size:10px;min-height:22px}
+  .card .cart{font-size:26px}
+  .card .cdesc{font-size:8.5px;min-height:40px}
+  .card:hover{transform:translateY(-30px) scale(1.4)}
+  .sprite{width:92px;height:92px}
+  .energy-orb{width:60px;height:60px;left:8px}
+  .pile{width:46px;height:62px}
+  .hand-area{padding:0 30px 6px}
+  .endturn{bottom:90px}
+  .topbar,.combat-top{font-size:12px}
+  #ghost{width:96px;height:146px}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- TITLE -->
+  <section class="screen" id="title">
+    <div class="bg-runes" id="bgRunes"></div>
+    <div class="soul-badge">🔮 <b id="soulCount">0</b> ソウル</div>
+    <button class="sound-toggle btn small" id="soundBtn">🔇 音 OFF</button>
+    <div class="title-emblem">🗼</div>
+    <h1>ASCEND</h1>
+    <div class="jp">千 の 階 の 塔</div>
+    <div class="sub">あなたは何階まで登れるか</div>
+    <div class="title-menu">
+      <button class="btn primary" id="btnNew">⚔ 新しい挑戦を始める</button>
+      <button class="btn" id="btnContinue">📜 続きから</button>
+      <button class="btn" id="btnSoul">🔮 ソウル強化</button>
+      <button class="btn" id="btnCodex">📖 カード図鑑</button>
+      <button class="btn" id="btnAch">🏆 実績</button>
+    </div>
+    <div class="title-stats">
+      <span>最高到達 <b id="tsBest">-</b>階</span>
+      <span>総プレイ <b id="tsRuns">0</b>回</span>
+      <span>総勝利 <b id="tsWins">0</b></span>
+      <span>討伐数 <b id="tsKills">0</b></span>
+    </div>
+  </section>
+
+  <!-- MAP -->
+  <section class="screen" id="map">
+    <div class="topbar" id="mapTop"></div>
+    <div class="map-scroll" id="mapScroll"></div>
+  </section>
+
+  <!-- COMBAT -->
+  <section class="screen" id="combat">
+    <div class="combat-top" id="combatTop"></div>
+    <div class="battlefield">
+      <div class="arena" id="arena">
+        <div class="enemy-zone" id="enemyZone"></div>
+        <div class="entity player-e" id="playerEntity"></div>
+      </div>
+      <div class="hand-area">
+        <div class="energy-orb"><b id="enNow">3</b><span>ENERGY</span></div>
+        <div class="hand" id="hand"></div>
+        <div class="pile draw" id="drawPile"><b id="drawN">0</b><span class="pile-label">山札</span></div>
+        <div class="pile disc" id="discPile"><b id="discN">0</b><span class="pile-label">捨札</span></div>
+        <div class="endturn"><button class="btn" id="endTurnBtn">ターン終了 ⟳</button></div>
+      </div>
+    </div>
+    <div class="darkflash" id="darkflash"></div>
+  </section>
+
+  <!-- overlays -->
+  <div class="overlay" id="ovReward"></div>
+  <div class="overlay" id="ovShop"></div>
+  <div class="overlay" id="ovRest"></div>
+  <div class="overlay" id="ovEvent"></div>
+  <div class="overlay" id="ovSoul"></div>
+  <div class="overlay" id="ovCodex"></div>
+  <div class="overlay" id="ovAch"></div>
+  <div class="overlay" id="ovPile"></div>
+  <div class="overlay" id="ovUpgrade"></div>
+
+  <!-- RESULT -->
+  <section class="screen" id="result"></section>
+
+  <div id="ghost"></div>
+  <svg id="trajectory"><path id="trajPath" fill="none" stroke="url(#tg)" stroke-width="4" stroke-linecap="round"/>
+    <defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e9c46a" stop-opacity="0"/><stop offset="1" stop-color="#ff7b6e"/></linearGradient></defs></svg>
+  <div id="toast"></div>
+</div>
+
+<script>
+"use strict";
+/*════════════════════════ ASCEND — 千の階の塔 ════════════════════════*/
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rng=n=>Math.floor(Math.random()*n);
+const pick=a=>a[rng(a.length)];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rng(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
+let UID=1;
+
+/*──────── CARD DATABASE (36) ────────*/
+// type: attack/skill/power  rarity: common/uncommon/rare/legendary
+const CARDS = {
+  strike:{name:"ストライク",type:"attack",rarity:"common",cost:1,art:"⚔️",dmg:6,up:{dmg:9},desc:s=>`<span class="dmg">${s.dmg}</span> ダメージ`},
+  guard:{name:"ガード",type:"skill",rarity:"common",cost:1,art:"🛡️",blk:5,up:{blk:8},desc:s=>`<span class="blk">${s.blk}</span> ブロック`},
+  heavy_swing:{name:"ヘビースイング",type:"attack",rarity:"common",cost:2,art:"🪓",dmg:15,up:{dmg:21},desc:s=>`<span class="dmg">${s.dmg}</span> ダメージ`},
+  iron_skin:{name:"アイアンスキン",type:"skill",rarity:"common",cost:2,art:"⛓️",blk:10,up:{blk:15},desc:s=>`<span class="blk">${s.blk}</span> ブロック`},
+  heal:{name:"ヒール",type:"skill",rarity:"common",cost:2,art:"💚",heal:8,up:{heal:13},desc:s=>`HP <b>${s.heal}</b> 回復`},
+  quick_jab:{name:"速撃",type:"attack",rarity:"common",cost:0,art:"🤜",dmg:3,up:{dmg:5},desc:s=>`<span class="dmg">${s.dmg}</span> ダメージ`},
+  shield_bash:{name:"盾殴り",type:"attack",rarity:"common",cost:1,art:"🛡️",dmg:5,blk:5,up:{dmg:8,blk:8},desc:s=>`<span class="dmg">${s.dmg}</span> ダメージ + <span class="blk">${s.blk}</span> ブロック`},
+  cleave:{name:"なぎ払い",type:"attack",rarity:"common",cost:1,art:"🌊",dmg:4,all:true,up:{dmg:7},desc:s=>`全敵に <span class="dmg">${s.dmg}</span> ダメージ`},
+
+  double_slash:{name:"二段斬り",type:"attack",rarity:"uncommon",cost:2,art:"⚔️",dmg:5,hits:2,up:{dmg:7,hits:2},desc:s=>`<span class="dmg">${s.dmg}</span>×${s.hits} ダメージ`},
+  bulwark:{name:"鉄壁",type:"skill",rarity:"uncommon",cost:2,art:"🏰",blk:8,retain:true,up:{blk:12,retain:true},desc:s=>`<span class="blk">${s.blk}</span> ブロック・次ターンも保持`},
+  burning_blade:{name:"燃焼剣",type:"attack",rarity:"uncommon",cost:1,art:"🔥",dmg:4,burn:3,up:{dmg:6,burn:4},desc:s=>`<span class="dmg">${s.dmg}</span> ダメージ + 燃焼 <b>${s.burn}</b>`},
+  frost_wave:{name:"凍結波",type:"attack",rarity:"uncommon",cost:2,art:"❄️",dmg:3,all:true,slow:2,up:{dmg:5,all:true,slow:3},desc:s=>`全敵に <span class="dmg">${s.dmg}</span> + スロー <b>${s.slow}</b>`},
+  counter_stance:{name:"反撃の構え",type:"skill",rarity:"uncommon",cost:1,art:"↩️",retaliate:2,up:{retaliate:3},desc:s=>`次ターン、受けた攻撃の<b>${s.retaliate}</b>倍を反射`},
+  poison_dagger:{name:"毒の短剣",type:"attack",rarity:"uncommon",cost:1,art:"🗡️",dmg:4,poison:4,up:{dmg:6,poison:6},desc:s=>`<span class="dmg">${s.dmg}</span> + 毒 <b>${s.poison}</b>`},
+  rage:{name:"憤怒",type:"power",rarity:"uncommon",cost:1,art:"💢",str:2,up:{str:3},desc:s=>`力 +<b>${s.str}</b>（永続）`},
+  focus:{name:"集中",type:"skill",rarity:"uncommon",cost:1,art:"🎯",draw:2,up:{draw:3},desc:s=>`カードを <b>${s.draw}</b> 枚引く`},
+  whirlwind:{name:"旋風",type:"attack",rarity:"uncommon",cost:2,art:"🌀",dmg:5,all:true,up:{dmg:8,all:true},desc:s=>`全敵に <span class="dmg">${s.dmg}</span> ダメージ`},
+  fortify:{name:"要塞",type:"power",rarity:"uncommon",cost:2,art:"🧱",dex:2,up:{dex:3},desc:s=>`敏捷 +<b>${s.dex}</b>（ブロック増加・永続）`},
+  meditate:{name:"瞑想",type:"skill",rarity:"uncommon",cost:1,art:"🧘",heal:6,draw:1,up:{heal:9,draw:1},desc:s=>`HP <b>${s.heal}</b> 回復 + <b>${s.draw}</b> ドロー`},
+  spike_armor:{name:"棘の鎧",type:"power",rarity:"uncommon",cost:2,art:"🦔",thorns:3,up:{thorns:5},desc:s=>`棘 <b>${s.thorns}</b>（被攻撃時に反射・永続）`},
+
+  blade_dance:{name:"神速の剣舞",type:"attack",rarity:"rare",cost:3,art:"🌪️",dmg:4,hits:5,up:{dmg:5,hits:5},desc:s=>`<span class="dmg">${s.dmg}</span>×${s.hits} ダメージ`},
+  immortal_shield:{name:"不滅の盾",type:"skill",rarity:"rare",cost:3,art:"💠",blk:20,retain:true,up:{blk:28,retain:true},desc:s=>`<span class="blk">${s.blk}</span> ブロック・次ターン保持`},
+  life_radiance:{name:"生命の輝き",type:"skill",rarity:"rare",cost:2,art:"✨",heal:15,cleanse:true,up:{heal:22,cleanse:true},desc:s=>`HP <b>${s.heal}</b> 回復 + 毒/燃焼を解除`},
+  time_warp:{name:"時間操作",type:"skill",rarity:"rare",cost:3,art:"⏳",extraTurn:true,up:{extraTurn:true,cost:2},desc:s=>`エナジー全回復し追加で行動`},
+  soul_eater:{name:"魂喰い",type:"attack",rarity:"rare",cost:2,art:"👻",dmg:8,lifesteal:true,up:{dmg:12,lifesteal:true},desc:s=>`<span class="dmg">${s.dmg}</span> ダメージ・与ダメ分HP回復`},
+  execute:{name:"処刑",type:"attack",rarity:"rare",cost:2,art:"☠️",dmg:10,exec:true,up:{dmg:14,exec:true},desc:s=>`<span class="dmg">${s.dmg}</span>・敵HP30%以下で2倍`},
+  flame_burst:{name:"火炎爆発",type:"attack",rarity:"rare",cost:2,art:"💥",dmg:6,all:true,burn:4,up:{dmg:9,all:true,burn:5},desc:s=>`全敵に <span class="dmg">${s.dmg}</span> + 燃焼 <b>${s.burn}</b>`},
+  holy_light:{name:"聖光",type:"skill",rarity:"rare",cost:2,art:"🌟",heal:10,blk:10,up:{heal:14,blk:14},desc:s=>`HP <b>${s.heal}</b> 回復 + <span class="blk">${s.blk}</span> ブロック`},
+  last_stand:{name:"背水の陣",type:"attack",rarity:"rare",cost:1,art:"🩸",dmg:6,scaleMiss:true,up:{dmg:9,scaleMiss:true},desc:s=>`<span class="dmg">${s.dmg}</span> + 失ったHP5毎に+1`},
+  adrenaline:{name:"アドレナリン",type:"skill",rarity:"rare",cost:0,art:"⚡",energy:2,draw:1,up:{energy:2,draw:2},desc:s=>`エナジー +<b>${s.energy}</b>・<b>${s.draw}</b> ドロー`},
+  berserk:{name:"狂戦士の血",type:"power",rarity:"rare",cost:1,art:"😈",str:3,selfDmg:4,up:{str:4,selfDmg:3},desc:s=>`力 +<b>${s.str}</b>・自傷 ${s.selfDmg}`},
+
+  thousand_blades:{name:"千の刃",type:"attack",rarity:"legendary",cost:4,art:"⚔️",dmg:8,hits:3,all:true,up:{dmg:10,hits:3,all:true},desc:s=>`全敵に <span class="dmg">${s.dmg}</span>×${s.hits} ダメージ`},
+  divine_blessing:{name:"神の加護",type:"skill",rarity:"legendary",cost:0,art:"😇",costDown:1,up:{costDown:2},desc:s=>`このターン全カードのコスト -<b>${s.costDown}</b>`},
+  wheel_of_fate:{name:"運命の輪",type:"skill",rarity:"rare",cost:2,art:"🎰",wheel:true,up:{wheel:true},desc:s=>`5種の強力効果から<b>ランダム</b>に発動`},
+  soul_blade:{name:"魂の刃",type:"attack",rarity:"rare",cost:1,art:"🔆",dmg:9,up:{dmg:13},desc:s=>`<span class="dmg">${s.dmg}</span> ダメージ（魂の力）`},
+};
+const ALL_CARD_IDS = Object.keys(CARDS);
+
+/*──────── ENEMY DATABASE (16) ────────*/
+function svg(type){
+  const S={
+    slime:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="85" rx="34" ry="10" fill="#0a160a"/><path d="M20 70 Q18 35 50 32 Q82 35 80 70 Q80 80 50 80 Q20 80 20 70" fill="#6fd08c"/><path d="M20 70 Q18 35 50 32 Q82 35 80 70" fill="#9be8b0" opacity=".5"/><circle cx="40" cy="55" r="5" fill="#0a2a14"/><circle cx="62" cy="55" r="5" fill="#0a2a14"/><circle cx="41" cy="53" r="2" fill="#fff"/><circle cx="63" cy="53" r="2" fill="#fff"/></svg>`,
+    goblin:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="90" rx="26" ry="7" fill="#0a160a"/><path d="M30 40 L22 22 L36 36 M70 40 L78 22 L64 36" stroke="#5a8a3a" stroke-width="6" fill="#7aac4a"/><ellipse cx="50" cy="55" rx="24" ry="26" fill="#7aac4a"/><path d="M28 55 L18 50 M72 55 L82 50" stroke="#5a8a3a" stroke-width="5"/><circle cx="42" cy="50" r="5" fill="#e7544c"/><circle cx="60" cy="50" r="5" fill="#e7544c"/><path d="M40 66 Q50 74 60 66" stroke="#2a1a0a" stroke-width="3" fill="none"/><path d="M44 70 L46 76 M56 70 L54 76" stroke="#fff" stroke-width="2"/></svg>`,
+    bat:`<svg viewBox="0 0 100 100"><path d="M50 45 Q20 25 8 42 Q26 42 30 55 Q14 52 16 66 Q34 58 50 62 Q66 58 84 66 Q86 52 70 55 Q74 42 92 42 Q80 25 50 45" fill="#4a3a6a"/><ellipse cx="50" cy="52" rx="14" ry="16" fill="#5a4a7a"/><circle cx="44" cy="48" r="4" fill="#ff7b6e"/><circle cx="56" cy="48" r="4" fill="#ff7b6e"/><path d="M44 58 L42 64 M56 58 L58 64" stroke="#fff" stroke-width="2"/></svg>`,
+    zombie:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="92" rx="24" ry="6" fill="#0a160a"/><rect x="34" y="40" width="32" height="44" rx="8" fill="#6a7a5a"/><ellipse cx="50" cy="36" rx="20" ry="22" fill="#7a8a64"/><circle cx="42" cy="34" r="4" fill="#1a2a0a"/><circle cx="58" cy="34" r="4" fill="#c4d44a"/><path d="M40 46 Q50 50 60 46" stroke="#2a1a0a" stroke-width="2" fill="none"/><path d="M30 55 L24 58 M70 55 L76 58" stroke="#6a7a5a" stroke-width="6"/></svg>`,
+    skeleton_knight:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="92" rx="24" ry="6" fill="#0a160a"/><ellipse cx="50" cy="36" rx="18" ry="20" fill="#e8e4d4"/><rect x="36" y="50" width="28" height="34" rx="5" fill="#d4d0c0"/><path d="M36 56 H64 M36 64 H64 M36 72 H64" stroke="#9a968a" stroke-width="2"/><circle cx="43" cy="36" r="5" fill="#1a1a2a"/><circle cx="57" cy="36" r="5" fill="#1a1a2a"/><circle cx="43" cy="35" r="2" fill="#82c7ff"/><circle cx="57" cy="35" r="2" fill="#82c7ff"/><path d="M70 30 L86 70" stroke="#b0c0d0" stroke-width="5"/></svg>`,
+    assassin:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="92" rx="22" ry="6" fill="#0a160a"/><path d="M34 38 Q50 26 66 38 L62 82 Q50 88 38 82 Z" fill="#2a2440"/><ellipse cx="50" cy="40" rx="16" ry="14" fill="#1a1630"/><rect x="38" y="42" width="24" height="6" rx="3" fill="#3a3458"/><circle cx="44" cy="45" r="3" fill="#ff7b6e"/><circle cx="56" cy="45" r="3" fill="#ff7b6e"/><path d="M30 60 L18 50 M70 60 L82 50" stroke="#b0c0d0" stroke-width="3"/></svg>`,
+    mage:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="92" rx="24" ry="6" fill="#0a160a"/><path d="M50 14 L36 44 L64 44 Z" fill="#7c4ad0"/><path d="M50 18 L40 42 L60 42 Z" fill="#9b6be0"/><circle cx="50" cy="14" r="5" fill="#ffd97a"/><path d="M34 44 Q50 38 66 44 L60 84 Q50 88 40 84 Z" fill="#5a3aa0"/><circle cx="44" cy="56" r="3" fill="#ffd97a"/><circle cx="56" cy="56" r="3" fill="#ffd97a"/><circle cx="50" cy="74" r="8" fill="#9b6be0" opacity=".6"/></svg>`,
+    golem:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="93" rx="30" ry="6" fill="#0a160a"/><rect x="30" y="44" width="40" height="42" rx="6" fill="#6a6a7a"/><rect x="36" y="26" width="28" height="24" rx="5" fill="#7a7a8a"/><rect x="20" y="48" width="12" height="30" rx="4" fill="#5a5a6a"/><rect x="68" y="48" width="12" height="30" rx="4" fill="#5a5a6a"/><circle cx="43" cy="36" r="4" fill="#ff7b6e"/><circle cx="57" cy="36" r="4" fill="#ff7b6e"/><path d="M38 60 H62 M38 70 H62" stroke="#4a4a5a" stroke-width="3"/></svg>`,
+    harpy:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="92" rx="20" ry="6" fill="#0a160a"/><path d="M50 50 Q14 30 6 50 Q24 54 30 64 M50 50 Q86 30 94 50 Q76 54 70 64" fill="#c47a4a"/><ellipse cx="50" cy="48" rx="14" ry="18" fill="#d4a060"/><path d="M44 36 Q50 28 56 36" fill="#e8c080"/><circle cx="44" cy="44" r="4" fill="#ffd97a"/><circle cx="56" cy="44" r="4" fill="#ffd97a"/><path d="M48 52 L50 58 L52 52" fill="#e7544c"/></svg>`,
+    dragonling:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="92" rx="24" ry="6" fill="#0a160a"/><path d="M50 46 Q16 34 10 56 Q30 54 36 64 M50 46 Q84 34 90 56 Q70 54 64 64" fill="#3a7a4a"/><ellipse cx="50" cy="54" rx="20" ry="22" fill="#4a9a5a"/><path d="M40 34 L36 24 M60 34 L64 24" stroke="#3a7a4a" stroke-width="4"/><circle cx="43" cy="50" r="5" fill="#ffd97a"/><circle cx="57" cy="50" r="5" fill="#ffd97a"/><circle cx="43" cy="50" r="2" fill="#000"/><circle cx="57" cy="50" r="2" fill="#000"/><path d="M42 66 Q50 72 58 66" stroke="#1a3a14" stroke-width="3" fill="none"/></svg>`,
+    wraith_knight:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="92" rx="22" ry="6" fill="#0a160a"/><path d="M34 34 Q50 24 66 34 L60 86 Q50 92 40 86 Z" fill="#243a44"/><ellipse cx="50" cy="34" rx="16" ry="16" fill="#1a2a30"/><path d="M40 24 L44 14 M60 24 L56 14" stroke="#3a5a64" stroke-width="4"/><circle cx="43" cy="36" r="4" fill="#82c7ff"/><circle cx="57" cy="36" r="4" fill="#82c7ff"/><path d="M72 28 L88 74" stroke="#5a8aa0" stroke-width="5"/><ellipse cx="80" cy="28" rx="5" ry="9" fill="#82c7ff" opacity=".5"/></svg>`,
+    succubus:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="92" rx="22" ry="6" fill="#0a160a"/><path d="M50 48 Q20 34 12 56 Q30 52 34 66 M50 48 Q80 34 88 56 Q70 52 66 66" fill="#8a2a5a"/><ellipse cx="50" cy="46" rx="16" ry="18" fill="#c44a7a"/><path d="M40 30 L34 18 M60 30 L66 18" stroke="#8a2a5a" stroke-width="4"/><circle cx="44" cy="44" r="4" fill="#ffd97a"/><circle cx="56" cy="44" r="4" fill="#ffd97a"/><path d="M44 54 Q50 58 56 54" stroke="#5a1a3a" stroke-width="3" fill="none"/></svg>`,
+    demon:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="93" rx="28" ry="6" fill="#0a160a"/><path d="M30 40 L20 18 L38 34 M70 40 L80 18 L62 34" stroke="#7a1a1a" stroke-width="6" fill="#a02a2a"/><ellipse cx="50" cy="54" rx="26" ry="28" fill="#a02a2a"/><path d="M50 30 L46 26 L54 26 Z" fill="#7a1a1a"/><circle cx="42" cy="50" r="6" fill="#ffd97a"/><circle cx="58" cy="50" r="6" fill="#ffd97a"/><circle cx="42" cy="50" r="2.5" fill="#000"/><circle cx="58" cy="50" r="2.5" fill="#000"/><path d="M38 66 Q50 76 62 66 L58 70 L54 66 L50 72 L46 66 L42 70 Z" fill="#3a0a0a"/></svg>`,
+    dragon_lord:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="93" rx="32" ry="6" fill="#0a160a"/><path d="M50 44 Q6 28 -2 58 Q26 54 34 68 M50 44 Q94 28 102 58 Q74 54 66 68" fill="#6a1a8a"/><ellipse cx="50" cy="52" rx="24" ry="26" fill="#8a2aa0"/><path d="M38 28 L34 12 M62 28 L66 12 M50 26 L50 10" stroke="#6a1a8a" stroke-width="4"/><circle cx="42" cy="48" r="6" fill="#ff7b6e"/><circle cx="58" cy="48" r="6" fill="#ff7b6e"/><path d="M38 64 Q50 74 62 64 L56 68 L50 64 L44 68 Z" fill="#3a0a4a"/><ellipse cx="50" cy="78" rx="10" ry="6" fill="#ffd97a" opacity=".5"/></svg>`,
+    abyss_envoy:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="92" rx="24" ry="6" fill="#0a160a"/><path d="M30 30 Q50 18 70 30 L66 88 Q50 96 34 88 Z" fill="#16102a"/><ellipse cx="50" cy="34" rx="18" ry="18" fill="#0a0618"/><circle cx="50" cy="36" r="9" fill="#9b6be0"/><circle cx="50" cy="36" r="4" fill="#fff"/><path d="M30 50 Q50 44 70 50" stroke="#9b6be0" stroke-width="2" opacity=".6"/><path d="M28 64 Q50 58 72 64" stroke="#9b6be0" stroke-width="2" opacity=".4"/><path d="M22 44 L10 36 M78 44 L90 36" stroke="#2a1a4a" stroke-width="4"/></svg>`,
+    tower_master:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="94" rx="34" ry="6" fill="#0a160a"/><path d="M24 38 L12 12 L34 32 M76 38 L88 12 L66 32" stroke="#8a6a1a" stroke-width="6" fill="#caa030"/><ellipse cx="50" cy="56" rx="30" ry="32" fill="#1a1430"/><path d="M50 24 L40 30 L50 22 L60 30 Z" fill="#caa030"/><circle cx="50" cy="20" r="6" fill="#ffd97a"/><circle cx="40" cy="52" r="7" fill="#ffce54"/><circle cx="60" cy="52" r="7" fill="#ffce54"/><circle cx="40" cy="52" r="3" fill="#000"/><circle cx="60" cy="52" r="3" fill="#000"/><path d="M36 70 Q50 82 64 70 L58 74 L52 70 L46 74 Z" fill="#000"/><path d="M50 56 L50 64" stroke="#caa030" stroke-width="3"/></svg>`,
+    player:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="93" rx="24" ry="6" fill="#0a160a"/><path d="M34 36 Q50 26 66 36 L62 84 Q50 90 38 84 Z" fill="#3a5a8a"/><ellipse cx="50" cy="34" rx="16" ry="17" fill="#d4b896"/><path d="M34 30 Q50 16 66 30 L64 24 Q50 12 36 24 Z" fill="#6a4a2a"/><circle cx="43" cy="34" r="3" fill="#2a2a4a"/><circle cx="57" cy="34" r="3" fill="#2a2a4a"/><path d="M44 44 Q50 48 56 44" stroke="#7a5a3a" stroke-width="2" fill="none"/><path d="M70 30 L86 72" stroke="#caa030" stroke-width="4"/><rect x="22" y="44" width="10" height="34" rx="3" fill="#5a4a6a"/></svg>`,
+  };
+  return S[type]||S.slime;
+}
+// move types: a=attack,b=block,s=strength,d=debuff(weak/vuln)
+const ENEMIES = {
+  slime:{name:"スライム",hp:[12,16],moves:[{t:"a",v:5},{t:"a",v:5},{t:"b",v:5}]},
+  goblin:{name:"ゴブリン",hp:[14,18],moves:[{t:"a",v:7},{t:"a",v:4},{t:"d",deb:"weak",v:1}]},
+  bat:{name:"コウモリ",hp:[9,13],moves:[{t:"a",v:3,hits:2},{t:"a",v:4},{t:"d",deb:"vuln",v:1}]},
+  zombie:{name:"ゾンビ",hp:[26,32],moves:[{t:"a",v:10},{t:"a",v:7},{t:"s",v:2}]},
+  skeleton_knight:{name:"骸骨剣士",hp:[30,38],moves:[{t:"a",v:9},{t:"b",v:8},{t:"a",v:6,hits:2}]},
+  assassin:{name:"暗殺者",hp:[22,28],moves:[{t:"a",v:6,hits:2},{t:"d",deb:"vuln",v:2},{t:"a",v:13}]},
+  mage:{name:"魔導士",hp:[28,34],moves:[{t:"a",v:11},{t:"d",deb:"weak",v:2},{t:"a",v:8,hits:2}]},
+  golem:{name:"ゴーレム",hp:[55,65],moves:[{t:"b",v:14},{t:"a",v:16},{t:"a",v:9}]},
+  harpy:{name:"ハーピー",hp:[34,42],moves:[{t:"a",v:7,hits:2},{t:"s",v:2},{t:"a",v:12}]},
+  dragonling:{name:"ドラゴンの仔",hp:[48,58],moves:[{t:"a",v:14},{t:"a",v:8,burn:3},{t:"b",v:10}]},
+  wraith_knight:{name:"亡霊騎士",hp:[60,72],moves:[{t:"a",v:18},{t:"b",v:14},{t:"a",v:9,hits:2}]},
+  succubus:{name:"サキュバス",hp:[46,56],moves:[{t:"a",v:10,heal:8},{t:"d",deb:"weak",v:2},{t:"a",v:8,hits:2}]},
+  demon:{name:"大悪魔",hp:[80,95],moves:[{t:"a",v:22},{t:"a",v:11,hits:2},{t:"s",v:3}]},
+  dragon_lord:{name:"龍王",hp:[110,130],moves:[{t:"a",v:26},{t:"a",v:9,hits:3,burn:4},{t:"b",v:18}]},
+  abyss_envoy:{name:"深淵の使者",hp:[95,115],moves:[{t:"a",v:16,hits:2},{t:"d",deb:"vuln",v:3},{t:"a",v:20}]},
+  tower_master:{name:"塔の主",hp:[260,260],boss:true,moves:[{t:"a",v:30},{t:"a",v:12,hits:3},{t:"s",v:4},{t:"b",v:25},{t:"a",v:18,burn:5}]},
+};
+const TIERS=[
+  {max:10,list:["slime","goblin","bat"]},
+  {max:30,list:["zombie","skeleton_knight","assassin","goblin"]},
+  {max:50,list:["mage","golem","harpy","skeleton_knight"]},
+  {max:80,list:["dragonling","wraith_knight","succubus","harpy"]},
+  {max:99,list:["demon","dragon_lord","abyss_envoy","wraith_knight"]},
+];
+const BOSS_FLOORS={10:"skeleton_knight",25:"golem",50:"wraith_knight",75:"dragon_lord",100:"tower_master"};
+
+/*──────── RELICS (24) ────────*/
+const RELICS = {
+  steel_ring:{name:"鋼の指輪",ic:"💍",ds:"ブロック獲得カードで +2 ブロック"},
+  blood_jewel:{name:"血の宝玉",ic:"🔴",ds:"戦闘終了時 HP 5 回復"},
+  fire_heart:{name:"火の心臓",ic:"❤️‍🔥",ds:"燃焼ダメージ +2"},
+  clock_gear:{name:"時計の歯車",ic:"⚙️",ds:"毎ターン開始時 1 ドロー"},
+  dark_pact:{name:"闇の契約",ic:"🖤",ds:"毎ターン最初のカードのコスト -1"},
+  tough_skin:{name:"鉄の皮膚",ic:"🪨",ds:"最大HP +8"},
+  energy_core:{name:"力の核",ic:"🔋",ds:"毎ターン エナジー +1"},
+  lucky_coin:{name:"幸運のコイン",ic:"🪙",ds:"獲得ゴールド +30%"},
+  vampire_fang:{name:"吸血の牙",ic:"🦷",ds:"毎ターン最初の攻撃で HP 3 回復"},
+  spiked_shield:{name:"棘の盾",ic:"🛡️",ds:"戦闘開始時 棘 3"},
+  rune_of_power:{name:"力のルーン",ic:"🔆",ds:"戦闘開始時 力 +1"},
+  swift_boots:{name:"疾風のブーツ",ic:"👢",ds:"戦闘開始時 追加で 1 ドロー"},
+  healing_herb:{name:"癒しの草",ic:"🌿",ds:"回復効果 +3"},
+  guardian_angel:{name:"守護天使",ic:"😇",ds:"戦闘開始時 ブロック 8"},
+  phoenix_feather:{name:"不死鳥の羽",ic:"🪶",ds:"一度だけ致命傷でHP1で復活"},
+  golden_idol:{name:"黄金の偶像",ic:"🗿",ds:"戦闘勝利時 ゴールド +20"},
+  ember_stone:{name:"燃え石",ic:"🔥",ds:"攻撃カードで燃焼 1 付与"},
+  titan_core:{name:"巨人の核",ic:"💪",ds:"最大HP +15"},
+  mana_crystal:{name:"魔力結晶",ic:"💎",ds:"3ターン毎にエナジー +1"},
+  berserker_mask:{name:"狂戦士の仮面",ic:"👹",ds:"HP50%以下で攻撃 +3"},
+  soul_lantern:{name:"魂の灯",ic:"🏮",ds:"死亡時のソウル +25%"},
+  card_satchel:{name:"カードの鞄",ic:"🎒",ds:"カード報酬の選択肢 +1"},
+  ice_shard:{name:"氷の欠片",ic:"🧊",ds:"攻撃で30%の確率スロー1"},
+  crystal_ball:{name:"水晶玉",ic:"🔮",ds:"戦闘開始時 2 ドロー"},
+};
+const RELIC_IDS=Object.keys(RELICS);
+
+/*──────── SOUL UPGRADES ────────*/
+const SOUL_UP = {
+  vitality:{name:"生命力",ds:"初期最大HP +10",cost:40,max:5,ic:"❤️"},
+  energy:{name:"力の源",ds:"初期エナジー +1",cost:120,max:2,ic:"⚡"},
+  hand:{name:"熟練の手",ds:"初期手札 +1 枚",cost:150,max:1,ic:"🃏"},
+  soulblade:{name:"魂の刃",ds:"初期デッキに「魂の刃」を追加",cost:90,max:3,ic:"🔆"},
+  rareluck:{name:"宿命",ds:"レアカード出現率アップ",cost:80,max:3,ic:"🌟"},
+  goldstart:{name:"財宝",ds:"開始ゴールド +50",cost:50,max:3,ic:"🪙"},
+  relicstart:{name:"祝福",ds:"ランダムなレリックを持って開始",cost:140,max:2,ic:"🗿"},
+  blockstart:{name:"鉄壁の構え",ds:"各戦闘開始時 ブロック +5",cost:70,max:2,ic:"🛡️"},
+  wisdom:{name:"叡智",ds:"カード報酬の選択肢 +1",cost:110,max:1,ic:"📖"},
+  resilience:{name:"不屈",ds:"受けるダメージ -10%",cost:160,max:2,ic:"🪬"},
+  regen:{name:"再生",ds:"各戦闘開始時 再生（毎ターンHP3）",cost:100,max:2,ic:"🌿"},
+};
+
+/*──────── ACHIEVEMENTS ────────*/
+const ACHS = {
+  first_blood:{name:"初陣",ds:"はじめての戦闘に勝利",ic:"⚔️"},
+  floor10:{name:"序章突破",ds:"10階に到達",ic:"🔟"},
+  floor25:{name:"中腹の征服者",ds:"25階に到達",ic:"🏔️"},
+  floor50:{name:"半ばの覇者",ds:"50階に到達",ic:"⛰️"},
+  floor100:{name:"塔の頂",ds:"100階に到達",ic:"🗼"},
+  win_game:{name:"千階の登攀者",ds:"塔の主を打倒",ic:"👑"},
+  collector:{name:"収集家",ds:"レリックを5つ所持",ic:"🗿"},
+  scholar:{name:"博学者",ds:"カードを20種発見",ic:"📚"},
+  big_hit:{name:"一撃必殺",ds:"1ターンで40ダメージ",ic:"💥"},
+  first_death:{name:"塔の試練",ds:"はじめての死",ic:"💀"},
+  card_master:{name:"カードマスター",ds:"累計300枚プレイ",ic:"🃏"},
+  rich:{name:"大富豪",ds:"ゴールドを300所持",ic:"💰"},
+};
+
+/*════════════════════ PERSISTENT META ════════════════════*/
+const META_KEY="ascend_meta_v1", SAVE_KEY="ascend_save_v1";
+let META = loadMeta();
+function loadMeta(){
+  try{const m=JSON.parse(localStorage.getItem(META_KEY));if(m)return Object.assign(defaultMeta(),m);}catch(e){}
+  return defaultMeta();
+}
+function defaultMeta(){return{souls:0,upgrades:{},stats:{best:0,runs:0,wins:0,kills:0,cardsPlayed:0},discovered:["strike","guard","heavy_swing","iron_skin","heal"],achievements:{},sound:false};}
+function saveMeta(){localStorage.setItem(META_KEY,JSON.stringify(META));}
+function lv(k){return META.upgrades[k]||0;}
+function discover(id){if(!META.discovered.includes(id)){META.discovered.push(id);if(META.discovered.length>=20)unlockAch("scholar");saveMeta();}}
+function unlockAch(id){if(!META.achievements[id]){META.achievements[id]=true;saveMeta();toast("🏆 実績解除：「"+ACHS[id].name+"」");}}
+
+/*════════════════════ RUN STATE ════════════════════*/
+let G=null;
+function newRun(){
+  let deck=[];
+  const base=["strike","strike","strike","strike","strike","guard","guard","guard","heal","heavy_swing"];
+  base.forEach(id=>deck.push(makeCard(id)));
+  for(let i=0;i<lv("soulblade");i++)deck.push(makeCard("soul_blade"));
+  const maxHp=80+lv("vitality")*10;
+  G={
+    deck, floor:0, gold:50+lv("goldstart")*50, relics:[],
+    player:{maxHp, hp:maxHp, block:0, buffs:{}},
+    map:genMap(), node:null, phoenixUsed:false, turnTotalDmg:0,
+  };
+  // starting relics from meta (grantRelic applies any maxHP bonus itself)
+  for(let i=0;i<lv("relicstart");i++)grantRelic(pick(RELIC_IDS),true);
+  META.stats.runs++; saveMeta();
+  saveRun();
+  goMap();
+}
+function makeCard(id,upgraded){return{id,uid:UID++,upgraded:!!upgraded};}
+function cardStats(c){
+  const d=CARDS[c.id], base={...d};
+  if(c.upgraded&&d.up)Object.assign(base,d.up);
+  return base;
+}
+function effCost(c){
+  const s=cardStats(c);
+  let cost=s.cost;
+  if(G.costDownThisTurn)cost-=G.costDownThisTurn;
+  if(G.firstCardCheap&&!G._firstPlayed)cost-=1;
+  return Math.max(0,cost);
+}
+function hasRelic(id){return G.relics.includes(id);}
+function grantRelic(id,silent){
+  if(hasRelic(id))return false;
+  G.relics.push(id);
+  if(id==="tough_skin"||id==="titan_core"){const b=id==="tough_skin"?8:15;G.player.maxHp+=b;G.player.hp+=b;}
+  if(G.relics.length>=5)unlockAch("collector");
+  if(!silent)toast("🗿 レリック獲得：「"+RELICS[id].name+"」");
+  saveMeta();
+  return true;
+}
+
+/*──────── MAP GENERATION ────────*/
+function genMap(){
+  // 100 floors; each floor offers choices (3) except boss floors (1)
+  const floors=[];
+  for(let f=1;f<=100;f++){
+    if(BOSS_FLOORS[f]){floors.push({boss:true,enemy:BOSS_FLOORS[f]});continue;}
+    const choices=[];
+    const pool=["combat","combat","combat","treasure","shop","rest","event"];
+    for(let i=0;i<3;i++){
+      let t=pick(pool);
+      // ensure variety
+      if(i===2&&choices.every(c=>c.type==="combat"))t=pick(["treasure","rest","event"]);
+      choices.push({type:t});
+    }
+    floors.push({choices});
+  }
+  return floors;
+}
+
+/*════════════════════ SCREENS ════════════════════*/
+function show(id){$$(".screen").forEach(s=>s.classList.remove("active"));$("#"+id).classList.add("active");}
+function closeAll(){$$(".overlay").forEach(o=>o.classList.remove("active"));}
+
+/*──────── TITLE ────────*/
+function goTitle(){
+  show("title");
+  $("#soulCount").textContent=META.souls;
+  $("#tsBest").textContent=META.stats.best||"-";
+  $("#tsRuns").textContent=META.stats.runs;
+  $("#tsWins").textContent=META.stats.wins;
+  $("#tsKills").textContent=META.stats.kills;
+  $("#btnContinue").disabled=!localStorage.getItem(SAVE_KEY);
+  $("#btnContinue").style.opacity=localStorage.getItem(SAVE_KEY)?1:.4;
+}
+
+/*──────── MAP RENDER ────────*/
+function goMap(){closeAll();show("map");renderTop("#mapTop");renderMap();saveRun();}
+function renderTop(sel){
+  const p=G.player, hpPct=clamp(p.hp/p.maxHp*100,0,100);
+  const relicHtml=G.relics.map(r=>`<div class="relic" title="${RELICS[r].name}：${RELICS[r].ds}">${RELICS[r].ic}</div>`).join("");
+  $(sel).innerHTML=`
+    <button class="btn small" onclick="confirmQuit()">🚪</button>
+    <div class="stat-chip hpc"><span>❤️</span><div class="hpbar"><i style="width:${hpPct}%"></i><b>${p.hp}/${p.maxHp}</b></div></div>
+    <div class="stat-chip">🪙 <b style="color:var(--gold2)">${G.gold}</b></div>
+    <div class="stat-chip">🗼 <b style="color:var(--rune)">${G.floor}</b>/100階</div>
+    <div class="relic-tray">${relicHtml||'<span style="color:var(--muted);font-size:12px">レリック無し</span>'}</div>`;
+}
+function renderMap(){
+  const nf=G.floor+1;
+  const node=G.map[nf-1];
+  let html=`<div class="tower-title">◈ 千 の 階 の 塔 ◈</div>`;
+  // tower mini visual (window around current)
+  html+=`<div class="tower-vis">`;
+  for(let f=Math.min(100,nf+3);f>=Math.max(1,nf-2);f--){
+    let cls="floor-row";if(f<nf)cls+=" done";if(f===nf)cls+=" cur";if(BOSS_FLOORS[f])cls+=" boss";
+    const lbl=BOSS_FLOORS[f]?"👑 BOSS":(f<nf?"踏破":(f===nf?"現在地":""));
+    html+=`<div class="${cls}"><span style="width:34px;text-align:right">${f}</span><div class="seg"></div><span style="width:54px;color:var(--gold2)">${lbl}</span></div>`;
+  }
+  html+=`</div>`;
+  html+=`<div class="floor-marker">— 第 ${nf} 階 —</div>`;
+
+  if(node.boss){
+    const e=ENEMIES[node.enemy];
+    html+=`<div class="choice-row"><div class="node boss" onclick="enterNode('boss','${node.enemy}')">
+      <span class="ic">👑</span><div class="nm">${e.name}</div><div class="ds">階層の番人<br>強大な敵が待つ</div></div></div>`;
+  }else{
+    html+=`<div class="choice-row">`;
+    node.choices.forEach((c,i)=>{
+      const info=nodeInfo(c.type);
+      html+=`<div class="node" onclick="enterNode('${c.type}',null,${i})">
+        <span class="ic">${info.ic}</span><div class="nm">${info.nm}</div><div class="ds">${info.ds}</div></div>`;
+    });
+    html+=`</div>`;
+  }
+  html+=`<div class="tip">登りたい道を選べ — 各階で運命が分かれる</div>`;
+  $("#mapScroll").innerHTML=html;
+}
+function nodeInfo(t){
+  return{
+    combat:{ic:"⚔️",nm:"戦闘",ds:"敵と戦う<br>勝利でカード報酬"},
+    treasure:{ic:"💎",nm:"宝箱",ds:"ゴールド・レリック<br>を獲得"},
+    shop:{ic:"🛒",nm:"商人",ds:"カード購入<br>不要札の除去"},
+    rest:{ic:"🔥",nm:"休憩",ds:"HP回復 または<br>カード強化"},
+    event:{ic:"❓",nm:"謎",ds:"未知の出来事<br>吉と出るか凶と出るか"},
+  }[t];
+}
+function enterNode(type,bossEnemy,idx){
+  G.floor++;
+  // achievements
+  if(G.floor>=10)unlockAch("floor10");
+  if(G.floor>=25)unlockAch("floor25");
+  if(G.floor>=50)unlockAch("floor50");
+  if(G.floor>META.stats.best){META.stats.best=G.floor;saveMeta();}
+  if(type==="boss"){startCombat(bossEnemy,true);return;}
+  if(type==="combat"){startCombat(rollEnemy(),false);return;}
+  if(type==="treasure"){doTreasure();return;}
+  if(type==="shop"){doShop();return;}
+  if(type==="rest"){doRest();return;}
+  if(type==="event"){doEvent();return;}
+}
+function rollEnemy(){
+  for(const t of TIERS){if(G.floor<=t.max)return pick(t.list);}
+  return pick(TIERS[TIERS.length-1].list);
+}
+
+/*════════════════════ COMBAT ════════════════════*/
+function startCombat(enemyId,isBoss){
+  closeAll();show("combat");
+  // build enemies (1, sometimes 2 for normal early/mid)
+  const list=[];
+  const count = isBoss?1:(G.floor>6&&Math.random()<0.35?2:1);
+  for(let i=0;i<count;i++){
+    const eid = i===0?enemyId:rollEnemy();
+    list.push(makeEnemy(eid,isBoss));
+  }
+  G.combat={
+    enemies:list, isBoss, turn:0,
+    hand:[], draw:shuffle(G.deck.map(c=>c)), discard:[], exhaust:[],
+    energy:0, maxEnergy:3+lv("energy"),
+    handSize:5+lv("hand"),
+    over:false, firstAtkThisTurn:true, firstPlayed:false,
+  };
+  G.player.block=0; G.player.buffs={};
+  G.turnTotalDmg=0;
+  // start-of-combat relics
+  if(hasRelic("rune_of_power"))addBuff(G.player,"str",1);
+  if(hasRelic("spiked_shield"))addBuff(G.player,"thorns",3);
+  if(hasRelic("guardian_angel"))gainBlock(G.player,8,true);
+  if(lv("blockstart"))gainBlock(G.player,5*lv("blockstart"),true);
+  if(lv("regen"))addBuff(G.player,"regen",3*lv("regen"));
+  // enemies set first intent
+  list.forEach(e=>setIntent(e));
+  renderCombat();
+  startPlayerTurn(true);
+  sfx("start");
+}
+function makeEnemy(id,isBoss){
+  const d=ENEMIES[id];
+  let hp=d.hp[0]+rng(d.hp[1]-d.hp[0]+1);
+  // mild scaling with floor for non-boss
+  if(!d.boss){hp=Math.round(hp*(1+G.floor*0.012));}
+  return{id,name:d.name,maxHp:hp,hp,block:0,buffs:{},intent:null,moveIdx:0,boss:!!d.boss};
+}
+function setIntent(e){
+  const moves=ENEMIES[e.id].moves;
+  let mv;
+  if(e.boss){mv=moves[e.moveIdx%moves.length];e.moveIdx++;}
+  else{mv=pick(moves);}
+  e.intent={...mv};
+}
+
+function startPlayerTurn(first){
+  const C=G.combat;
+  C.turn++;
+  G.player.block=G.player._retain||0; G.player._retain=0;
+  C.energy=C.maxEnergy;
+  if(hasRelic("energy_core"))C.energy+=1;
+  if(hasRelic("mana_crystal")&&C.turn%3===0)C.energy+=1;
+  C.firstAtkThisTurn=true; C.firstPlayed=false;
+  G.costDownThisTurn=0; G.firstCardCheap=hasRelic("dark_pact"); G._firstPlayed=false;
+  // tick player DoT & buffs
+  tickStart(G.player);
+  if(G.combat.over)return;
+  // draw
+  let n=C.handSize;
+  if(first&&hasRelic("swift_boots"))n+=1;
+  if(first&&hasRelic("crystal_ball"))n+=2;
+  if(hasRelic("clock_gear"))n+=1;
+  drawCards(n);
+  renderCombat();
+  saveRun();
+}
+function tickStart(ent){
+  // regen
+  if(ent.buffs.regen){heal(ent,ent.buffs.regen);}
+  // burn
+  if(ent.buffs.burn){const dmg=ent.buffs.burn+(ent===G.player?0:0);dealRaw(ent,ent.buffs.burn,"dmg");ent.buffs.burn=Math.max(0,ent.buffs.burn-1);}
+  // poison
+  if(ent.buffs.poison){dealRaw(ent,ent.buffs.poison,"dmg");ent.buffs.poison=Math.max(0,ent.buffs.poison-1);}
+  // decrement timed
+  ["vuln","weak","slow"].forEach(k=>{if(ent.buffs[k])ent.buffs[k]=Math.max(0,ent.buffs[k]-1);});
+  checkDeaths();
+}
+
+function drawCards(n){
+  const C=G.combat;
+  for(let i=0;i<n;i++){
+    if(C.draw.length===0){
+      if(C.discard.length===0)break;
+      C.draw=shuffle(C.discard); C.discard=[];
+    }
+    C.hand.push(C.draw.pop());
+  }
+}
+
+/*──────── playing a card ────────*/
+function canPlay(c){return effCost(c)<=G.combat.energy && !G.combat.over;}
+function playCard(c,targetEnemy){
+  const C=G.combat;
+  if(!canPlay(c))return false;
+  const cost=effCost(c); C.energy-=cost;
+  const s=cardStats(c);
+  // first-card tracking
+  if(G.firstCardCheap)G._firstPlayed=true;
+  C.firstPlayed=true;
+  sfx(s.type==="attack"?"slash":(s.type==="power"?"power":"skill"));
+  // resolve target
+  const targets = s.all ? C.enemies.filter(e=>e.hp>0) : (targetEnemy?[targetEnemy]:[firstAlive()]);
+  // DAMAGE
+  if(s.dmg){
+    const hits=s.hits||1;
+    for(let h=0;h<hits;h++){
+      targets.forEach(t=>{
+        if(t.hp<=0)return;
+        let dmg=computeDamage(s,t);
+        const dealt=attackEnemy(t,dmg);
+        if(s.lifesteal)heal(G.player,dealt);
+      });
+    }
+    // on-attack relics
+    onPlayerAttack(targets);
+  }
+  // BLOCK
+  if(s.blk)gainBlock(G.player,s.blk);
+  if(s.thorns)addBuff(G.player,"thorns",s.thorns);
+  // HEAL
+  if(s.heal){let amt=s.heal;if(hasRelic("healing_herb"))amt+=3;heal(G.player,amt);}
+  // status to enemies
+  targets.forEach(t=>{
+    if(t.hp<=0)return;
+    if(s.burn)addBuff(t,"burn",s.burn+(hasRelic("fire_heart")?2:0));
+    if(s.poison)addBuff(t,"poison",s.poison);
+    if(s.slow)addBuff(t,"slow",s.slow);
+  });
+  // self buffs
+  if(s.str)addBuff(G.player,"str",s.str);
+  if(s.dex)addBuff(G.player,"dex",s.dex);
+  if(s.retaliate)addBuff(G.player,"retaliate",s.retaliate);
+  if(s.selfDmg)dealRaw(G.player,s.selfDmg,"dmg");
+  if(s.cleanse){G.player.buffs.poison=0;G.player.buffs.burn=0;}
+  if(s.draw)drawCards(s.draw);
+  if(s.energy)C.energy+=s.energy;
+  if(s.costDown){G.costDownThisTurn+=s.costDown;}
+  if(s.retain){G.player._retain=(G.player._retain||0)+s.blk;}
+  if(s.wheel)wheelOfFate();
+  if(s.extraTurn){C.energy=C.maxEnergy;drawCards(2);toast("⏳ 追加ターン！");}
+  // move card to discard
+  const idx=C.hand.indexOf(c);
+  if(idx>=0)C.hand.splice(idx,1);
+  C.discard.push(c);
+  META.stats.cardsPlayed++;
+  if(META.stats.cardsPlayed>=300)unlockAch("card_master");
+  if((META.stats.cardsPlayed&7)===0)saveMeta();
+  checkDeaths();
+  renderCombat();
+  if(C.enemies.every(e=>e.hp<=0)&&!C.over)winCombat();
+  return true;
+}
+function computeDamage(s,t){
+  let dmg=s.dmg+(G.player.buffs.str||0);
+  if(s.exec&&t.hp<=t.maxHp*0.3)dmg*=2;
+  if(s.scaleMiss)dmg+=Math.floor((G.player.maxHp-G.player.hp)/5);
+  if(hasRelic("berserker_mask")&&G.player.hp<=G.player.maxHp*0.5)dmg+=3;
+  if(G.player.buffs.weak)dmg=Math.floor(dmg*0.75);
+  if(t.buffs.vuln)dmg=Math.floor(dmg*1.5);
+  return Math.max(0,dmg);
+}
+function onPlayerAttack(targets){
+  const C=G.combat;
+  if(C.firstAtkThisTurn){
+    if(hasRelic("vampire_fang"))heal(G.player,3);
+    C.firstAtkThisTurn=false;
+  }
+  if(hasRelic("ember_stone"))targets.forEach(t=>{if(t.hp>0)addBuff(t,"burn",1);});
+  if(hasRelic("ice_shard"))targets.forEach(t=>{if(t.hp>0&&Math.random()<0.3)addBuff(t,"slow",1);});
+}
+function wheelOfFate(){
+  const r=rng(5);
+  if(r===0){C_dmgAll(20);toast("🎰 全敵に20ダメージ！");}
+  else if(r===1){gainBlock(G.player,25);toast("🎰 25ブロック！");}
+  else if(r===2){heal(G.player,20);toast("🎰 HP20回復！");}
+  else if(r===3){G.combat.energy+=3;drawCards(2);toast("🎰 エナジー+3・2ドロー！");}
+  else{G.combat.enemies.forEach(e=>{if(e.hp>0){addBuff(e,"burn",5);addBuff(e,"poison",5);}});toast("🎰 全敵に燃焼5・毒5！");}
+}
+function C_dmgAll(v){G.combat.enemies.forEach(e=>{if(e.hp>0)attackEnemy(e,v);});}
+
+/*──────── damage helpers ────────*/
+function attackEnemy(e,dmg){
+  let remaining=dmg;
+  if(e.block>0){
+    const absorbed=Math.min(e.block,remaining);
+    e.block-=absorbed; remaining-=absorbed;
+    if(absorbed>0)floatNum("#enemy"+e._i,absorbed,"block");
+  }
+  if(remaining>0){
+    e.hp=Math.max(0,e.hp-remaining);
+    floatNum("#enemy"+e._i,remaining,"dmg");
+    flash("#enemy"+e._i);
+    G.turnTotalDmg+=remaining;
+    if(G.turnTotalDmg>=40)unlockAch("big_hit");
+  }
+  return dmg;
+}
+function dealRaw(ent,dmg,kind){
+  // ignores block (DoT/self)
+  ent.hp=Math.max(0,ent.hp-dmg);
+  const sel=ent===G.player?"#playerEntity":"#enemy"+ent._i;
+  floatNum(sel,dmg,kind);
+}
+function damagePlayer(rawDmg,attacker){
+  let dmg=rawDmg;
+  if(lv("resilience"))dmg=Math.floor(dmg*(1-0.1*lv("resilience")));
+  let remaining=dmg;
+  if(G.player.block>0){
+    const ab=Math.min(G.player.block,remaining);
+    G.player.block-=ab; remaining-=ab;
+    if(ab>0)floatNum("#playerEntity",ab,"block");
+  }
+  if(remaining>0){
+    G.player.hp=Math.max(0,G.player.hp-remaining);
+    floatNum("#playerEntity",remaining,"dmg");
+    flash("#playerEntity");shakeEl("#playerEntity");
+    // retaliate
+    if(G.player.buffs.retaliate&&attacker){
+      const back=remaining*G.player.buffs.retaliate;
+      attackEnemy(attacker,back);
+    }
+    // thorns
+    if(G.player.buffs.thorns&&attacker){attackEnemy(attacker,G.player.buffs.thorns);}
+  }else if(G.player.buffs.thorns&&attacker){attackEnemy(attacker,G.player.buffs.thorns);}
+}
+function gainBlock(ent,amt,silent){
+  let v=amt;
+  if(ent===G.player){
+    v+=(ent.buffs.dex||0);
+    if(hasRelic("steel_ring"))v+=2;
+  }
+  ent.block+=v;
+  if(!silent)floatNum(ent===G.player?"#playerEntity":"#enemy"+ent._i,v,"block");
+}
+function heal(ent,amt){
+  const before=ent.hp;
+  ent.hp=Math.min(ent.maxHp,ent.hp+amt);
+  const gained=ent.hp-before;
+  if(gained>0)floatNum(ent===G.player?"#playerEntity":"#enemy"+(ent._i),gained,"heal");
+}
+function addBuff(ent,k,v){ent.buffs[k]=(ent.buffs[k]||0)+v;}
+function firstAlive(){return G.combat.enemies.find(e=>e.hp>0);}
+function checkDeaths(){
+  G.combat.enemies.forEach(e=>{if(e.hp<=0&&!e._dead){e._dead=true;}});
+  // player death handled in endEnemyTurn/anyDamage
+  if(G.player.hp<=0&&!G.combat.over)playerDying();
+}
+
+/*──────── enemy turn ────────*/
+function endTurn(){
+  if(G.combat.over)return;
+  // discard hand
+  const C=G.combat;
+  C.discard.push(...C.hand); C.hand=[];
+  renderCombat();
+  // enemy phase
+  setTimeout(enemyPhase,250);
+}
+function enemyPhase(){
+  const C=G.combat;
+  const living=C.enemies.filter(e=>e.hp>0);
+  let i=0;
+  function step(){
+    if(C.over)return;
+    if(C.enemies.every(en=>en.hp<=0)){renderCombat();winCombat();return;}
+    if(i>=living.length){ // end of enemy phase
+      checkDeaths();
+      if(!C.over)startPlayerTurn(false);
+      return;
+    }
+    const e=living[i];
+    if(e.hp<=0){i++;step();return;}
+    e.block=0;
+    tickStart(e);
+    if(e.hp<=0){i++;renderCombat();setTimeout(step,150);return;}
+    executeIntent(e);
+    setIntent(e);
+    i++;
+    renderCombat();
+    if(G.player.hp<=0&&!C.over){playerDying();return;}
+    setTimeout(step,420);
+  }
+  step();
+}
+function executeIntent(e){
+  const it=e.intent; if(!it)return;
+  if(it.t==="a"){
+    let val=it.v+(e.buffs.str||0);
+    if(e.buffs.weak)val=Math.floor(val*0.75);
+    if(e.buffs.slow)val=Math.floor(val*0.6);
+    const hits=it.hits||1;
+    shakeEl("#enemy"+e._i);
+    for(let h=0;h<hits;h++)damagePlayer(val,e);
+    if(it.burn)addBuff(G.player,"burn",it.burn);
+    if(it.heal)heal(e,it.heal);
+  }else if(it.t==="b"){gainBlock(e,it.v);}
+  else if(it.t==="s"){addBuff(e,"str",it.v);}
+  else if(it.t==="d"){addBuff(G.player,it.deb,it.v);}
+}
+
+/*──────── win/lose ────────*/
+function winCombat(){
+  const C=G.combat; C.over=true;
+  META.stats.kills+=C.enemies.length;
+  if(!META.achievements.first_blood)unlockAch("first_blood");
+  unlockAch("first_blood");
+  // relics on win
+  if(hasRelic("blood_jewel"))heal(G.player,5);
+  let gold=10+rng(16)+G.floor;
+  if(C.isBoss)gold+=40;
+  if(hasRelic("golden_idol"))gold+=20;
+  if(hasRelic("lucky_coin"))gold=Math.round(gold*1.3);
+  G.gold+=gold;
+  if(G.gold>=300)unlockAch("rich");
+  saveMeta();saveRun();
+  sfx("win");goldShower("combat");
+  if(C.isBoss&&C.enemies[0].id==="tower_master"){setTimeout(()=>gameWin(),1400);return;}
+  setTimeout(()=>showReward(gold,C.isBoss),900);
+}
+function playerDying(){
+  if(hasRelic("phoenix_feather")&&!G.phoenixUsed){
+    G.phoenixUsed=true;G.player.hp=1;G.player.buffs.burn=0;G.player.buffs.poison=0;
+    toast("🪶 不死鳥の羽が砕け、HP1で蘇る！");renderCombat();return;
+  }
+  G.combat.over=true;
+  sfx("death");
+  const df=$("#darkflash");df.style.transition="opacity 1s";df.style.opacity="1";
+  setTimeout(()=>gameOver(),1100);
+}
+
+/*──────── REWARD ────────*/
+function showReward(gold,isBoss){
+  const ov=$("#ovReward");
+  let n=3+(hasRelic("card_satchel")?1:0)+lv("wisdom");
+  const cards=rollReward(n);
+  let bossRelicNote="";
+  if(isBoss){
+    const avail=RELIC_IDS.filter(r=>!G.relics.includes(r));
+    if(avail.length){const rid=pick(avail);grantRelic(rid,true);
+      bossRelicNote=`<div class="rune-divider"></div><p style="text-align:center;color:var(--gold2)">👑 ボス討伐ボーナス：レリック「${RELICS[rid].ic} ${RELICS[rid].name}」を獲得！<br><span style="color:var(--muted);font-size:12px">${RELICS[rid].ds}</span></p>`;}
+  }
+  let html=`<div class="panel"><h2>⚔ 勝利</h2><div class="ptag">+${gold} ゴールド を獲得</div>`;
+  html+=`<p style="text-align:center;color:var(--rune);margin:0 0 8px">報酬カードを1枚選択（スキップ可）</p><div class="choice-grid" id="rewardCards"></div>`;
+  html+=bossRelicNote;
+  html+=`<div style="text-align:center;margin-top:10px"><button class="btn small" id="skipReward">スキップして進む →</button></div></div>`;
+  ov.innerHTML=html;ov.classList.add("active");
+  const cont=$("#rewardCards");
+  cards.forEach(id=>{
+    discover(id);
+    const el=cardEl(makeCard(id),true);
+    const w=document.createElement("div");w.className="rcard-wrap";
+    w.appendChild(el);
+    el.onclick=()=>{G.deck.push(makeCard(id));toast("✚ デッキに「"+CARDS[id].name+"」を追加");closeAll();afterNode();};
+    cont.appendChild(w);
+  });
+  $("#skipReward").onclick=()=>{closeAll();afterNode();};
+}
+function rollReward(n){
+  const ids=[];const pool=ALL_CARD_IDS.filter(id=>id!=="strike"&&id!=="guard");
+  while(ids.length<n){
+    const rar=rollRarity();
+    const cand=pool.filter(id=>CARDS[id].rarity===rar&&!ids.includes(id));
+    if(cand.length)ids.push(pick(cand));
+    else{const any=pool.filter(id=>!ids.includes(id));ids.push(pick(any));}
+  }
+  return ids;
+}
+function rollRarity(){
+  let r=Math.random();
+  const luck=lv("rareluck")*0.06;
+  if(r<0.50-luck)return "common";
+  if(r<0.80-luck)return "uncommon";
+  if(r<0.96)return "rare";
+  return "legendary";
+}
+function afterNode(){
+  if(G.player.hp<=0){gameOver();return;}
+  if(G.floor>=100){gameWin();return;}
+  goMap();
+}
+
+/*──────── TREASURE ────────*/
+function doTreasure(){
+  const ov=$("#ovReward");
+  const roll=Math.random();
+  let html=`<div class="panel" style="max-width:440px"><h2>💎 宝箱</h2><div class="ptag">古びた宝箱を開けた…</div>`;
+  let gold=20+rng(40)+G.floor;
+  if(hasRelic("lucky_coin"))gold=Math.round(gold*1.3);
+  G.gold+=gold;
+  html+=`<p style="text-align:center;font-size:40px">🪙</p><p style="text-align:center;color:var(--gold2)">${gold} ゴールド を発見！</p>`;
+  if(roll<0.45){
+    const avail=RELIC_IDS.filter(r=>!G.relics.includes(r));
+    if(avail.length){const rid=pick(avail);grantRelic(rid,true);
+      html+=`<div class="rune-divider"></div><p style="text-align:center;font-size:36px">${RELICS[rid].ic}</p><p style="text-align:center;color:var(--rune)">レリック「${RELICS[rid].name}」を獲得！<br><span style="color:var(--muted);font-size:12px">${RELICS[rid].ds}</span></p>`;}
+  }else if(roll<0.75){
+    const id=rollReward(1)[0];G.deck.push(makeCard(id));discover(id);
+    html+=`<div class="rune-divider"></div><p style="text-align:center;color:var(--green)">カード「${CARDS[id].name}」を発見しデッキに追加！</p>`;
+  }
+  html+=`<div style="text-align:center;margin-top:14px"><button class="btn primary" onclick="closeAll();afterNode()">受け取る</button></div></div>`;
+  ov.innerHTML=html;ov.classList.add("active");
+  sfx("win");saveRun();
+}
+
+/*──────── SHOP ────────*/
+function doShop(){
+  const ov=$("#ovShop");
+  const stock=rollReward(5).map(id=>({id,price:priceFor(id)}));
+  const removePrice=75;
+  function render(){
+    let html=`<div class="panel"><span class="close-x" onclick="closeAll();afterNode()">×</span><h2>🛒 商人</h2><div class="ptag">所持ゴールド 🪙 <b style="color:var(--gold2)">${G.gold}</b></div>`;
+    html+=`<div class="choice-grid" id="shopCards"></div>`;
+    html+=`<div class="rune-divider"></div><div style="text-align:center"><button class="btn small" id="removeBtn">🗑 カード除去（🪙${removePrice}）</button>
+      <button class="btn small" onclick="closeAll();afterNode()">立ち去る →</button></div></div>`;
+    ov.innerHTML=html;ov.classList.add("active");
+    const cont=$("#shopCards");
+    stock.forEach((it,i)=>{
+      if(it.sold)return;
+      discover(it.id);
+      const w=document.createElement("div");w.className="rcard-wrap";
+      const el=cardEl(makeCard(it.id),true);
+      const aff=G.gold>=it.price;
+      el.style.opacity=aff?1:.5;
+      el.onclick=()=>{if(G.gold<it.price){toast("ゴールドが足りない");return;}G.gold-=it.price;G.deck.push(makeCard(it.id));it.sold=true;toast("購入：「"+CARDS[it.id].name+"」");saveRun();render();};
+      w.appendChild(el);
+      const pt=document.createElement("div");pt.className="pricetag";pt.textContent="🪙 "+it.price;
+      w.appendChild(pt);
+      cont.appendChild(w);
+    });
+    $("#removeBtn").onclick=()=>{if(G.gold<removePrice){toast("ゴールドが足りない");return;}openRemove(removePrice,render);};
+  }
+  render();
+}
+function priceFor(id){const r=CARDS[id].rarity;return{common:40,uncommon:65,rare:100,legendary:150}[r]+rng(15);}
+function openRemove(price,back){
+  const ov=$("#ovPile");
+  let html=`<div class="panel"><span class="close-x" onclick="$('#ovPile').classList.remove('active')">×</span><h2>🗑 除去するカードを選択</h2><div class="ptag">不要なカードを1枚デッキから消す</div><div class="choice-grid" style="max-height:60vh;overflow:auto"></div></div>`;
+  ov.innerHTML=html;ov.classList.add("active");
+  const cont=ov.querySelector(".choice-grid");
+  G.deck.forEach(c=>{
+    const el=cardEl(c,true);
+    el.onclick=()=>{G.gold-=price;G.deck=G.deck.filter(x=>x.uid!==c.uid);toast("「"+CARDS[c.id].name+"」を除去");ov.classList.remove("active");saveRun();back&&back();};
+    cont.appendChild(el);
+  });
+}
+
+/*──────── REST ────────*/
+function doRest(){
+  const ov=$("#ovRest");
+  let html=`<div class="panel" style="max-width:500px"><h2>🔥 休憩所</h2><div class="ptag">焚き火の前でひと息つく</div>
+    <div class="ev-art" style="text-align:center;font-size:54px">🔥</div>
+    <div class="ev-opts" style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+      <button class="btn" id="restHeal">💚 休む — HP ${Math.round(G.player.maxHp*0.3)} 回復</button>
+      <button class="btn" id="restUp">⚒ 鍛える — カードを1枚強化</button>
+    </div></div>`;
+  ov.innerHTML=html;ov.classList.add("active");
+  $("#restHeal").onclick=()=>{heal(G.player,Math.round(G.player.maxHp*0.3));toast("HP回復した");sfx("heal");closeAll();afterNode();};
+  $("#restUp").onclick=()=>openUpgrade();
+}
+function openUpgrade(){
+  const ov=$("#ovUpgrade");
+  const upgradable=G.deck.filter(c=>!c.upgraded&&CARDS[c.id].up);
+  let html=`<div class="panel"><span class="close-x" onclick="closeAll();afterNode()">×</span><h2>⚒ カード強化</h2><div class="ptag">強化するカードを選べ（強力になる）</div><div class="choice-grid" style="max-height:62vh;overflow:auto"></div></div>`;
+  ov.innerHTML=html;ov.classList.add("active");
+  const cont=ov.querySelector(".choice-grid");
+  if(!upgradable.length){cont.innerHTML='<p style="color:var(--muted)">強化できるカードがない</p>';}
+  upgradable.forEach(c=>{
+    const wrap=document.createElement("div");wrap.style.cssText="display:flex;align-items:center;gap:4px";
+    const before=cardEl(c,true);
+    const up=makeCard(c.id,true);const after=cardEl(up,true);
+    const arr=document.createElement("div");arr.textContent="→";arr.style.cssText="font-size:24px;color:var(--gold2)";
+    wrap.appendChild(before);wrap.appendChild(arr);wrap.appendChild(after);
+    after.style.cursor="pointer";before.style.cursor="pointer";
+    const doUp=()=>{c.upgraded=true;toast("⚒ 「"+CARDS[c.id].name+"」を強化！");sfx("power");closeAll();afterNode();};
+    before.onclick=doUp;after.onclick=doUp;
+    cont.appendChild(wrap);
+  });
+}
+
+/*──────── EVENT ────────*/
+const EVENTS=[
+  {art:"⛲",text:"清らかな泉を見つけた。水を飲むと体力が満ちていく…が、何かが潜んでいる気もする。",
+   opts:[{t:"水を飲む（HP20回復）",f:()=>{heal(G.player,20);toast("HP20回復")}},
+         {t:"血を捧げる（最大HP+8 / 現HP-5）",f:()=>{G.player.maxHp+=8;G.player.hp=Math.max(1,G.player.hp-5);heal(G.player,8);toast("最大HP+8")}}]},
+  {art:"📜",text:"古びた巻物が落ちている。封印を解けば力を得られそうだが、危険な香りもする。",
+   opts:[{t:"巻物を読む（ランダムカード獲得）",f:()=>{const id=rollReward(1)[0];G.deck.push(makeCard(id));discover(id);toast("カード「"+CARDS[id].name+"」獲得")}},
+         {t:"無視する",f:()=>{toast("そっと立ち去った")}}]},
+  {art:"💰",text:"金貨の山だ！しかし手を伸ばすと罠が作動するかもしれない。",
+   opts:[{t:"全て奪う（+80G / 50%で罠 HP-10）",f:()=>{G.gold+=80;if(Math.random()<0.5){dealRaw(G.player,10,"dmg");toast("罠だ！+80G・HP-10")}else toast("+80ゴールド！")}},
+         {t:"少しだけ取る（+30G）",f:()=>{G.gold+=30;toast("+30ゴールド")}}]},
+  {art:"🗿",text:"古の祭壇。カードを1枚捧げれば、見返りに祝福を授かるという。",
+   opts:[{t:"カードを捧げる（除去＋レリック）",f:()=>{if(G.deck.length>5){G.deck.pop();const a=RELIC_IDS.filter(r=>!G.relics.includes(r));if(a.length)grantRelic(pick(a))}toast("祭壇の祝福")}},
+         {t:"祈るだけ（+40G）",f:()=>{G.gold+=40;toast("+40ゴールド")}}]},
+  {art:"😈",text:"悪魔がささやく。「我と契約せよ。力をくれてやろう…代償と引き換えにな」",
+   opts:[{t:"契約する（力+2の永続 / 最大HP-6）",f:()=>{G.player.maxHp=Math.max(20,G.player.maxHp-6);G.player.hp=Math.min(G.player.hp,G.player.maxHp);const a=RELIC_IDS.filter(r=>!G.relics.includes(r));if(a.length)grantRelic(pick(a));toast("悪魔と契約した…")}},
+         {t:"拒絶する",f:()=>{heal(G.player,8);toast("意志を貫いた（HP8回復）")}}]},
+  {art:"🌟",text:"星屑が舞い降りる神秘的な空間。手を伸ばせば運命が変わるかもしれない。",
+   opts:[{t:"星に触れる（HP全回復 / 最大HP-10）",f:()=>{G.player.maxHp=Math.max(30,G.player.maxHp-10);G.player.hp=G.player.maxHp;toast("完全回復・最大HP-10")}},
+         {t:"願いを込める（+60G）",f:()=>{G.gold+=60;toast("+60ゴールド")}}]},
+];
+function doEvent(){
+  const ev=pick(EVENTS);const ov=$("#ovEvent");
+  let html=`<div class="panel event-box"><div class="ev-art">${ev.art}</div><h2>❓ 謎</h2><div class="ev-text">${ev.text}</div><div class="ev-opts">`;
+  ev.opts.forEach((o,i)=>{html+=`<button class="btn" data-i="${i}">${o.t}</button>`;});
+  html+=`</div></div>`;
+  ov.innerHTML=html;ov.classList.add("active");
+  ov.querySelectorAll("[data-i]").forEach(b=>{
+    b.onclick=()=>{ev.opts[+b.dataset.i].f();G.player.hp=clamp(G.player.hp,0,G.player.maxHp);sfx("skill");closeAll();afterNode();};
+  });
+}
+
+/*════════════════════ GAME OVER / WIN ════════════════════*/
+function endRun(won){
+  let souls=G.floor*10;
+  if(hasRelic("soul_lantern"))souls=Math.round(souls*1.25);
+  if(won){souls+=300;META.stats.wins++;unlockAch("win_game");unlockAch("floor100");}
+  META.souls+=souls;
+  if(!won&&!META.achievements.first_death)unlockAch("first_death");
+  saveMeta();localStorage.removeItem(SAVE_KEY);
+  return souls;
+}
+function gameOver(){
+  const souls=endRun(false);
+  show("result");
+  $("#result").className="screen active defeat";
+  $("#result").innerHTML=`<div class="result-card"><h1>💀 GAME OVER</h1>
+    <p style="color:var(--muted);margin-bottom:16px">塔の試練に倒れた…だが魂は継承される。</p>
+    <div class="result-stat"><span>到達階層</span><b>${G.floor} 階</b></div>
+    <div class="result-stat"><span>獲得ソウル</span><b>+${souls} 🔮</b></div>
+    <div class="result-stat"><span>最高到達</span><b>${META.stats.best} 階</b></div>
+    <div style="margin-top:22px;display:flex;flex-direction:column;gap:10px">
+      <button class="btn primary" onclick="newRun()">⚔ もう一度挑む</button>
+      <button class="btn" onclick="goTitle()">タイトルへ戻る</button>
+    </div></div>`;
+  $("#darkflash").style.opacity="0";
+}
+function gameWin(){
+  G.floor=100;const souls=endRun(true);
+  show("result");goldShower("result");
+  $("#result").className="screen active victory";
+  $("#result").innerHTML=`<div class="result-card"><h1>👑 登頂成功</h1>
+    <p style="color:var(--gold2);margin-bottom:16px">塔の主を打ち倒し、千の階を制覇した！<br>あなたは伝説の登攀者となった。</p>
+    <div class="result-stat"><span>到達階層</span><b>100 階 (頂上)</b></div>
+    <div class="result-stat"><span>獲得ソウル</span><b>+${souls} 🔮</b></div>
+    <div class="result-stat"><span>総勝利数</span><b>${META.stats.wins}</b></div>
+    <div style="margin-top:22px;display:flex;flex-direction:column;gap:10px">
+      <button class="btn primary" onclick="newRun()">⚔ 新たな挑戦へ</button>
+      <button class="btn" onclick="goTitle()">タイトルへ戻る</button>
+    </div></div>`;
+}
+
+/*════════════════════ RENDER COMBAT ════════════════════*/
+function renderCombat(){
+  const C=G.combat;
+  renderTopCombat();
+  // enemies
+  const ez=$("#enemyZone");ez.innerHTML="";
+  C.enemies.forEach((e,i)=>{
+    e._i=i;
+    const div=document.createElement("div");div.className="entity";div.id="enemyWrap"+i;
+    div.innerHTML=enemyHtml(e,i);
+    ez.appendChild(div);
+  });
+  // player
+  $("#playerEntity").innerHTML=playerHtml();
+  // hand
+  renderHand();
+  $("#enNow").textContent=C.energy;
+  $("#drawN").textContent=C.draw.length;
+  $("#discN").textContent=C.discard.length;
+  $("#endTurnBtn").disabled=C.over;
+}
+function renderTopCombat(){
+  const p=G.player,hpPct=clamp(p.hp/p.maxHp*100,0,100);
+  const relicHtml=G.relics.map(r=>`<div class="relic" title="${RELICS[r].name}：${RELICS[r].ds}">${RELICS[r].ic}</div>`).join("");
+  $("#combatTop").innerHTML=`
+    <span class="floor-tag">🗼 ${G.floor}階${G.combat.isBoss?" — BOSS":""}</span>
+    <div class="stat-chip hpc"><span>❤️</span><div class="hpbar"><i style="width:${hpPct}%"></i><b>${p.hp}/${p.maxHp}</b></div></div>
+    <div class="stat-chip">🪙 <b style="color:var(--gold2)">${G.gold}</b></div>
+    <div class="relic-tray">${relicHtml}</div>`;
+}
+function enemyHtml(e,i){
+  if(e.hp<=0)return `<div class="sprite dead" id="enemy${i}">${svg(e.id)}</div><div class="ename" style="opacity:.4">${e.name}</div>`;
+  const hpPct=clamp(e.hp/e.maxHp*100,0,100);
+  return `${intentHtml(e)}
+    <div class="sprite" id="enemy${i}" data-ei="${i}">${e.block>0?`<div class="block-badge">🛡${e.block}</div>`:""}${svg(e.id)}</div>
+    <div class="ename">${e.name}</div>
+    <div class="ehp"><div class="ehpbar"><i style="width:${hpPct}%"></i><b>${e.hp}/${e.maxHp}</b></div></div>
+    <div class="buffs">${buffsHtml(e)}</div>`;
+}
+function intentHtml(e){
+  const it=e.intent;if(!it)return `<div class="intent">…</div>`;
+  if(it.t==="a"){let v=it.v+(e.buffs.str||0);if(e.buffs.weak)v=Math.floor(v*.75);if(e.buffs.slow)v=Math.floor(v*.6);
+    return `<div class="intent atk">🗡 ${v}${it.hits?`×${it.hits}`:""}${it.burn?" 🔥":""}</div>`;}
+  if(it.t==="b")return `<div class="intent def">🛡 ${it.v} 防御</div>`;
+  if(it.t==="s")return `<div class="intent buf">⬆ 力強化</div>`;
+  if(it.t==="d")return `<div class="intent deb">☠ ${it.deb==="weak"?"弱体":"脆弱"}</div>`;
+  return `<div class="intent">?</div>`;
+}
+function playerHtml(){
+  const p=G.player,hpPct=clamp(p.hp/p.maxHp*100,0,100);
+  return `<div class="sprite" id="playerEntity_s">${p.block>0?`<div class="block-badge">🛡${p.block}</div>`:""}${svg("player")}</div>
+    <div class="ename">登攀者</div>
+    <div class="ehp"><div class="ehpbar player"><i style="width:${hpPct}%"></i><b>${p.hp}/${p.maxHp}</b></div></div>
+    <div class="buffs">${buffsHtml(p)}</div>`;
+}
+function buffsHtml(ent){
+  const b=ent.buffs,out=[];
+  const map={str:["💪力",1],dex:["🪶敏",1],vuln:["🎯脆",0],weak:["💧弱",0],burn:["🔥燃",0],poison:["☠毒",0],slow:["🐌遅",0],thorns:["🦔棘",1],retaliate:["↩反",1],regen:["🌿再",1]};
+  for(const k in map){if(b[k]>0)out.push(`<div class="buff ${map[k][1]?"good":"bad"}">${map[k][0]}${b[k]}</div>`);}
+  return out.join("");
+}
+function renderHand(){
+  const C=G.combat,hand=$("#hand");hand.innerHTML="";
+  const n=C.hand.length;
+  C.hand.forEach((c,i)=>{
+    const el=cardEl(c);
+    if(!canPlay(c))el.classList.add("unplayable");
+    // fan layout
+    const mid=(n-1)/2, off=i-mid;
+    el.style.transform=`rotate(${off*3}deg) translateY(${Math.abs(off)*6}px)`;
+    el.dataset.uid=c.uid;
+    attachDrag(el,c);
+    hand.appendChild(el);
+  });
+}
+function cardEl(c,plain){
+  const d=CARDS[c.id],s=cardStats(c);
+  const el=document.createElement("div");
+  el.className=`card ${d.type} r-${d.rarity}${c.upgraded?" upgraded":""}`;
+  const typeLbl={attack:"攻撃",skill:"スキル",power:"パワー"}[d.type];
+  el.innerHTML=`<div class="cframe">
+    <div class="cost">${plain?d.cost:effCost(c)}</div>
+    ${c.upgraded?'<div class="upg">＋</div>':''}
+    <div class="cname">${d.name}</div>
+    <div class="cart">${d.art}</div>
+    <div class="cdesc">${d.desc(s)}</div>
+    <div class="ctype">◆ ${typeLbl} ◆</div></div>`;
+  return el;
+}
+
+/*════════════════════ DRAG & DROP ════════════════════*/
+function attachDrag(el,c){
+  let dragging=false,sx=0,sy=0,moved=false;
+  const ghost=$("#ghost"),traj=$("#trajectory"),tp=$("#trajPath");
+  function down(e){
+    if(!canPlay(c)||G.combat.over)return;
+    e.preventDefault();
+    const pt=e.touches?e.touches[0]:e;
+    sx=pt.clientX;sy=pt.clientY;dragging=true;moved=false;
+    ghost.innerHTML=el.outerHTML;
+    window.addEventListener("mousemove",move);window.addEventListener("mouseup",up);
+    window.addEventListener("touchmove",move,{passive:false});window.addEventListener("touchend",up);
+  }
+  function move(e){
+    if(!dragging)return;e.preventDefault();
+    const pt=e.touches?e.touches[0]:e;
+    const dx=pt.clientX-sx,dy=pt.clientY-sy;
+    if(Math.hypot(dx,dy)>14)moved=true;
+    if(moved){
+      el.classList.add("dragging");
+      ghost.style.display="block";
+      ghost.style.left=pt.clientX+"px";ghost.style.top=pt.clientY+"px";
+      // trajectory from hand to pointer
+      const r=el.getBoundingClientRect();
+      traj.style.display="block";
+      tp.setAttribute("d",`M ${r.left+r.width/2} ${r.top+r.height/2} Q ${(r.left+pt.clientX)/2} ${pt.clientY-80} ${pt.clientX} ${pt.clientY}`);
+      // highlight enemy under pointer
+      highlightDrop(pt.clientX,pt.clientY,c);
+    }
+  }
+  function up(e){
+    window.removeEventListener("mousemove",move);window.removeEventListener("mouseup",up);
+    window.removeEventListener("touchmove",move);window.removeEventListener("touchend",up);
+    el.classList.remove("dragging");ghost.style.display="none";traj.style.display="none";
+    $$(".drop-hot").forEach(x=>x.classList.remove("drop-hot"));
+    if(!dragging)return;dragging=false;
+    const pt=e.changedTouches?e.changedTouches[0]:e;
+    const d=CARDS[c.id];
+    if(!moved){
+      // click: auto target
+      playClicked(c);return;
+    }
+    // determine target / valid drop
+    const needsTarget=d.dmg&&!cardStats(c).all;
+    const enemyEl=enemyUnder(pt.clientX,pt.clientY);
+    if(needsTarget){
+      if(enemyEl){const ei=+enemyEl.dataset.ei;playCard(c,G.combat.enemies[ei]);}
+      else toast("敵に向けて使うカード");
+    }else{
+      // released anywhere in upper half = play
+      if(pt.clientY<window.innerHeight*0.7)playCard(c);
+      else { /* dropped back */ }
+    }
+  }
+  el.addEventListener("mousedown",down);
+  el.addEventListener("touchstart",down,{passive:false});
+}
+function playClicked(c){
+  const d=CARDS[c.id],s=cardStats(c);
+  if(d.dmg&&!s.all){
+    // target first alive (or only) enemy
+    const t=firstAlive();if(t)playCard(c,t);
+  }else playCard(c);
+}
+function enemyUnder(x,y){
+  const els=document.elementsFromPoint(x,y);
+  for(const el of els){const s=el.closest(".sprite[data-ei]");if(s)return s;}
+  return null;
+}
+function highlightDrop(x,y,c){
+  $$(".drop-hot").forEach(x=>x.classList.remove("drop-hot"));
+  const d=CARDS[c.id];
+  if(d.dmg&&!cardStats(c).all){
+    const s=enemyUnder(x,y);if(s)s.closest(".entity").classList.add("drop-hot");
+  }
+}
+
+/*════════════════════ FX ════════════════════*/
+function floatNum(sel,val,kind){
+  const el=document.querySelector(sel.startsWith("#enemy")?sel:sel);
+  let rect;
+  if(sel==="#playerEntity"){const s=$("#playerEntity_s");rect=(s||$("#playerEntity")).getBoundingClientRect();}
+  else{const e=document.querySelector(sel);if(!e)return;rect=e.getBoundingClientRect();}
+  const f=document.createElement("div");
+  f.className="fnum "+kind+(val>=25&&kind==="dmg"?" crit":"");
+  f.textContent=(kind==="heal"?"+":kind==="block"?"🛡":"")+val;
+  f.style.left=(rect.left+rect.width/2+(Math.random()*30-15))+"px";
+  f.style.top=(rect.top+rect.height*0.3)+"px";
+  document.body.appendChild(f);
+  if(kind==="dmg")sfx("hit");
+  setTimeout(()=>f.remove(),1000);
+}
+function flash(sel){const e=document.querySelector(sel);if(e){e.classList.add("flash");setTimeout(()=>e.classList.remove("flash"),200);}}
+function shakeEl(sel){const e=document.querySelector(sel);const w=e&&e.closest(".entity");if(w){w.classList.add("shake");setTimeout(()=>w.classList.remove("shake"),350);}}
+function goldShower(screen){
+  const host=$("#"+screen);if(!host)return;
+  const div=document.createElement("div");div.className="gold-shower";
+  const ic=["✨","🌟","💛","⭐","🔆"];
+  for(let i=0;i<40;i++){const s=document.createElement("span");s.className="spark";s.textContent=ic[rng(ic.length)];
+    s.style.left=Math.random()*100+"%";s.style.animationDuration=(1.5+Math.random()*2)+"s";s.style.animationDelay=(Math.random()*0.8)+"s";s.style.fontSize=(12+rng(18))+"px";div.appendChild(s);}
+  host.appendChild(div);setTimeout(()=>div.remove(),3500);
+}
+function toast(msg){
+  const t=document.createElement("div");t.className="toast";t.textContent=msg;
+  $("#toast").appendChild(t);setTimeout(()=>t.remove(),2600);
+}
+
+/*════════════════════ AUDIO (Web Audio API) ════════════════════*/
+let AC=null,bgmNode=null,soundOn=META.sound;
+function audio(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function tone(freq,dur,type,vol,slideTo){
+  if(!soundOn)return;const ac=audio();if(!ac)return;
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type=type||"sine";o.frequency.value=freq;
+  if(slideTo)o.frequency.exponentialRampToValueAtTime(slideTo,ac.currentTime+dur);
+  g.gain.setValueAtTime((vol||0.15),ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+  o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+dur);
+}
+function sfx(type){
+  if(!soundOn)return;
+  switch(type){
+    case "slash":tone(620,0.12,"sawtooth",0.12,180);break;
+    case "hit":tone(140,0.14,"square",0.14,70);break;
+    case "skill":tone(520,0.18,"sine",0.12,760);break;
+    case "power":tone(330,0.25,"triangle",0.14,520);break;
+    case "heal":tone(660,0.2,"sine",0.12,990);setTimeout(()=>tone(880,0.2,"sine",0.1),100);break;
+    case "win":[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,0.3,"triangle",0.14),i*120));break;
+    case "death":tone(220,0.8,"sawtooth",0.18,55);break;
+    case "start":tone(196,0.3,"triangle",0.12,294);break;
+  }
+}
+function startBgm(){
+  if(!soundOn)return;const ac=audio();if(!ac||bgmNode)return;
+  const o=ac.createOscillator(),o2=ac.createOscillator(),g=ac.createGain(),lfo=ac.createOscillator(),lg=ac.createGain();
+  o.type="sine";o.frequency.value=110;o2.type="sine";o2.frequency.value=164.81;
+  lfo.frequency.value=0.07;lg.gain.value=14;lfo.connect(lg).connect(o.frequency);
+  g.gain.value=0.045;o.connect(g);o2.connect(g);g.connect(ac.destination);
+  o.start();o2.start();lfo.start();
+  bgmNode={o,o2,lfo,g};
+}
+function stopBgm(){if(bgmNode){try{bgmNode.o.stop();bgmNode.o2.stop();bgmNode.lfo.stop();}catch(e){}bgmNode=null;}}
+function toggleSound(){
+  soundOn=!soundOn;META.sound=soundOn;saveMeta();
+  $("#soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF";
+  if(soundOn){audio()&&audio().resume();startBgm();}else stopBgm();
+}
+
+/*════════════════════ SOUL SHOP ════════════════════*/
+function openSoul(){
+  const ov=$("#ovSoul");
+  function render(){
+    let html=`<div class="panel"><span class="close-x" onclick="closeAll();goTitle()">×</span><h2>🔮 ソウル強化</h2><div class="ptag">所持ソウル 🔮 <b style="color:var(--rune)">${META.souls}</b> — 永続的に強くなる</div><div class="soul-grid">`;
+    for(const k in SOUL_UP){
+      const u=SOUL_UP[k],l=lv(k),maxed=l>=u.max,cost=u.cost*(l+1);
+      let pips="";for(let i=0;i<u.max;i++)pips+=`<div class="pip ${i<l?"on":""}"></div>`;
+      html+=`<div class="soul-item"><div class="si-top"><span class="si-nm">${u.ic} ${u.name}</span><span class="si-lv">Lv ${l}/${u.max}</span></div>
+        <div class="si-ds">${u.ds}</div><div class="pips">${pips}</div>
+        <button class="btn ${maxed?"":"primary"} small" data-k="${k}" ${maxed||META.souls<cost?"disabled":""} style="margin-top:8px">${maxed?"MAX":"購入 🔮"+cost}</button></div>`;
+    }
+    html+=`</div></div>`;
+    ov.innerHTML=html;ov.classList.add("active");
+    ov.querySelectorAll("[data-k]").forEach(b=>{
+      b.onclick=()=>{const k=b.dataset.k,u=SOUL_UP[k],l=lv(k),cost=u.cost*(l+1);
+        if(META.souls<cost)return;META.souls-=cost;META.upgrades[k]=l+1;saveMeta();sfx("power");render();};
+    });
+  }
+  render();
+}
+
+/*════════════════════ CODEX ════════════════════*/
+function openCodex(){
+  const ov=$("#ovCodex");
+  let tab="cards";
+  function render(){
+    let html=`<div class="panel"><span class="close-x" onclick="closeAll();goTitle()">×</span><h2>📖 図鑑</h2>
+      <div class="codex-tabs">
+        <button class="btn small ${tab==="cards"?"active":""}" data-t="cards">🃏 カード (${META.discovered.length}/${ALL_CARD_IDS.length})</button>
+        <button class="btn small ${tab==="enemies"?"active":""}" data-t="enemies">👹 敵</button>
+        <button class="btn small ${tab==="relics"?"active":""}" data-t="relics">🗿 レリック</button>
+      </div>`;
+    if(tab==="cards"){
+      html+=`<div class="codex-grid">`;
+      const order={common:0,uncommon:1,rare:2,legendary:3};
+      ALL_CARD_IDS.slice().sort((a,b)=>order[CARDS[a].rarity]-order[CARDS[b].rarity]).forEach(id=>{
+        const d=CARDS[id],found=META.discovered.includes(id);
+        const rc={common:"var(--common)",uncommon:"var(--uncommon)",rare:"var(--rare)",legendary:"var(--legend)"}[d.rarity];
+        html+=`<div class="codex-card ${found?"":"locked"}"><div class="cc-nm"><span style="color:${rc}">${found?d.art+" "+d.name:"？？？"}</span><span style="font-size:9px;color:${rc}">${found?({attack:"攻撃",skill:"スキル",power:"パワー"}[d.type]+" ⚡"+d.cost):"未発見"}</span></div><div class="cc-ds">${found?d.desc(cardStats({id,upgraded:false})):"このカードはまだ発見されていない"}</div></div>`;
+      });
+      html+=`</div>`;
+    }else if(tab==="enemies"){
+      html+=`<div class="codex-grid">`;
+      for(const id in ENEMIES){const e=ENEMIES[id];
+        html+=`<div class="codex-card"><div class="cc-nm"><span>${e.name}</span><span style="font-size:10px;color:var(--red2)">HP ${e.hp[0]}~${e.hp[1]}${e.boss?" 👑":""}</span></div>
+          <div style="height:70px;margin:6px 0">${svg(id)}</div></div>`;}
+      html+=`</div>`;
+    }else{
+      html+=`<div class="codex-grid">`;
+      for(const id in RELICS){const r=RELICS[id],owned=G&&G.relics&&G.relics.includes(id);
+        html+=`<div class="codex-card"><div class="cc-nm"><span>${r.ic} ${r.name}</span></div><div class="cc-ds">${r.ds}</div></div>`;}
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+    ov.innerHTML=html;ov.classList.add("active");
+    ov.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{tab=b.dataset.t;render();});
+  }
+  render();
+}
+
+/*════════════════════ ACHIEVEMENTS ════════════════════*/
+function openAch(){
+  const ov=$("#ovAch");
+  let html=`<div class="panel" style="max-width:560px"><span class="close-x" onclick="closeAll();goTitle()">×</span><h2>🏆 実績</h2><div class="ptag">${Object.keys(META.achievements).length}/${Object.keys(ACHS).length} 達成</div>`;
+  for(const id in ACHS){const a=ACHS[id],got=META.achievements[id];
+    html+=`<div class="ach-item ${got?"got":""}"><div class="ai-ic">${a.ic}</div><div><div class="ai-nm">${got?a.name:"？？？"}</div><div class="ai-ds">${a.ds}</div></div></div>`;}
+  html+=`</div>`;
+  ov.innerHTML=html;ov.classList.add("active");
+}
+
+/*════════════════════ SAVE / LOAD RUN ════════════════════*/
+function saveRun(){if(G)localStorage.setItem(SAVE_KEY,JSON.stringify({floor:G.floor,gold:G.gold,deck:G.deck,relics:G.relics,player:{maxHp:G.player.maxHp,hp:G.player.hp},map:G.map,phoenixUsed:G.phoenixUsed}));}
+function continueRun(){
+  try{
+    const s=JSON.parse(localStorage.getItem(SAVE_KEY));if(!s)return;
+    G={floor:s.floor,gold:s.gold,deck:s.deck.map(c=>({...c,uid:UID++})),relics:s.relics,
+       player:{maxHp:s.player.maxHp,hp:s.player.hp,block:0,buffs:{}},map:s.map,node:null,phoenixUsed:s.phoenixUsed,turnTotalDmg:0};
+    goMap();
+  }catch(e){toast("セーブデータの読込に失敗");}
+}
+function confirmQuit(){
+  if(confirm("塔から退却しますか？\n（進行状況は保存されます）")){saveRun();goTitle();}
+}
+
+/*════════════════════ INIT ════════════════════*/
+function initBgRunes(){
+  const r=$("#bgRunes");const runes="ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ";
+  for(let i=0;i<14;i++){const s=document.createElement("span");s.textContent=runes[rng(runes.length)];
+    s.style.left=Math.random()*100+"%";s.style.animationDuration=(14+Math.random()*16)+"s";s.style.animationDelay=(-Math.random()*20)+"s";r.appendChild(s);}
+}
+function bindTitle(){
+  $("#btnNew").onclick=()=>{if(localStorage.getItem(SAVE_KEY)&&!confirm("新しい挑戦を始めると現在のセーブは消えます。よろしいですか？"))return;audio()&&audio().resume();startBgm();newRun();};
+  $("#btnContinue").onclick=()=>{audio()&&audio().resume();startBgm();continueRun();};
+  $("#btnSoul").onclick=openSoul;
+  $("#btnCodex").onclick=openCodex;
+  $("#btnAch").onclick=openAch;
+  $("#soundBtn").onclick=toggleSound;
+  $("#soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF";
+  $("#endTurnBtn").onclick=()=>{if(!G.combat.over){endTurn();}};
+}
+window.addEventListener("DOMContentLoaded",()=>{
+  initBgRunes();bindTitle();goTitle();
+});
+// expose for inline onclick
+Object.assign(window,{enterNode,newRun,goTitle,confirmQuit,closeAll,afterNode});
+</script>
+</body>
+</html>
