@@ -11,6 +11,7 @@
 | 003 | あなたの取扱説明書ジェネレーター | [day003-manual](./day003-manual/) |
 | 004 | 心の天気予報 | [day004-mindweather](./day004-mindweather/) |
 | 005 | Sanctuary of Light - あなたの色を捧げる祭壇 | [day005-sanctuary](./day005-sanctuary/) |
+| 006 | Soul Reading - 魂の鑑定書 | [day006-soulreading](./day006-soulreading/) |
 
 ## ルール
 

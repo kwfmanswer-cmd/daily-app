@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Soul Reading — 魂の鑑定書</title>
+<meta name="description" content="名と生まれし日より、占星・数秘・五行・神話を融合した5ページの魂の鑑定書を顕す。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Shippori+Mincho:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Soul Reading — 魂の鑑定書
+   Day 006 / 100-day web app challenge
+   ============================================================ */
+:root{
+  --garamond:'Cormorant Garamond', serif;
+  --mincho:'Shippori Mincho', serif;
+  --serif:'Noto Serif JP', serif;
+  --night:#0a0814;
+  --paper:#f5ecd9;
+  --paper-edge:#e6d6b8;
+  --ink:#2a1810;
+  --ink-soft:#5a4632;
+  --crimson:#8b0000;
+  --gold:#c9a961;
+  --gold-deep:#a07c2e;
+  --indigo:#1a2c4e;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:var(--serif);
+  background:var(--night);
+  color:var(--ink);
+  line-height:1.95;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::selection{background:rgba(201,169,97,.4);color:#1a1008}
+::-webkit-scrollbar{width:9px}
+::-webkit-scrollbar-thumb{background:rgba(201,169,97,.3);border-radius:9px}
+::-webkit-scrollbar-track{background:#0a0814}
+
+/* ============================================================
+   COSMIC NIGHT BACKDROP
+   ============================================================ */
+.backdrop{position:fixed;inset:0;z-index:-3;
+  background:radial-gradient(130% 100% at 50% 0%, #161228 0%, #0c0a18 45%, #06040d 100%)}
+.backdrop::before{content:"";position:absolute;inset:-20%;
+  background:
+   radial-gradient(36% 36% at 25% 25%, rgba(120,90,180,.16), transparent 70%),
+   radial-gradient(40% 40% at 78% 70%, rgba(60,90,150,.14), transparent 70%);
+  animation:drift 40s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate3d(-2%,-1%,0)}to{transform:translate3d(3%,2%,0)}}
+.bg-stars{position:fixed;inset:0;z-index:-2;pointer-events:none}
+.bg-stars i{position:absolute;border-radius:50%;background:#f3e9c8;animation:twinkle 5s infinite ease-in-out}
+@keyframes twinkle{0%,100%{opacity:.1;transform:scale(.7)}50%{opacity:.7;transform:scale(1.1)}}
+
+/* ============================================================
+   STAGES
+   ============================================================ */
+.stage{display:none}
+.stage.active{display:block}
+
+/* ============================================================
+   INPUT SCREEN
+   ============================================================ */
+#stage-input.active{display:flex;min-height:100vh;min-height:100dvh;align-items:center;justify-content:center;padding:40px 22px}
+.input-card{position:relative;width:100%;max-width:520px;text-align:center}
+
+.candle{position:relative;width:60px;height:96px;margin:0 auto 8px}
+.candle .flame{position:absolute;left:50%;top:0;width:18px;height:42px;transform:translateX(-50%);
+  background:radial-gradient(ellipse at 50% 75%, #fff6cf 0%, #ffd35e 32%, #ff8a1e 64%, rgba(200,60,0,0) 80%);
+  border-radius:50% 50% 48% 48% / 62% 62% 40% 40%;
+  filter:blur(.4px);transform-origin:50% 90%;
+  animation:flicker 2.6s ease-in-out infinite;
+  box-shadow:0 -8px 40px 8px rgba(255,170,60,.55)}
+.candle .flame::after{content:"";position:absolute;left:50%;bottom:2px;width:8px;height:18px;transform:translateX(-50%);
+  background:radial-gradient(ellipse at 50% 70%, #6fa8ff 0%, rgba(120,160,255,0) 75%);border-radius:50%}
+.candle .glow{position:absolute;left:50%;top:-26px;width:160px;height:160px;transform:translateX(-50%);
+  background:radial-gradient(circle, rgba(255,190,90,.28), transparent 65%);animation:glowPulse 2.6s ease-in-out infinite;pointer-events:none}
+.candle .wax{position:absolute;left:50%;bottom:0;width:26px;height:52px;transform:translateX(-50%);
+  background:linear-gradient(180deg,#f3e6c4,#d8c49a);border-radius:6px 6px 4px 4px;
+  box-shadow:inset 0 4px 6px rgba(255,255,255,.5),inset 0 -6px 10px rgba(120,90,40,.4)}
+@keyframes flicker{0%,100%{transform:translateX(-50%) rotate(-2deg) scaleY(1)}25%{transform:translateX(-52%) rotate(2deg) scaleY(1.06)}50%{transform:translateX(-49%) rotate(-1deg) scaleY(.96)}75%{transform:translateX(-51%) rotate(1deg) scaleY(1.03)}}
+@keyframes glowPulse{0%,100%{opacity:.7;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.12)}}
+.candle.ignite .flame{animation:igniteFlame 1.1s var(--ease) forwards}
+@keyframes igniteFlame{0%{transform:translateX(-50%) scaleY(1)}40%{transform:translateX(-50%) scaleY(3.2) translateY(-30px);filter:blur(2px) brightness(1.6)}100%{transform:translateX(-50%) scaleY(6) translateY(-120px);opacity:0}}
+
+.input-kicker{font-family:var(--garamond);letter-spacing:.6em;text-transform:uppercase;font-size:.72rem;
+  color:var(--gold);margin-bottom:14px;padding-left:.6em}
+.input-title{font-family:var(--garamond);font-weight:500;font-size:clamp(2.4rem,9vw,3.6rem);letter-spacing:.08em;
+  color:#f3e9c8;line-height:1.1;margin-bottom:6px;text-shadow:0 0 40px rgba(201,169,97,.4)}
+.input-title-jp{font-family:var(--mincho);font-weight:500;letter-spacing:.4em;font-size:.92rem;color:#cdbf9a;margin-bottom:40px;padding-left:.4em}
+
+.field{margin-bottom:26px;text-align:left}
+.field > label{display:block;font-family:var(--mincho);font-size:.82rem;letter-spacing:.24em;color:#cdbf9a;margin-bottom:10px}
+.field input[type=text]{width:100%;background:rgba(245,236,217,.04);border:1px solid rgba(201,169,97,.3);
+  border-radius:4px;color:#f3e9c8;font-family:var(--mincho);font-size:1.15rem;letter-spacing:.06em;
+  padding:14px 16px;outline:none;transition:border-color .3s,box-shadow .3s}
+.field input[type=text]::placeholder{color:rgba(205,191,154,.35);font-size:.95rem}
+.field input[type=text]:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,169,97,.14)}
+.dob{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px}
+.dob select{width:100%;background:rgba(245,236,217,.04);border:1px solid rgba(201,169,97,.3);border-radius:4px;
+  color:#f3e9c8;font-family:var(--mincho);font-size:1rem;padding:14px 10px;outline:none;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,#c9a961 50%),linear-gradient(135deg,#c9a961 50%,transparent 50%);
+  background-position:calc(100% - 18px) calc(50% - 2px),calc(100% - 13px) calc(50% - 2px);
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.dob select:focus{border-color:var(--gold)}
+.dob select option{background:#161228;color:#f3e9c8}
+
+.begin-btn{margin-top:18px;width:100%;font-family:var(--garamond);font-weight:600;letter-spacing:.3em;text-transform:uppercase;
+  font-size:1rem;color:#1a1008;
+  background:linear-gradient(135deg,#e7d6a8,#c9a961 60%,#a07c2e);
+  padding:17px;border-radius:5px;position:relative;overflow:hidden;
+  box-shadow:0 12px 34px rgba(160,124,46,.4),inset 0 1px 0 rgba(255,255,255,.5);
+  transition:transform .3s var(--ease),box-shadow .3s}
+.begin-btn:hover{transform:translateY(-2px);box-shadow:0 18px 44px rgba(160,124,46,.55),inset 0 1px 0 rgba(255,255,255,.6)}
+.begin-btn:active{transform:translateY(0)}
+.begin-btn .jp{display:block;font-family:var(--mincho);font-size:.62rem;letter-spacing:.4em;margin-top:5px;opacity:.7}
+.err{color:#ff9a8a;font-size:.78rem;letter-spacing:.1em;margin-top:8px;min-height:1.2em;text-align:center}
+
+.fade-seq{opacity:0;transform:translateY(18px);animation:fadeUp 1.2s var(--ease) forwards}
+.d1{animation-delay:.2s}.d2{animation-delay:.5s}.d3{animation-delay:.8s}.d4{animation-delay:1.1s}.d5{animation-delay:1.4s}.d6{animation-delay:1.7s}
+@keyframes fadeUp{to{opacity:1;transform:none}}
+
+/* full-screen ignite flash */
+#ignite-overlay{position:fixed;inset:0;z-index:200;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at 50% 60%, #fff 0%, #ffcf6e 25%, #ff7a1e 50%, rgba(120,30,0,0) 75%)}
+#ignite-overlay.fire{animation:igniteFlash 1.6s var(--ease) forwards}
+@keyframes igniteFlash{0%{opacity:0;transform:scale(.4)}30%{opacity:1;transform:scale(1)}70%{opacity:.85}100%{opacity:0;transform:scale(1.3)}}
+
+/* ============================================================
+   READING (book of pages)
+   ============================================================ */
+#stage-reading.active{display:block;padding:48px 16px 60px}
+.book{max-width:760px;margin:0 auto}
+
+.book-toolbar{position:sticky;top:0;z-index:40;display:flex;justify-content:center;gap:8px;
+  padding:10px;margin:-10px auto 26px;flex-wrap:wrap;max-width:760px}
+.book-toolbar .pg-dot{width:32px;height:32px;border-radius:50%;border:1px solid rgba(201,169,97,.4);
+  font-family:var(--garamond);font-size:.78rem;color:#cdbf9a;display:flex;align-items:center;justify-content:center;
+  background:rgba(20,16,38,.7);backdrop-filter:blur(6px);transition:all .3s}
+.book-toolbar .pg-dot.active{background:var(--gold);color:#1a1008;border-color:var(--gold);box-shadow:0 0 16px rgba(201,169,97,.6)}
+.book-toolbar .pg-dot:hover{transform:scale(1.1)}
+
+/* ---- the page (parchment) ---- */
+.page{position:relative;background:var(--paper);color:var(--ink);
+  border-radius:3px;margin:0 auto 60px;padding:54px 46px 60px;
+  aspect-ratio:1 / 1.414;max-width:680px;
+  box-shadow:0 30px 80px rgba(0,0,0,.6),0 2px 0 rgba(0,0,0,.3),inset 0 0 120px rgba(120,80,30,.12);
+  overflow:hidden;
+  opacity:0;transform:translateY(40px) scale(.97);
+  transition:opacity 1s var(--ease),transform 1s var(--ease)}
+.page.in{opacity:1;transform:none}
+/* parchment texture */
+.page::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:multiply;
+  background:
+   radial-gradient(80% 60% at 20% 10%, rgba(180,140,80,.18), transparent 60%),
+   radial-gradient(70% 70% at 90% 90%, rgba(150,100,50,.22), transparent 60%),
+   radial-gradient(60% 50% at 50% 50%, transparent 40%, rgba(120,80,40,.10) 100%),
+   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E")}
+/* burnt edges */
+.page::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:3px;
+  box-shadow:inset 0 0 18px rgba(90,50,15,.45),inset 0 0 60px rgba(120,70,25,.25);
+  border:1px solid rgba(120,80,35,.2)}
+.page-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column}
+
+/* corner arabesques */
+.corner{position:absolute;width:64px;height:64px;z-index:3;opacity:.55;color:var(--gold-deep)}
+.corner.tl{top:14px;left:14px}
+.corner.tr{top:14px;right:14px;transform:scaleX(-1)}
+.corner.bl{bottom:14px;left:14px;transform:scaleY(-1)}
+.corner.br{bottom:14px;right:14px;transform:scale(-1,-1)}
+
+/* page side labels */
+.page-side{position:absolute;top:50%;font-family:var(--garamond);letter-spacing:.4em;text-transform:uppercase;
+  font-size:.6rem;color:var(--ink-soft);opacity:.6;writing-mode:vertical-rl}
+.page-side.left{left:16px;transform:translateY(-50%)}
+.page-side.right{right:16px;transform:translateY(-50%) rotate(180deg)}
+
+/* dividers */
+.divider{display:flex;align-items:center;justify-content:center;gap:12px;margin:18px 0;color:var(--gold-deep)}
+.divider svg{height:14px;opacity:.85}
+.divider .line{height:1px;flex:1;max-width:120px;background:linear-gradient(90deg,transparent,var(--gold-deep),transparent)}
+
+/* typography inside pages */
+.chapter-tag{font-family:var(--garamond);font-style:italic;letter-spacing:.2em;font-size:.82rem;color:var(--crimson);text-align:center;margin-bottom:4px}
+.chapter-title{font-family:var(--mincho);font-weight:700;font-size:clamp(1.5rem,5.4vw,2rem);letter-spacing:.14em;text-align:center;color:var(--ink);margin-bottom:6px}
+.chapter-title .en{display:block;font-family:var(--garamond);font-style:italic;font-weight:500;font-size:.5em;letter-spacing:.24em;color:var(--gold-deep);margin-top:6px}
+
+.gold-ul{border-bottom:2px solid var(--gold);padding-bottom:1px;font-weight:600}
+.crimson{color:var(--crimson)}
+.dropcap::first-letter{font-family:var(--mincho);font-weight:800;font-size:3.4em;float:left;line-height:.8;
+  margin:6px 12px 0 0;color:var(--crimson);text-shadow:1px 1px 0 rgba(201,169,97,.4)}
+
+.body-text{font-family:var(--serif);font-size:.95rem;line-height:2.1;color:#34241a;text-align:justify}
+
+/* ---- COVER (page 1) ---- */
+.cover-top{text-align:center;margin-top:8px}
+.cover-emblem{width:84px;height:84px;margin:0 auto 18px;color:var(--gold-deep)}
+.cover-soulreading{font-family:var(--garamond);font-weight:600;font-size:clamp(2.2rem,8vw,3.2rem);letter-spacing:.22em;
+  color:var(--ink);text-align:center;padding-left:.22em;line-height:1.1}
+.cover-jp{font-family:var(--mincho);font-weight:600;letter-spacing:.6em;font-size:.92rem;color:var(--crimson);text-align:center;margin-top:8px;padding-left:.6em}
+.cover-name{font-family:var(--mincho);font-weight:700;font-size:clamp(1.8rem,7vw,2.6rem);letter-spacing:.16em;
+  text-align:center;color:var(--ink);margin:auto 0}
+.cover-name .label{display:block;font-family:var(--garamond);font-style:italic;font-size:.36em;letter-spacing:.3em;color:var(--ink-soft);margin-bottom:10px;font-weight:500}
+.cover-sigil{width:140px;height:140px;margin:10px auto;display:block}
+.cover-meta{text-align:center;font-family:var(--mincho);font-size:.8rem;letter-spacing:.16em;color:var(--ink-soft);line-height:2}
+.cover-meta .no{font-family:var(--garamond);letter-spacing:.3em;color:var(--crimson);font-size:1rem}
+
+/* ---- essence grid (page 2) ---- */
+.essence-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px}
+.essence-cell{border:1px solid rgba(120,80,35,.25);border-radius:4px;padding:16px 16px;background:rgba(255,250,235,.4);position:relative}
+.essence-cell.full{grid-column:1 / -1}
+.essence-cell .k{font-family:var(--garamond);font-style:italic;letter-spacing:.16em;font-size:.74rem;color:var(--gold-deep);margin-bottom:6px;text-transform:uppercase}
+.essence-cell .v{font-family:var(--mincho);font-weight:700;font-size:1.5rem;letter-spacing:.06em;color:var(--ink);line-height:1.2}
+.essence-cell .desc{font-size:.82rem;line-height:1.85;color:#4a3526;margin-top:6px}
+.soul-num{display:flex;align-items:center;gap:14px}
+.soul-num .roman{font-family:var(--garamond);font-weight:700;font-size:2.6rem;color:var(--crimson);line-height:1;text-shadow:1px 1px 0 rgba(201,169,97,.4)}
+.color-swatch{width:42px;height:42px;border-radius:50%;flex:none;box-shadow:0 3px 10px rgba(0,0,0,.3),inset 0 2px 4px rgba(255,255,255,.4);border:2px solid rgba(255,255,255,.5)}
+.elem-icon{width:46px;height:46px;flex:none;color:var(--indigo)}
+.rank-dots{display:flex;gap:6px;margin-top:8px}
+.rank-dots i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--gold-deep)}
+.rank-dots i.on{background:var(--gold);box-shadow:0 0 8px rgba(201,169,97,.6)}
+
+/* ---- archetype (page 3) ---- */
+.archetype-art{width:130px;height:130px;margin:6px auto 14px;color:var(--indigo);
+  background:radial-gradient(circle, rgba(201,169,97,.18), transparent 70%);border-radius:50%;padding:10px}
+.archetype-name{font-family:var(--mincho);font-weight:700;font-size:1.6rem;letter-spacing:.1em;text-align:center;color:var(--ink)}
+.archetype-type{font-family:var(--garamond);font-style:italic;letter-spacing:.2em;font-size:.86rem;color:var(--crimson);text-align:center;margin-bottom:14px}
+.sub-head{font-family:var(--mincho);font-weight:600;font-size:.92rem;letter-spacing:.16em;color:var(--gold-deep);margin:18px 0 6px;display:flex;align-items:center;gap:8px}
+.sub-head::before{content:"❖";font-size:.7em;color:var(--crimson)}
+
+/* ---- destiny (page 4) ---- */
+.equation{text-align:center;font-family:var(--garamond);font-size:1.15rem;letter-spacing:.06em;color:var(--ink);
+  background:rgba(255,250,235,.5);border:1px solid rgba(120,80,35,.25);border-radius:4px;padding:18px 14px;margin:10px 0 6px;line-height:2.2}
+.equation .term{color:var(--crimson);font-weight:600}
+.equation .result{font-family:var(--mincho);font-weight:800;font-size:1.8rem;color:var(--indigo);display:inline-block;margin-left:6px}
+.cycle-wrap{margin:14px 0}
+.cycle-wrap svg{width:100%;height:auto;display:block}
+.phase-row{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+.phase-box{flex:1;text-align:center;border:1px solid rgba(120,80,35,.2);border-radius:4px;padding:12px 8px;background:rgba(255,250,235,.4)}
+.phase-box .k{font-family:var(--garamond);font-style:italic;font-size:.68rem;letter-spacing:.12em;color:var(--gold-deep);text-transform:uppercase}
+.phase-box .v{font-family:var(--mincho);font-weight:700;font-size:1.05rem;color:var(--ink);margin-top:4px;line-height:1.4}
+.affinity{display:flex;justify-content:space-around;gap:8px;margin-top:16px;text-align:center;flex-wrap:wrap}
+.affinity .a{flex:1;min-width:80px}
+.affinity .a .k{font-family:var(--garamond);font-style:italic;font-size:.7rem;color:var(--gold-deep);letter-spacing:.1em}
+.affinity .a .v{font-family:var(--mincho);font-weight:700;font-size:1.2rem;color:var(--crimson);margin-top:2px}
+
+/* ---- oracle (page 5) ---- */
+.oracle-quote{font-family:var(--mincho);font-weight:500;font-size:1.2rem;line-height:2.2;letter-spacing:.06em;
+  text-align:center;color:var(--ink);position:relative;padding:14px 20px;margin:6px 0 14px}
+.oracle-quote::before,.oracle-quote::after{font-family:var(--garamond);color:var(--gold-deep);font-size:1.8em;line-height:0;position:relative;top:.3em}
+.oracle-quote::before{content:"「"}.oracle-quote::after{content:"」"}
+.let-go-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.let-go-box{border:1px solid rgba(120,80,35,.25);border-radius:4px;padding:14px;text-align:center;background:rgba(255,250,235,.4)}
+.let-go-box .k{font-family:var(--garamond);font-style:italic;font-size:.72rem;letter-spacing:.12em;color:var(--gold-deep);text-transform:uppercase;margin-bottom:6px}
+.let-go-box.release .k{color:var(--crimson)}
+.let-go-box .v{font-family:var(--mincho);font-weight:700;font-size:1.15rem;color:var(--ink);line-height:1.5}
+.poem{text-align:center;font-family:var(--mincho);font-size:1.05rem;line-height:2.4;letter-spacing:.1em;color:var(--indigo);
+  margin:14px 0;padding:18px 10px;border-top:1px solid rgba(201,169,97,.4);border-bottom:1px solid rgba(201,169,97,.4)}
+.issue-note{text-align:center;font-family:var(--garamond);font-style:italic;letter-spacing:.1em;font-size:.78rem;color:var(--ink-soft);margin-top:auto;padding-top:18px}
+
+/* per-page share button */
+.page-share{position:absolute;bottom:14px;right:16px;z-index:5;
+  font-family:var(--garamond);letter-spacing:.14em;font-size:.66rem;text-transform:uppercase;color:var(--gold-deep);
+  border:1px solid rgba(160,124,46,.4);border-radius:999px;padding:6px 14px;background:rgba(255,250,235,.6);
+  display:inline-flex;align-items:center;gap:6px;transition:all .3s}
+.page-share:hover{background:var(--gold);color:#1a1008;border-color:var(--gold)}
+
+/* foot actions */
+.book-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:20px auto 0;max-width:680px}
+.book-actions button{font-family:var(--garamond);letter-spacing:.16em;text-transform:uppercase;font-size:.82rem;
+  padding:14px 26px;border-radius:5px;transition:transform .3s var(--ease),box-shadow .3s}
+.b-save{background:linear-gradient(135deg,#e7d6a8,#c9a961);color:#1a1008;box-shadow:0 10px 26px rgba(160,124,46,.35)}
+.b-x{background:#0a0a0a;color:#fff;border:1px solid rgba(201,169,97,.4)}
+.b-again{background:rgba(245,236,217,.06);border:1px solid rgba(201,169,97,.35);color:#cdbf9a}
+.book-actions button:hover{transform:translateY(-3px)}
+
+/* archive */
+.archive{max-width:680px;margin:46px auto 0;border-top:1px solid rgba(201,169,97,.2);padding-top:30px}
+.archive .a-title{font-family:var(--garamond);letter-spacing:.3em;text-transform:uppercase;font-size:.74rem;color:var(--gold);text-align:center;margin-bottom:18px}
+.archive-list{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.archive-chip{font-family:var(--mincho);font-size:.82rem;letter-spacing:.08em;color:#cdbf9a;
+  border:1px solid rgba(201,169,97,.3);border-radius:999px;padding:8px 16px;background:rgba(20,16,38,.6);transition:all .3s}
+.archive-chip:hover{border-color:var(--gold);color:#f3e9c8;transform:translateY(-2px)}
+.archive-chip .no{font-family:var(--garamond);color:var(--crimson);font-size:.76rem;margin-right:6px;letter-spacing:.1em}
+.archive-empty{text-align:center;font-family:var(--garamond);font-style:italic;color:rgba(205,191,154,.4);letter-spacing:.1em}
+
+.book-footer{text-align:center;font-family:var(--garamond);letter-spacing:.24em;font-size:.7rem;color:rgba(205,191,154,.35);padding:36px 0 20px}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(140%);z-index:160;
+  background:rgba(20,16,38,.95);color:#f3e9c8;padding:13px 26px;border-radius:999px;font-size:.84rem;letter-spacing:.08em;
+  border:1px solid rgba(201,169,97,.4);box-shadow:0 14px 36px rgba(0,0,0,.5);transition:transform .5s var(--ease)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media (max-width:560px){
+  .page{padding:42px 26px 50px}
+  .essence-grid{grid-template-columns:1fr;gap:12px}
+  .corner{width:48px;height:48px}
+  .page-side{display:none}
+  .cover-soulreading{letter-spacing:.14em}
+}
+@media print{
+  body{background:#fff}
+  .backdrop,.bg-stars,.book-toolbar,.book-actions,.archive,.book-footer,.page-share,.toast{display:none!important}
+  .page{box-shadow:none;break-after:page;margin:0 auto 0;opacity:1!important;transform:none!important;max-width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important}
+}
+</style>
+</head>
+<body>
+
+<div class="backdrop"></div>
+<div class="bg-stars" id="bgStars"></div>
+<div id="ignite-overlay"></div>
+
+<!-- ============================================================
+     INPUT
+     ============================================================ -->
+<section class="stage active" id="stage-input">
+  <div class="input-card">
+    <div class="candle fade-seq d1" id="candle">
+      <div class="glow"></div>
+      <div class="flame"></div>
+      <div class="wax"></div>
+    </div>
+    <div class="input-kicker fade-seq d2">Arcanum&nbsp;·&nbsp;Soul&nbsp;Reading</div>
+    <h1 class="input-title fade-seq d2">Soul Reading</h1>
+    <div class="input-title-jp fade-seq d3">魂 の 鑑 定 書</div>
+
+    <div class="field fade-seq d4">
+      <label>あなたの名</label>
+      <input type="text" id="inName" maxlength="20" placeholder="例：宮沢 賢治" autocomplete="off">
+    </div>
+    <div class="field fade-seq d4">
+      <label>あなたの生まれし日</label>
+      <div class="dob">
+        <select id="inYear"></select>
+        <select id="inMonth"></select>
+        <select id="inDay"></select>
+      </div>
+    </div>
+    <div class="field fade-seq d5">
+      <label>あなたの問い <span style="opacity:.5;font-size:.85em">(任意)</span></label>
+      <input type="text" id="inQuestion" maxlength="40" placeholder="例：私の進む道は、これで良いのか" autocomplete="off">
+    </div>
+
+    <button class="begin-btn fade-seq d6" id="beginBtn">
+      Begin the Reading<span class="jp">鑑定を始める</span>
+    </button>
+    <div class="err fade-seq d6" id="inErr"></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     READING
+     ============================================================ -->
+<section class="stage" id="stage-reading">
+  <div class="book-toolbar" id="bookToolbar"></div>
+  <div class="book" id="book"></div>
+
+  <div class="book-actions">
+    <button class="b-save" id="saveAll">全ページ画像保存</button>
+    <button class="b-x" id="shareAll">𝕏 で鑑定をシェア</button>
+    <button class="b-again" id="againBtn">もう一度鑑定する</button>
+  </div>
+
+  <div class="archive" id="archive"></div>
+  <div class="book-footer" id="bookFooter">Soul Reading · Day 006 / 100-day app challenge</div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   Soul Reading — engine
+   ============================================================ */
+const $=id=>document.getElementById(id);
+
+/* ---------- seeded RNG (mulberry32) ---------- */
+function mulberry32(a){
+  return function(){
+    a|=0; a=a+0x6D2B79F5|0;
+    let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+function hashStr(str){
+  let h=2166136261>>>0;
+  for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); }
+  return h>>>0;
+}
+function pick(rng,arr){ return arr[Math.floor(rng()*arr.length)]; }
+
+/* ---------- numerology ---------- */
+function digitSum(n){ let s=0; while(n>0){ s+=n%10; n=Math.floor(n/10); } return s; }
+function soulNumber(y,m,d){
+  let n=digitSum(y)+digitSum(m)+digitSum(d);
+  while(n>9) n=digitSum(n);
+  return n||9;
+}
+function toRoman(n){
+  const map=[['Ⅹ',10],['Ⅸ',9],['Ⅷ',8],['Ⅶ',7],['Ⅵ',6],['Ⅴ',5],['Ⅳ',4],['Ⅲ',3],['Ⅱ',2],['Ⅰ',1]];
+  for(const [r,v] of map){ if(n===v) return r; }
+  return String(n);
+}
+
+/* ============================================================
+   DATA TABLES
+   ============================================================ */
+const SOUL_NUMBERS={
+  1:{title:'開拓する焔',desc:'すべての始まりに立つ魂。あなたは道なき地に最初の一歩を刻む者。孤独を恐れず、内なる炎で他者を照らす先駆者の宿命を負っている。'},
+  2:{title:'調和の月',desc:'二つを結ぶ魂。あなたは対立の間に橋を架け、見えぬ糸で人と人を縫い合わせる。静かなる力で、世界の均衡を保つ調停者。'},
+  3:{title:'創造の光彩',desc:'喜びを生み出す魂。あなたの言葉と表現は、灰色の日常に色を与える。生まれながらの語り部であり、無から美を顕す者。'},
+  4:{title:'礎を築く石',desc:'秩序を司る魂。あなたは混沌の中に構造を見出し、堅牢な土台を据える。地に足のついた誠実さが、永続する塔を建てる。'},
+  5:{title:'自由を求める風',desc:'変化を愛する魂。あなたは一つ所に留まらず、五感で世界を貪欲に味わう。束縛を解き放ち、未知への扉を次々と開く冒険者。'},
+  6:{title:'慈愛の器',desc:'護り育てる魂。あなたは傷ついた者に寄り添い、その手で温もりを分け与える。家庭と共同体を照らす、献身の灯火。'},
+  7:{title:'真理の探究者',desc:'深淵を覗く魂。あなたは表層を信じず、物事の核心へと潜行する。孤高の思索の果てに、隠された叡智を掴む賢者。'},
+  8:{title:'権能の柱',desc:'力を統べる魂。あなたは現実を動かす才を持ち、志を形にする胆力がある。物質と精神、その両界を統べる支配の星。'},
+  9:{title:'普遍の慈悲',desc:'すべてを抱く魂。あなたは個を超え、大いなるものへと心を開く。終わりと始まりを知り、世界に奉仕する完成された魂。'}
+};
+const ELEMENTS=[
+  {key:'fire', jp:'火',en:'Ignis',desc:'情熱と意志の元素。燃え上がる衝動と行動力があなたを突き動かす。'},
+  {key:'water',jp:'水',en:'Aqua', desc:'感情と直感の元素。深く澄んだ感受性が、人の心を映し出す。'},
+  {key:'wind', jp:'風',en:'Ventus',desc:'知性と自由の元素。軽やかな思考が、束縛を越えて駆け抜ける。'},
+  {key:'earth',jp:'地',en:'Terra', desc:'安定と豊穣の元素。揺るがぬ意志が、確かな実りを地に結ぶ。'},
+  {key:'void', jp:'空',en:'Aether',desc:'超越と神秘の元素。形なきものを感じ、彼岸と此岸を繋ぐ。'}
+];
+const ELEMENT_SVG={
+  fire:'<path d="M23 4 C28 14 38 18 30 30 C29 41 17 42 15 32 C13 26 19 24 18 18 C22 22 25 18 23 4Z" fill="currentColor"/>',
+  water:'<path d="M23 4 C32 18 38 26 30 36 C25 44 14 41 13 32 C12 24 18 18 23 4Z" fill="currentColor"/>',
+  wind:'<g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 16 H30 a5 5 0 1 0 -5 -5"/><path d="M6 24 H36 a5 5 0 1 1 -5 5"/><path d="M6 32 H24"/></g>',
+  earth:'<path d="M23 6 L40 36 H6 Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M14 26 H32" stroke="currentColor" stroke-width="2.4"/>',
+  void:'<circle cx="23" cy="22" r="15" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="23" cy="22" r="5" fill="currentColor"/><path d="M23 2 V8 M23 36 V42 M3 22 H9 M37 22 H43" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'
+};
+const COLOR_NAMES=[
+  {max:14,jp:'緋の焔',en:'Crimson Flame'},{max:38,jp:'琥珀の黎明',en:'Amber Dawn'},
+  {max:58,jp:'黄金の麦穂',en:'Golden Wheat'},{max:82,jp:'若草の萌芽',en:'Verdant Sprout'},
+  {max:152,jp:'翡翠の森',en:'Jade Forest'},{max:188,jp:'水縹の泉',en:'Aqua Spring'},
+  {max:216,jp:'蒼穹の空',en:'Azure Sky'},{max:246,jp:'深海の藍',en:'Abyssal Indigo'},
+  {max:278,jp:'宵闇の菫',en:'Twilight Violet'},{max:302,jp:'神秘の紫',en:'Mystic Purple'},
+  {max:332,jp:'紅梅の宴',en:'Plum Revel'},{max:350,jp:'薔薇の囁き',en:'Rose Whisper'},{max:361,jp:'緋の焔',en:'Crimson Flame'}
+];
+const COLOR_MEANINGS={
+  '緋の焔':'情熱と勇気。あなたの心には消えぬ炎が宿る。',
+  '琥珀の黎明':'温もりと希望。新しい朝を呼ぶ光をまとう。',
+  '黄金の麦穂':'豊かさと誇り。実りをもたらす黄金の徳。',
+  '若草の萌芽':'成長と再生。常に芽吹き続ける生命力。',
+  '翡翠の森':'癒しと調和。深い緑が心を鎮める。',
+  '水縹の泉':'清浄と知性。澄んだ水のごとき明晰さ。',
+  '蒼穹の空':'自由と誠実。果てなき空のような広い心。',
+  '深海の藍':'静寂と叡智。深淵に宿る揺るがぬ知。',
+  '宵闇の菫':'神秘と変容。境界を越える夕闇の力。',
+  '神秘の紫':'霊性と気高さ。見えざるものを観る目。',
+  '紅梅の宴':'魅惑と慈愛。人を惹きつける華の徳。',
+  '薔薇の囁き':'優美と情愛。柔らかく強い愛の色。'
+};
+const ARCHETYPES=[
+  {name:'王の参謀',type:'The Sage（賢者型）',sil:'crown',
+   desc:'前世のあなたは王の傍らで国を導いた知の番人。戦場ではなく書斎で運命を動かし、言葉一つで人の生死を左右した。冷静な観察眼と先を読む知略を持ち、表に立つことなく歴史を裏から織りなした。',
+   now:'今のあなたが場の空気を読み、最適な一手を瞬時に見抜けるのは、その記憶ゆえ。だが時に、考えすぎて動けなくなる癖もまた、前世の名残。',
+   mission:'前世で果たせなかったのは「自らの声で語ること」。陰に徹したあなたの今世の課題は、知を内に秘めず、世界へ表明することにある。'},
+  {name:'砂漠の旅人',type:'The Seeker（探求者型）',sil:'star',
+   desc:'前世のあなたは果てなき砂漠を渡り歩いた孤独な探求者。一つの地に根を張らず、地平の彼方に何があるのかをただ知りたくて歩き続けた。星を読み、風を聴き、誰も見たことのない景色を瞳に焼き付けた。',
+   now:'今のあなたが安住を退屈に感じ、常に新しい刺激を求めるのは、旅の魂が疼くから。変化こそがあなたの故郷。',
+   mission:'前世で辿り着けなかった「終着の地」。今世のあなたは、外の世界ではなく己の内側に、ついに安らげる場所を見出すために生まれた。'},
+  {name:'夜明けの戦士',type:'The Guardian（守護者型）',sil:'sword',
+   desc:'前世のあなたは夜明けと共に剣を取り、弱き者の前に立った守護の戦士。栄光のためではなく、ただ守りたいもののために幾度も傷を負い、それでも盾を下ろさなかった。',
+   now:'今のあなたが理不尽を見過ごせず、つい誰かを庇ってしまうのは、その誓いが魂に刻まれているから。強さの裏に、深い優しさを隠している。',
+   mission:'前世で守りきれなかった者がいた。その悔いが、今世で「まず自分自身を守り、大切にする」という、最も難しい課題を与えている。'},
+  {name:'月の巫女',type:'The Mystic（神秘家型）',sil:'moon',
+   desc:'前世のあなたは月光の下で神託を授かった巫女。目に見えぬ流れを読み、人々の不安に静かな言葉を与えた。孤高の聖域に身を置き、俗世とは一線を画す清らかな魂を保った。',
+   now:'今のあなたが妙に勘が鋭く、人の感情を察してしまうのは、霊性の名残。ただし、感じ取りすぎて疲れることもある。',
+   mission:'前世で果たせなかったのは「自らも愛され、人の輪に入ること」。聖域を出て、ありのままの自分で人と交わることが今世のテーマ。'},
+  {name:'海の交易商',type:'The Connector（媒介者型）',sil:'wave',
+   desc:'前世のあなたは七つの海を渡り、文化と文化を結んだ交易商。異なる言語、異なる神々の間を行き来し、対立する者たちの間に利と理解の橋を架けた。',
+   now:'今のあなたが初対面の人ともすぐ打ち解け、異なる立場を繋げられるのは、その商才ゆえ。人と人の間にこそ、あなたの価値が宿る。',
+   mission:'前世で築いた富も縁も、海に沈んで失われた。今世の課題は「形あるものより、心の絆という真の財を遺すこと」。'},
+  {name:'森の治癒者',type:'The Healer（治癒者型）',sil:'leaf',
+   desc:'前世のあなたは深い森で薬草を煎じ、傷ついた者を癒した治癒者。名声を求めず、訪れる者すべてに手を差し伸べ、自然の声を聴きながら静かに生きた。',
+   now:'今のあなたが、誰かの痛みを放っておけず、つい世話を焼いてしまうのは、その慈悲の記憶。あなたの存在は、それだけで人を安らがせる。',
+   mission:'前世で自分の身を顧みず尽くしすぎた。今世の使命は「他者と同じだけ、自らをも癒すこと」を学ぶこと。'},
+  {name:'天空の建築家',type:'The Builder（建設者型）',sil:'tower',
+   desc:'前世のあなたは天を衝く塔を設計した建築家。百年先を見据え、自らは完成を見られぬと知りながら、未来の人々のために石を積んだ。揺るがぬ意志と緻密な計算の人。',
+   now:'今のあなたが目標に向けてコツコツ積み上げる才を持つのは、その記憶ゆえ。だが完璧を求めるあまり、自分に厳しすぎることもある。',
+   mission:'前世で塔は未完のまま遺された。今世のテーマは「完璧でなくとも、今あるものを認め、味わうこと」。'},
+  {name:'流浪の詩人',type:'The Artist（表現者型）',sil:'lyre',
+   desc:'前世のあなたは町から町へと渡り歌った詩人。富も家も持たず、ただ心を震わせる言葉と旋律を人々に贈った。喜びも哀しみも、すべて歌に変えて生きた魂。',
+   now:'今のあなたが豊かな感受性を持ち、表現せずにはいられないのは、その魂の名残。あなたの感じる世界は、人より色濃く鮮やか。',
+   mission:'前世で評価されぬまま朽ちた。今世の課題は「自らの表現を、恐れず世に問い、受け取られる喜びを知ること」。'},
+  {name:'地下の錬金術師',type:'The Alchemist（変革者型）',sil:'flask',
+   desc:'前世のあなたは地下の工房で物質の変容を追い求めた錬金術師。卑金属を黄金に変えるその探求は、実は己の魂を磨く道だった。孤独な実験の果てに真理の片鱗に触れた。',
+   now:'今のあなたが、困難を成長の糧に変える力を持つのは、その記憶ゆえ。どんな逆境も、あなたの手で価値あるものへと変わる。',
+   mission:'前世で「賢者の石」は完成しなかった。今世の使命は「外に黄金を求めず、己の内なる輝きこそが石だと気づくこと」。'},
+  {name:'星詠みの観測者',type:'The Visionary（先見者型）',sil:'eye',
+   desc:'前世のあなたは天文台で星々の運行を記録した観測者。人々がまだ知らぬ未来の兆しを、夜空の中に読み取った。誰にも信じられずとも、見えたものを記し続けた。',
+   now:'今のあなたが、流行や変化の到来をいち早く感じ取れるのは、その眼の名残。だが先が見えすぎるゆえの孤独も抱えている。',
+   mission:'前世で予見を誰にも届けられなかった。今世の課題は「見えたものを、人に伝わる言葉へと翻訳すること」。'},
+  {name:'炉の鍛冶神官',type:'The Maker（創造者型）',sil:'hammer',
+   desc:'前世のあなたは聖なる炉の前で武具を打った鍛冶の神官。火と鉄を御し、祈りを込めて一振りの剣に魂を宿らせた。沈黙のうちに、神話に残る業物を世に送り出した。',
+   now:'今のあなたが、手を動かして何かを生み出すことに喜びを覚えるのは、その記憶。あなたの作るものには、不思議と力が宿る。',
+   mission:'前世で名を遺さず炉と共に消えた。今世の使命は「自らの創造に署名し、確かに生きた証を世界に刻むこと」。'},
+  {name:'霧の渡し守',type:'The Guide（導き手型）',sil:'boat',
+   desc:'前世のあなたは此岸と彼岸を結ぶ霧の川の渡し守。迷える魂を静かに対岸へと送り、別れと旅立ちの瞬間に幾度も立ち会った。多くを語らず、ただ櫂を漕ぎ続けた。',
+   now:'今のあなたが、人生の岐路に立つ人をそっと支える力を持つのは、その記憶ゆえ。あなたの傍にいると、人は安心して前へ進める。',
+   mission:'前世で自らはどこにも渡れなかった。今世の課題は「人を導くだけでなく、自らの舟に乗り、行きたい岸へ向かうこと」。'}
+];
+const SILHOUETTES={
+  crown:'<path d="M14 78 H86 L80 44 L66 58 L50 30 L34 58 L20 44 Z" fill="currentColor" opacity=".85"/><circle cx="50" cy="24" r="6" fill="currentColor"/>',
+  star:'<path d="M50 14 L58 40 L86 40 L63 56 L72 82 L50 66 L28 82 L37 56 L14 40 L42 40 Z" fill="currentColor" opacity=".85"/>',
+  sword:'<path d="M50 10 L56 60 L50 90 L44 60 Z" fill="currentColor" opacity=".85"/><rect x="34" y="58" width="32" height="6" fill="currentColor"/>',
+  moon:'<path d="M62 18 a34 34 0 1 0 0 64 a26 26 0 0 1 0 -64 Z" fill="currentColor" opacity=".85"/>',
+  wave:'<path d="M12 60 q12 -20 24 0 t24 0 t24 0 v22 H12 Z" fill="currentColor" opacity=".85"/><circle cx="50" cy="28" r="8" fill="currentColor"/>',
+  leaf:'<path d="M50 12 C24 30 24 70 50 88 C76 70 76 30 50 12 Z" fill="currentColor" opacity=".85"/><path d="M50 20 V82" stroke="#f5ecd9" stroke-width="3"/>',
+  tower:'<path d="M36 88 V34 L50 18 L64 34 V88 Z" fill="currentColor" opacity=".85"/><rect x="44" y="48" width="12" height="18" fill="#f5ecd9"/>',
+  lyre:'<path d="M30 80 C24 50 30 20 40 18 M70 80 C76 50 70 20 60 18" fill="none" stroke="currentColor" stroke-width="5"/><path d="M38 30 H62 M38 44 H62 M38 58 H62" stroke="currentColor" stroke-width="3"/>',
+  flask:'<path d="M42 16 H58 V40 L72 76 a4 4 0 0 1 -4 6 H32 a4 4 0 0 1 -4 -6 L42 40 Z" fill="currentColor" opacity=".85"/><rect x="40" y="12" width="20" height="6" fill="currentColor"/>',
+  eye:'<path d="M14 50 Q50 20 86 50 Q50 80 14 50 Z" fill="currentColor" opacity=".85"/><circle cx="50" cy="50" r="12" fill="#f5ecd9"/><circle cx="50" cy="50" r="6" fill="currentColor"/>',
+  hammer:'<rect x="46" y="40" width="8" height="48" fill="currentColor"/><path d="M30 22 H70 V40 H30 Z" fill="currentColor" opacity=".85"/>',
+  boat:'<path d="M16 60 H84 L74 82 H26 Z" fill="currentColor" opacity=".85"/><path d="M50 16 V58" stroke="currentColor" stroke-width="4"/><path d="M50 20 L72 40 H50 Z" fill="currentColor"/>'
+};
+const PHASES=[
+  {max:13,name:'萌芽の春',en:'Spring of Sprouting'},
+  {max:25,name:'疾風の青',en:'Azure of Wind'},
+  {max:38,name:'灼熱の夏',en:'Summer of Flame'},
+  {max:52,name:'結実の秋',en:'Autumn of Harvest'},
+  {max:67,name:'静観の冬',en:'Winter of Stillness'},
+  {max:200,name:'円環の極',en:'Circle of Completion'}
+];
+const LET_GO=['過去への執着','他人の評価','完璧への強迫','報われぬ我慢','古い罪悪感','叶わぬ理想','恐れによる沈黙','偽りの平穏','比較する心','過剰な責任'];
+const TAKE_IN=['今この瞬間の喜び','自分への赦し','新しい出会い','静かな勇気','本音を語る力','身を委ねる安らぎ','遊び心','確かな自尊','分かち合う豊かさ','未知への好奇心'];
+const ORACLE_OPEN=['星々が告げている。','古き声が囁く。','炎の奥に視えたもの。','水鏡に映る答え。','風が運んできた言葉。','沈黙の中に響く託宣。'];
+const ORACLE_BODY=[
+  '答えはすでにあなたの中にある。問いを抱いて歩むその姿勢こそが、道そのものなのだ。',
+  '迷いは弱さではない。それは魂が誠実に岐路を見つめている証。怖れず、その先へ。',
+  '今は種を蒔く季。実りを急がず、ただ信じて土を耕せ。時が満ちれば、花は自ら開く。',
+  '手放すことを恐れるな。空いた手にこそ、次の宝は授けられる。',
+  'あなたが他者を照らすために生まれたことを、忘れるな。その光は、消えはしない。',
+  '正しさより、心が震えるほうを選べ。魂は、いつもそちらを指している。'
+];
+const POEM_LINES_A=['夜の果てに','静寂の底で','遠き日の約束が','名もなき星が','古き河の畔で','風の通り道に'];
+const POEM_LINES_B=['一つの灯がともる','魂の形を見た','今もあなたを呼ぶ','静かに瞬いて','物語は紡がれる','光がこぼれ落ちる'];
+const POEM_LINES_C=['迷いは霧となり','過ぎし日は糧となり','涙は真珠となり','痛みは翼となり','孤独は鎧となり','沈黙は祈りとなり'];
+const POEM_LINES_D=['あなたは前へ進む','明日へと続く','確かに輝きだす','空へ羽ばたいてゆく','すべてを抱きしめる','夜明けを連れてくる'];
+
+/* ============================================================
+   GENERATE READING
+   ============================================================ */
+function generateReading(name,y,m,d,question){
+  const seedStr=`${name}|${y}-${m}-${d}`;
+  const seed=hashStr(seedStr);
+  const rng=mulberry32(seed);
+  // warm up
+  for(let i=0;i<5;i++) rng();
+
+  const sNum=soulNumber(y,m,d);
+  const hue=seed%360;
+  const sat=58+(Math.floor(rng()*30));
+  const lum=46+(Math.floor(rng()*20));
+  const colorDef=COLOR_NAMES.find(c=>hue<c.max)||COLOR_NAMES[0];
+  const element=ELEMENTS[(digitSum(y)+m+d)%5];
+  const soulRank=1+((sNum+d)%5);
+  const archetype=ARCHETYPES[(seed>>3)%ARCHETYPES.length];
+
+  // age & phase
+  const today=new Date();
+  let age=today.getFullYear()-y;
+  if(today.getMonth()+1<m || (today.getMonth()+1===m && today.getDate()<d)) age--;
+  if(age<0) age=0;
+  const phase=PHASES.find(p=>age<p.max)||PHASES[PHASES.length-1];
+
+  const nameLen=[...name.trim()].length||1;
+  const destinyVal=Math.round((sNum*m)/nameLen*10)/10;
+  const nextTurn=1+Math.floor(rng()*6)+ (sNum%4);
+
+  // affinity
+  const luckyNum=1+((sNum*m+d)%9);
+  const dirList=['北','北東','東','南東','南','南西','西','北西'];
+  const luckyDir=dirList[(y+m+d)%8];
+
+  // reading number
+  const readingNo=10000+(seed%89999);
+
+  // oracle from question
+  const oOpen=ORACLE_OPEN[seed%ORACLE_OPEN.length];
+  const oBody=ORACLE_BODY[(seed>>5)%ORACLE_BODY.length];
+  let oracle;
+  if(question && question.trim()){
+    oracle=`${oOpen}「${question.trim()}」── ${oBody}`;
+  } else {
+    oracle=`${oOpen}${oBody}`;
+  }
+
+  const letGo=LET_GO[(seed>>2)%LET_GO.length];
+  const takeIn=TAKE_IN[(seed>>4)%TAKE_IN.length];
+
+  const poem=[
+    POEM_LINES_A[(seed)%6],
+    POEM_LINES_B[(seed>>3)%6],
+    POEM_LINES_C[(seed>>6)%6],
+    POEM_LINES_D[(seed>>9)%6]
+  ];
+
+  return {
+    name,y,m,d,question:(question||'').trim(),
+    seed,sNum,hue,sat,lum,colorDef,
+    colorMeaning:COLOR_MEANINGS[colorDef.jp]||'',
+    element,soulRank,archetype,age,phase,
+    destinyVal,nextTurn,luckyNum,luckyDir,readingNo,
+    oracle,letGo,takeIn,poem,
+    issuedDate:formatDate(today)
+  };
+}
+
+function formatDate(dt){
+  const y=dt.getFullYear(),m=dt.getMonth()+1,d=dt.getDate();
+  // 和暦 (令和)
+  const reiwa=y-2018;
+  const wareki=reiwa===1?'令和元年':`令和${reiwa}年`;
+  return {seireki:`${y}年${m}月${d}日`, wareki:`${wareki}${m}月${d}日`, raw:`${y}/${m}/${d}`};
+}
+
+/* ============================================================
+   SIGIL (魂の紋章) — deterministic SVG
+   ============================================================ */
+function buildSigil(R,size,color){
+  const cx=size/2, cy=size/2, rad=size*0.40;
+  const points=6+(R.sNum%5); // 6..10
+  let path='';
+  // outer geometric star/polygon from seed
+  const angOff=(R.seed%360)*Math.PI/180;
+  const skip=1+(R.sNum%((points-1)||1)|| 1);
+  const coords=[];
+  for(let i=0;i<points;i++){
+    const a=angOff+i*2*Math.PI/points;
+    coords.push([cx+Math.cos(a)*rad, cy+Math.sin(a)*rad]);
+  }
+  // star polygon connecting with skip
+  let starPath='M';
+  let idx=0;
+  for(let i=0;i<=points;i++){
+    const [x,yy]=coords[idx%points];
+    starPath+=`${x.toFixed(1)},${yy.toFixed(1)} `;
+    idx+=skip;
+  }
+  starPath+='Z';
+  // inner ring nodes
+  let nodes='';
+  coords.forEach(([x,yy])=>{ nodes+=`<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="${(size*0.022).toFixed(1)}" fill="${color}"/>`; });
+  // inner rune lines
+  const innerR=rad*0.5;
+  let inner='';
+  const rng=mulberry32(R.seed^0x9e3779b9);
+  for(let i=0;i<R.soulRank+2;i++){
+    const a1=rng()*Math.PI*2, a2=rng()*Math.PI*2;
+    inner+=`<line x1="${(cx+Math.cos(a1)*innerR).toFixed(1)}" y1="${(cy+Math.sin(a1)*innerR).toFixed(1)}" x2="${(cx+Math.cos(a2)*innerR).toFixed(1)}" y2="${(cy+Math.sin(a2)*innerR).toFixed(1)}" stroke="${color}" stroke-width="1" opacity=".6"/>`;
+  }
+  return `<svg viewBox="0 0 ${size} ${size}" class="cover-sigil" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="${cx}" cy="${cy}" r="${(rad*1.18).toFixed(1)}" fill="none" stroke="${color}" stroke-width="1" opacity=".5"/>
+    <circle cx="${cx}" cy="${cy}" r="${(rad*1.06).toFixed(1)}" fill="none" stroke="${color}" stroke-width="0.6" opacity=".35"/>
+    <path d="${starPath}" fill="none" stroke="${color}" stroke-width="1.4"/>
+    <circle cx="${cx}" cy="${cy}" r="${innerR.toFixed(1)}" fill="none" stroke="${color}" stroke-width="0.8" opacity=".5"/>
+    ${inner}${nodes}
+    <circle cx="${cx}" cy="${cy}" r="${(size*0.03).toFixed(1)}" fill="${color}"/>
+  </svg>`;
+}
+
+/* corner arabesque svg */
+const CORNER_SVG=`<svg class="corner-svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.4">
+  <path d="M4 4 H30 M4 4 V30" stroke-width="2"/>
+  <path d="M4 14 C20 14 14 4 28 6 C20 10 22 18 12 18 C16 12 10 14 4 14Z" fill="currentColor" stroke="none" opacity=".8"/>
+  <path d="M14 4 C14 20 4 14 6 28 C10 20 18 22 18 12" />
+  <circle cx="9" cy="9" r="2" fill="currentColor" stroke="none"/>
+</svg>`;
+function corners(){
+  return `<div class="corner tl">${CORNER_SVG}</div><div class="corner tr">${CORNER_SVG}</div>
+          <div class="corner bl">${CORNER_SVG}</div><div class="corner br">${CORNER_SVG}</div>`;
+}
+const DIVIDER=`<div class="divider"><span class="line"></span>
+  <svg viewBox="0 0 40 16"><path d="M20 2 L24 8 L20 14 L16 8 Z" fill="currentColor"/><path d="M2 8 H14 M26 8 H38" stroke="currentColor" stroke-width="1.4"/><circle cx="20" cy="8" r="2" fill="none" stroke="currentColor"/></svg>
+  <span class="line"></span></div>`;
+
+/* ============================================================
+   RENDER PAGES
+   ============================================================ */
+function renderBook(R){
+  const hsl=`hsl(${R.hue},${R.sat}%,${R.lum}%)`;
+  const dt=formatDate(new Date());
+
+  const pages=[];
+
+  /* ---- PAGE 1 : COVER ---- */
+  pages.push(page('cover','Cover · 表紙',`
+    ${corners()}
+    <div class="page-content">
+      <div class="cover-top">
+        <svg class="cover-emblem" viewBox="0 0 84 84" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="42" cy="42" r="30" opacity=".4"/>
+          <path d="M42 12 L50 34 L74 34 L55 48 L62 72 L42 57 L22 72 L29 48 L10 34 L34 34 Z" fill="currentColor" stroke="none" opacity=".9"/>
+          <circle cx="42" cy="42" r="6" fill="#f5ecd9" stroke="currentColor"/>
+        </svg>
+        <div class="cover-soulreading">SOUL READING</div>
+        <div class="cover-jp">魂 の 鑑 定 書</div>
+      </div>
+      <div class="cover-name"><span class="label">This Reading belongs to</span>${esc(R.name)}</div>
+      ${buildSigil(R,140,hsl)}
+      <div class="cover-meta">
+        <div class="no">No. ${pad5(R.readingNo)}</div>
+        生まれし日 ・ ${R.y}年${R.m}月${R.d}日<br>
+        鑑定日 ・ ${dt.wareki}（${dt.seireki}）
+      </div>
+    </div>`));
+
+  /* ---- PAGE 2 : ESSENCE ---- */
+  const sn=SOUL_NUMBERS[R.sNum];
+  pages.push(page('essence','Chapter I · 本質',`
+    ${corners()}
+    <div class="page-content">
+      <div class="chapter-tag">Chapter the First</div>
+      <div class="chapter-title">あなたの本質<span class="en">The Essence of Thy Soul</span></div>
+      ${DIVIDER}
+      <div class="essence-grid">
+        <div class="essence-cell">
+          <div class="k">Soul Number ・ ソウルナンバー</div>
+          <div class="soul-num"><span class="roman">${toRoman(R.sNum)}</span>
+            <div><div class="v" style="font-size:1.15rem">${sn.title}</div></div></div>
+          <div class="desc">${sn.desc}</div>
+        </div>
+        <div class="essence-cell">
+          <div class="k">Destined Color ・ 宿命の色</div>
+          <div class="soul-num"><span class="color-swatch" style="background:${hsl}"></span>
+            <div><div class="v" style="font-size:1.15rem">${R.colorDef.jp}</div></div></div>
+          <div class="desc">${R.colorMeaning}<br><span style="font-family:var(--garamond);font-style:italic;color:var(--gold-deep);font-size:.85em">${R.colorDef.en} · H${R.hue} S${R.sat} L${R.lum}</span></div>
+        </div>
+        <div class="essence-cell">
+          <div class="k">Guardian Element ・ 守護元素</div>
+          <div class="soul-num"><svg class="elem-icon" viewBox="0 0 46 46">${ELEMENT_SVG[R.element.key]}</svg>
+            <div><div class="v">${R.element.jp} <span style="font-family:var(--garamond);font-style:italic;font-size:.6em;color:var(--gold-deep)">${R.element.en}</span></div></div></div>
+          <div class="desc">${R.element.desc}</div>
+        </div>
+        <div class="essence-cell">
+          <div class="k">Soul Tier ・ 魂の階層</div>
+          <div class="v" style="font-size:1.15rem">第 ${toRoman(R.soulRank)} 層</div>
+          <div class="rank-dots">${[1,2,3,4,5].map(i=>`<i class="${i<=R.soulRank?'on':''}"></i>`).join('')}</div>
+          <div class="desc">幾度の生を経て磨かれた、あなたの魂の成熟度。</div>
+        </div>
+      </div>
+    </div>`));
+
+  /* ---- PAGE 3 : ARCHETYPE ---- */
+  const A=R.archetype;
+  pages.push(page('archetype','Chapter II · 前世',`
+    ${corners()}
+    <div class="page-content">
+      <div class="chapter-tag">Chapter the Second</div>
+      <div class="chapter-title">前世のアーキタイプ<span class="en">The Archetype of Past Lives</span></div>
+      ${DIVIDER}
+      <svg class="archetype-art" viewBox="0 0 100 100">${SILHOUETTES[A.sil]}</svg>
+      <div class="archetype-name">${A.name}</div>
+      <div class="archetype-type">${A.type}</div>
+      <p class="body-text dropcap">${A.desc}</p>
+      <div class="sub-head">現世への影響</div>
+      <p class="body-text">${A.now}</p>
+      <div class="sub-head">未完の使命</div>
+      <p class="body-text">${A.mission}</p>
+    </div>`));
+
+  /* ---- PAGE 4 : DESTINY ---- */
+  const cycleSVG=buildCycleGraph(R);
+  pages.push(page('destiny','Chapter III · 運命',`
+    ${corners()}
+    <div class="page-content">
+      <div class="chapter-tag">Chapter the Third</div>
+      <div class="chapter-title">運命の方程式<span class="en">The Equation of Fate</span></div>
+      ${DIVIDER}
+      <div class="equation">
+        <span class="term">${R.sNum}</span> <small>(ソウル)</small> &times;
+        <span class="term">${R.m}</span> <small>(生月)</small> &divide;
+        <span class="term">${[...R.name.trim()].length||1}</span> <small>(名の文字数)</small>
+        <br>= <span class="result">${R.destinyVal}</span>
+      </div>
+      <div class="sub-head">運命のサイクル</div>
+      <div class="cycle-wrap">${cycleSVG}</div>
+      <div class="phase-row">
+        <div class="phase-box"><div class="k">Current Phase</div><div class="v">${R.phase.name}</div></div>
+        <div class="phase-box"><div class="k">Next Turning</div><div class="v">${R.nextTurn}年後</div></div>
+      </div>
+      <div class="affinity">
+        <div class="a"><div class="k">幸運数</div><div class="v">${R.luckyNum}</div></div>
+        <div class="a"><div class="k">幸運色</div><div class="v" style="color:${hsl}">${R.colorDef.jp}</div></div>
+        <div class="a"><div class="k">幸運の方角</div><div class="v">${R.luckyDir}</div></div>
+      </div>
+    </div>`));
+
+  /* ---- PAGE 5 : ORACLE ---- */
+  pages.push(page('oracle','Finale · 託宣',`
+    ${corners()}
+    <div class="page-content">
+      <div class="chapter-tag">The Final Chapter</div>
+      <div class="chapter-title">あなたへの託宣<span class="en">The Oracle for Thee</span></div>
+      ${DIVIDER}
+      <div class="oracle-quote">${esc(R.oracle)}</div>
+      <div class="let-go-row">
+        <div class="let-go-box release"><div class="k">手放すべきもの</div><div class="v">${R.letGo}</div></div>
+        <div class="let-go-box"><div class="k">迎え入れるべきもの</div><div class="v">${R.takeIn}</div></div>
+      </div>
+      <div class="sub-head">あなたを守護する詩</div>
+      <div class="poem">${R.poem.map(esc).join('<br>')}</div>
+      <div class="issue-note">この鑑定書は ${dt.wareki}（${dt.seireki}）に発行されました。<br>
+        No. ${pad5(R.readingNo)} ・ Soul Reading ${new Date().getFullYear()}</div>
+    </div>`));
+
+  return pages.join('');
+}
+
+function page(cls,sideLabel,inner){
+  return `<div class="page page-${cls}" data-page="${cls}">
+    <div class="page-side left">${sideLabel}</div>
+    <div class="page-side right">Soul Reading</div>
+    ${inner}
+    <button class="page-share" data-share="${cls}">✦ このページをシェア</button>
+  </div>`;
+}
+
+/* cycle graph SVG (life wave) */
+function buildCycleGraph(R){
+  const w=600,h=160,pad=20;
+  const rng=mulberry32(R.seed^0x5bd1e995);
+  let d='M';
+  const pts=[];
+  const n=8;
+  for(let i=0;i<=n;i++){
+    const x=pad+(w-2*pad)*i/n;
+    const base=h/2;
+    const amp=(h/2-pad)*(0.4+rng()*0.55);
+    const y=base+Math.sin(i*1.1+R.sNum)*amp*(i%2?1:-1)*0.5 - (rng()-0.5)*30;
+    pts.push([x,Math.max(pad,Math.min(h-pad,y))]);
+  }
+  // smooth path
+  d+=`${pts[0][0]},${pts[0][1].toFixed(1)} `;
+  for(let i=1;i<pts.length;i++){
+    const [x0,y0]=pts[i-1],[x1,y1]=pts[i];
+    const cx=(x0+x1)/2;
+    d+=`C${cx.toFixed(1)},${y0.toFixed(1)} ${cx.toFixed(1)},${y1.toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)} `;
+  }
+  // current age marker
+  const ageX=pad+(w-2*pad)*Math.min(R.age,80)/80;
+  const hsl=`hsl(${R.hue},${R.sat}%,${R.lum}%)`;
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:140px">
+    <line x1="${pad}" y1="${h/2}" x2="${w-pad}" y2="${h/2}" stroke="rgba(120,80,35,.25)" stroke-width="1" stroke-dasharray="4 4"/>
+    <path d="${d}" fill="none" stroke="#8b0000" stroke-width="2.4" opacity=".8"/>
+    <path d="${d} L${w-pad},${h} L${pad},${h} Z" fill="rgba(139,0,0,.07)"/>
+    <line x1="${ageX.toFixed(1)}" y1="${pad}" x2="${ageX.toFixed(1)}" y2="${h-pad}" stroke="${hsl}" stroke-width="1.5"/>
+    <circle cx="${ageX.toFixed(1)}" cy="${pad}" r="4" fill="${hsl}"/>
+    <text x="${ageX.toFixed(1)}" y="${pad-6}" text-anchor="middle" font-size="11" fill="#5a4632" font-family="serif">今 ${R.age}歳</text>
+    <text x="${pad}" y="${h-4}" font-size="10" fill="#8a7256" font-family="serif">誕生</text>
+    <text x="${w-pad}" y="${h-4}" text-anchor="end" font-size="10" fill="#8a7256" font-family="serif">老成</text>
+  </svg>`;
+}
+
+/* ============================================================
+   FLOW
+   ============================================================ */
+let CURRENT=null;
+function showReading(R){
+  CURRENT=R;
+  document.documentElement.style.setProperty('--accent-hsl',`hsl(${R.hue},${R.sat}%,${R.lum}%)`);
+  $('book').innerHTML=renderBook(R);
+  // toolbar dots
+  const pages=[...document.querySelectorAll('.page')];
+  $('bookToolbar').innerHTML=pages.map((p,i)=>`<button class="pg-dot" data-i="${i}">${i+1}</button>`).join('');
+  const dots=[...$('bookToolbar').querySelectorAll('.pg-dot')];
+  dots.forEach((dot,i)=>dot.addEventListener('click',()=>{
+    pages[i].scrollIntoView({behavior:'smooth',block:'start'});
+  }));
+  // share buttons
+  document.querySelectorAll('.page-share').forEach(btn=>{
+    btn.addEventListener('click',()=>sharePage(btn.dataset.share));
+  });
+  $('bookFooter').textContent=`No. ${pad5(R.readingNo)} ・ Soul Reading ${new Date().getFullYear()} · Day 006`;
+
+  switchStage('stage-reading');
+  // reveal pages on scroll + active dot
+  setupPageObserver(pages,dots);
+  // first page in
+  requestAnimationFrame(()=>{ pages.forEach((p,i)=>setTimeout(()=>p.classList.add('in'),i*120)); });
+  saveArchive(R);
+  renderArchive();
+  window.scrollTo(0,0);
+}
+
+let pageObserver=null;
+function setupPageObserver(pages,dots){
+  if(pageObserver) pageObserver.disconnect();
+  pageObserver=new IntersectionObserver(es=>{
+    es.forEach(en=>{
+      if(en.isIntersecting){
+        en.target.classList.add('in');
+        const i=pages.indexOf(en.target);
+        dots.forEach((d,j)=>d.classList.toggle('active',j===i));
+      }
+    });
+  },{threshold:0.4});
+  pages.forEach(p=>pageObserver.observe(p));
+}
+
+function switchStage(idTo){
+  document.querySelectorAll('.stage').forEach(s=>s.classList.remove('active'));
+  $(idTo).classList.add('active');
+}
+
+/* ---------- share ---------- */
+const PAGE_SHARE_TXT={
+  cover:R=>`【魂の鑑定書】No.${pad5(R.readingNo)}\n${R.name} の魂が、いま顕された。`,
+  essence:R=>`私のソウルナンバーは『${toRoman(R.sNum)}・${SOUL_NUMBERS[R.sNum].title}』、宿命の色は「${R.colorDef.jp}」、守護元素は「${R.element.jp}」だった。`,
+  archetype:R=>`私の前世のアーキタイプは『${R.archetype.name}（${R.archetype.type}）』らしい…`,
+  destiny:R=>`私の運命値は ${R.destinyVal}。次の転機は ${R.nextTurn}年後、幸運の方角は「${R.luckyDir}」。`,
+  oracle:R=>`私への託宣：${R.oracle.length>70?R.oracle.slice(0,70)+'…':R.oracle}`
+};
+function sharePage(which){
+  if(!CURRENT) return;
+  const base=(PAGE_SHARE_TXT[which]||PAGE_SHARE_TXT.cover)(CURRENT);
+  const txt=`${base}\n\n#魂の鑑定書 #SoulReading`;
+  const url='https://twitter.com/intent/tweet?text='+encodeURIComponent(txt);
+  window.open(url,'_blank','noopener');
+}
+$('shareAll').addEventListener('click',()=>sharePage('cover'));
+$('saveAll').addEventListener('click',()=>{
+  toast('印刷ダイアログから「PDFに保存」を選ぶと全5ページ保存できます');
+  setTimeout(()=>window.print(),800);
+});
+$('againBtn').addEventListener('click',()=>{
+  switchStage('stage-input');
+  window.scrollTo(0,0);
+});
+
+/* ---------- archive (localStorage) ---------- */
+function saveArchive(R){
+  try{
+    const arr=loadArchive();
+    if(arr.some(a=>a.seed===R.seed)) return; // dedup
+    arr.unshift({name:R.name,readingNo:R.readingNo,seed:R.seed,y:R.y,m:R.m,d:R.d,
+      question:R.question, colorJp:R.colorDef.jp, hue:R.hue});
+    if(arr.length>10) arr.length=10;
+    localStorage.setItem('soulreading_archive',JSON.stringify(arr));
+  }catch(e){}
+}
+function loadArchive(){
+  try{ return JSON.parse(localStorage.getItem('soulreading_archive')||'[]'); }catch(e){ return []; }
+}
+function renderArchive(){
+  const arr=loadArchive();
+  const box=$('archive');
+  if(arr.length===0){ box.innerHTML='<div class="a-title">Past Readings ・ 過去の鑑定</div><div class="archive-empty">まだ鑑定の記録はありません</div>'; return; }
+  box.innerHTML=`<div class="a-title">Past Readings ・ 過去の鑑定</div>
+    <div class="archive-list">${arr.map(a=>`<button class="archive-chip" data-seed="${a.seed}"><span class="no">No.${pad5(a.readingNo)}</span>${esc(a.name)}</button>`).join('')}</div>`;
+  box.querySelectorAll('.archive-chip').forEach(chip=>{
+    chip.addEventListener('click',()=>{
+      const a=arr.find(x=>String(x.seed)===chip.dataset.seed);
+      if(a){ const R=generateReading(a.name,a.y,a.m,a.d,a.question||''); showReading(R); }
+    });
+  });
+}
+
+/* ============================================================
+   INPUT HANDLING
+   ============================================================ */
+(function fillDates(){
+  const ySel=$('inYear'),mSel=$('inMonth'),dSel=$('inDay');
+  const now=new Date().getFullYear();
+  let yo='<option value="" disabled selected>年</option>';
+  for(let y=now;y>=1925;y--) yo+=`<option value="${y}">${y}</option>`;
+  ySel.innerHTML=yo;
+  let mo='<option value="" disabled selected>月</option>';
+  for(let m=1;m<=12;m++) mo+=`<option value="${m}">${m}</option>`;
+  mSel.innerHTML=mo;
+  let do_='<option value="" disabled selected>日</option>';
+  for(let d=1;d<=31;d++) do_+=`<option value="${d}">${d}</option>`;
+  dSel.innerHTML=do_;
+})();
+
+$('beginBtn').addEventListener('click',()=>{
+  const name=$('inName').value.trim();
+  const y=+$('inYear').value, m=+$('inMonth').value, d=+$('inDay').value;
+  const q=$('inQuestion').value.trim();
+  const err=$('inErr');
+  if(!name){ err.textContent='あなたの名を記してください。'; shake($('inName')); return; }
+  if(!y||!m||!d){ err.textContent='生まれし日をすべて選んでください。'; return; }
+  err.textContent='';
+
+  // ignite animation
+  $('candle').classList.add('ignite');
+  $('ignite-overlay').classList.add('fire');
+  setTimeout(()=>{
+    const R=generateReading(name,y,m,d,q);
+    showReading(R);
+    $('candle').classList.remove('ignite');
+    $('ignite-overlay').classList.remove('fire');
+  },1100);
+});
+function shake(el){ el.style.animation='none'; requestAnimationFrame(()=>{ el.style.animation='shk .4s'; }); }
+const shkStyle=document.createElement('style');
+shkStyle.textContent='@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}';
+document.head.appendChild(shkStyle);
+
+// enter key on inputs
+['inName','inQuestion'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter') $('beginBtn').click(); }));
+
+/* ============================================================
+   STARS + HELPERS
+   ============================================================ */
+(function(){
+  let h='';
+  for(let i=0;i<80;i++){
+    const s=(Math.random()*1.6+0.5).toFixed(1);
+    h+=`<i style="left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;width:${s}px;height:${s}px;animation-delay:${(Math.random()*5).toFixed(1)}s"></i>`;
+  }
+  $('bgStars').innerHTML=h;
+})();
+
+function pad5(n){ return String(n).padStart(5,'0'); }
+function esc(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+let toastT=null;
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// render archive on first load (in case user returns)
+renderArchive();
+</script>
+</body>
+</html>
