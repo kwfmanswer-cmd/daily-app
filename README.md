@@ -13,6 +13,7 @@
 | 005 | Sanctuary of Light - あなたの色を捧げる祭壇 | [day005-sanctuary](./day005-sanctuary/) |
 | 006 | Soul Reading - 魂の鑑定書 | [day006-soulreading](./day006-soulreading/) |
 | 007 | Ascend - 千の階の塔 | [day007-ascend](./day007-ascend/) |
+| 008 | コトノハ - 毎日の言葉パズル | [day008-kotonoha](./day008-kotonoha/) |
 
 ## ルール
 
