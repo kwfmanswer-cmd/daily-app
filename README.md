@@ -14,6 +14,7 @@
 | 006 | Soul Reading - 魂の鑑定書 | [day006-soulreading](./day006-soulreading/) |
 | 007 | Ascend - 千の階の塔 | [day007-ascend](./day007-ascend/) |
 | 008 | コトノハ - 毎日の言葉パズル | [day008-kotonoha](./day008-kotonoha/) |
+| 009 | ムゲン - 無限フィジェットボード | [day009-mugen](./day009-mugen/) |
 
 ## ルール
 
