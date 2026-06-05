@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ゴウガイ - あなただけの号外新聞</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Noto+Serif+JP:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4f0e6;
+    --paper2: #efe9d9;
+    --ink: #1a1714;
+    --ink2: #3c352d;
+    --red: #c0231a;
+    --line: #2a251f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Noto Serif JP", serif;
+    background:
+      radial-gradient(circle at 20% 10%, #2a2622, #16130f 70%);
+    color: var(--ink);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    padding: 18px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  /* ====== 入力画面 ====== */
+  #intro {
+    background: var(--paper);
+    border: 3px double var(--line);
+    border-radius: 4px;
+    padding: 34px 26px 38px;
+    box-shadow: 0 26px 60px rgba(0,0,0,.55);
+    position: relative;
+    overflow: hidden;
+  }
+  #intro::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,.018) 0 2px, transparent 2px 4px);
+    pointer-events: none;
+  }
+  .masthead {
+    text-align: center;
+    border-bottom: 4px solid var(--line);
+    padding-bottom: 14px;
+    margin-bottom: 8px;
+  }
+  .masthead .eng {
+    font-family: "Shippori Mincho";
+    letter-spacing: .5em;
+    font-size: 12px;
+    color: var(--ink2);
+    padding-left: .5em;
+  }
+  .masthead h1 {
+    font-family: "Shippori Mincho", serif;
+    font-weight: 800;
+    font-size: clamp(34px, 8vw, 62px);
+    letter-spacing: .12em;
+    margin: 4px 0 2px;
+    color: var(--ink);
+  }
+  .masthead .sub {
+    font-size: 13px;
+    letter-spacing: .35em;
+    color: var(--red);
+    font-weight: 700;
+  }
+  .reception {
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink2);
+    margin: 16px auto 26px;
+    max-width: 520px;
+    border-top: 1px dashed #b5ac96;
+    border-bottom: 1px dashed #b5ac96;
+    padding: 10px 0;
+  }
+  .field { margin: 0 auto 20px; max-width: 540px; }
+  .field label {
+    display: block;
+    font-family: "Shippori Mincho";
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 7px;
+    letter-spacing: .08em;
+  }
+  .field label .badge {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 11px;
+    padding: 1px 8px;
+    margin-right: 8px;
+    vertical-align: 2px;
+    letter-spacing: .1em;
+  }
+  .field input[type="text"] {
+    width: 100%;
+    font-family: "Noto Serif JP", serif;
+    font-size: 16px;
+    padding: 12px 14px;
+    border: 2px solid var(--line);
+    background: #fbf8f0;
+    color: var(--ink);
+    border-radius: 2px;
+  }
+  .field input::placeholder { color: #a99f88; }
+  .hintrow {
+    display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px;
+  }
+  .chip {
+    font-size: 12px;
+    padding: 4px 11px;
+    border: 1px solid #b09b6f;
+    background: #fbf8f0;
+    color: var(--ink2);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: .15s;
+  }
+  .chip:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .moodrow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .mood {
+    text-align: center;
+    padding: 12px 4px 10px;
+    border: 2px solid var(--line);
+    background: #fbf8f0;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: .15s;
+    user-select: none;
+  }
+  .mood .emo { font-size: 26px; display: block; }
+  .mood .lbl { font-size: 12px; font-weight: 700; margin-top: 3px; letter-spacing: .05em; }
+  .mood.on { background: var(--ink); color: var(--paper); transform: translateY(-2px); }
+  .mood.on .lbl { color: var(--paper); }
+  @media (max-width: 480px) {
+    .moodrow { grid-template-columns: repeat(3, 1fr); }
+  }
+  .pub-btn {
+    display: block;
+    width: 100%;
+    max-width: 540px;
+    margin: 8px auto 0;
+    font-family: "Shippori Mincho";
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: .25em;
+    padding: 17px;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    box-shadow: 0 8px 0 #7d160f, 0 14px 24px rgba(0,0,0,.4);
+    transition: .08s;
+    padding-left: calc(.25em + 14px);
+  }
+  .pub-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 #7d160f; }
+  .errmsg { color: var(--red); font-size: 13px; text-align: center; min-height: 18px; margin-top: 10px; font-weight: 700; }
+
+  .history-box { max-width: 540px; margin: 26px auto 0; }
+  .history-box h3 {
+    font-family: "Shippori Mincho"; font-size: 13px; letter-spacing: .2em;
+    color: var(--ink2); border-bottom: 1px solid #c3b8a0; padding-bottom: 5px; margin-bottom: 8px;
+  }
+  .hist-item {
+    font-size: 12px; padding: 6px 4px; cursor: pointer; color: var(--ink2);
+    border-bottom: 1px dotted #cabfa7; display: flex; justify-content: space-between; gap: 10px;
+  }
+  .hist-item:hover { color: var(--red); }
+  .hist-item b { font-weight: 700; }
+
+  /* ====== 演出 ====== */
+  #press {
+    position: fixed; inset: 0; z-index: 60;
+    background: #0d0b08;
+    display: none;
+    flex-direction: column;
+    align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  #press.on { display: flex; }
+  .roller {
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    border: 14px solid #d8cfa9;
+    border-top-color: var(--red);
+    border-right-color: #8a7c55;
+    animation: spin .55s linear infinite;
+    box-shadow: 0 0 0 10px #1c1814, inset 0 0 18px rgba(0,0,0,.6);
+    position: relative;
+  }
+  .roller::after {
+    content: ""; position: absolute; inset: 28px; border-radius: 50%;
+    border: 6px dashed #b3a679; animation: spin 1.1s linear infinite reverse;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .press-txt {
+    margin-top: 30px;
+    font-family: "Shippori Mincho"; font-weight: 800;
+    color: #f4f0e6; font-size: 24px; letter-spacing: .3em;
+  }
+  .ticker {
+    position: absolute; top: 8%; left: 0; width: 100%;
+    overflow: hidden; white-space: nowrap;
+    border-top: 2px solid var(--red); border-bottom: 2px solid var(--red);
+    background: rgba(192,35,26,.12);
+    padding: 6px 0;
+  }
+  .ticker span {
+    display: inline-block;
+    font-family: "Shippori Mincho"; font-weight: 800; color: var(--red);
+    font-size: 22px; letter-spacing: .2em;
+    animation: scroll 7s linear infinite;
+    padding-left: 100%;
+  }
+  @keyframes scroll { to { transform: translateX(-100%); } }
+  .paper-fall { position:absolute; color:#d8cfa9; font-size:30px; top:-40px; animation: fall linear infinite; opacity:.8;}
+  @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+
+  /* ====== 号外新聞 ====== */
+  #paper { display: none; }
+  #paper.on { display: block; animation: drop .8s cubic-bezier(.2,1.2,.3,1); }
+  @keyframes drop {
+    0% { transform: translateY(-90px) rotate(-2deg) scale(.96); opacity: 0; }
+    60% { transform: translateY(8px) rotate(.6deg) scale(1.01); opacity: 1; }
+    100% { transform: none; }
+  }
+  .news {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid #000;
+    padding: 22px 24px 30px;
+    box-shadow: 0 30px 70px rgba(0,0,0,.6);
+    position: relative;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,.012) 0 3px, transparent 3px 6px),
+      radial-gradient(circle at 80% 0%, rgba(120,90,40,.05), transparent 40%);
+  }
+  .news .stamp {
+    position: absolute; top: 14px; right: 16px;
+    width: 96px; height: 96px;
+    border: 5px solid var(--red);
+    border-radius: 50%;
+    color: var(--red);
+    font-family: "Shippori Mincho"; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px; letter-spacing: .05em;
+    transform: rotate(-14deg);
+    box-shadow: inset 0 0 0 3px var(--red);
+    opacity: .9;
+    text-shadow: 1px 1px 0 rgba(192,35,26,.3);
+  }
+  @media (max-width:520px){ .news .stamp{ width:72px;height:72px;font-size:25px;top:10px;right:10px;} }
+
+  .news-head {
+    border-bottom: 5px solid var(--line);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+  }
+  .news-title {
+    font-family: "Shippori Mincho"; font-weight: 800;
+    font-size: clamp(30px, 9vw, 58px);
+    letter-spacing: .1em;
+    line-height: 1.05;
+  }
+  .news-meta {
+    display: flex; flex-wrap: wrap; justify-content: space-between;
+    gap: 6px 14px; font-size: 12px; color: var(--ink2);
+    border-top: 1px solid var(--line); margin-top: 8px; padding-top: 5px;
+    letter-spacing: .03em;
+  }
+  .news-meta .price { color: var(--red); font-weight: 700; }
+
+  .headline {
+    font-family: "Shippori Mincho"; font-weight: 800;
+    font-size: clamp(30px, 8.5vw, 60px);
+    line-height: 1.12;
+    letter-spacing: .02em;
+    margin: 18px 0 6px;
+    text-align: justify;
+  }
+  .headline .hl-red { color: var(--red); }
+  .subhead {
+    font-family: "Shippori Mincho"; font-weight: 700;
+    font-size: clamp(16px, 4.2vw, 24px);
+    border-top: 2px solid var(--line);
+    border-bottom: 2px solid var(--line);
+    padding: 7px 0;
+    margin-bottom: 16px;
+    letter-spacing: .04em;
+  }
+  .columns {
+    column-gap: 22px;
+    column-rule: 1px solid #b8ae96;
+  }
+  @media (min-width: 640px) { .columns { column-count: 2; } }
+  .lead {
+    font-size: 15.5px;
+    text-align: justify;
+    margin-bottom: 14px;
+    break-inside: avoid;
+  }
+  .lead::first-letter {
+    font-family: "Shippori Mincho"; font-weight: 800;
+    font-size: 2.6em; float: left; line-height: .8;
+    padding: 4px 8px 2px 0; color: var(--red);
+  }
+  .photo {
+    break-inside: avoid;
+    border: 1px solid var(--line);
+    background:
+      repeating-linear-gradient(45deg, #cfc7b2 0 8px, #c5bca6 8px 16px);
+    height: 140px;
+    display: flex; align-items: flex-end;
+    margin-bottom: 4px;
+    position: relative;
+  }
+  .photo .cap {
+    background: rgba(0,0,0,.55); color: var(--paper);
+    font-size: 10.5px; padding: 2px 6px; width: 100%;
+  }
+  .photo .imgtag {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    color:#7a715b; font-size:13px; letter-spacing:.1em; font-weight:700;
+  }
+  .photofig { break-inside: avoid; margin-bottom: 14px; }
+  .body-text { font-size: 14px; text-align: justify; margin-bottom: 14px; break-inside: avoid; }
+
+  .box {
+    border: 2px solid var(--line);
+    padding: 11px 13px;
+    margin-bottom: 14px;
+    break-inside: avoid;
+    background: rgba(255,255,255,.18);
+  }
+  .box h4 {
+    font-family: "Shippori Mincho"; font-weight: 800;
+    font-size: 15px; letter-spacing: .08em;
+    border-bottom: 1.5px solid var(--line);
+    padding-bottom: 4px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .box h4::before { content: "■"; color: var(--red); font-size: 12px; }
+  .expert { font-size: 13.5px; margin-bottom: 9px; }
+  .expert .who { font-weight: 700; }
+  .expert .who small { font-weight: 400; color: var(--ink2); }
+  .voice { font-size: 13px; margin-bottom: 7px; padding-left: 14px; position: relative; }
+  .voice::before { content: "▸"; position: absolute; left: 0; color: var(--red); }
+  .voice .meta { color: var(--ink2); font-size: 11.5px; }
+
+  .panels { }
+  .panel-row { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .miniline { font-size: 13px; padding: 6px 0; border-bottom: 1px dotted #b3a98f; }
+  .miniline:last-child { border-bottom: none; }
+  .miniline b { font-family: "Shippori Mincho"; }
+  .stock-up { color: var(--red); font-weight: 700; }
+  .stock-down { color: #1d4e89; font-weight: 700; }
+
+  .footer-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 4px; }
+  @media (min-width: 640px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+  .ad {
+    border: 3px double var(--line);
+    padding: 12px;
+    text-align: center;
+    background: rgba(255,255,255,.25);
+  }
+  .ad .tag { font-size: 10px; letter-spacing: .3em; color: var(--ink2); }
+  .ad .name { font-family: "Shippori Mincho"; font-weight: 800; font-size: 20px; margin: 5px 0; }
+  .ad .copy { font-size: 12.5px; }
+  .ad .price2 { color: var(--red); font-weight: 700; font-size: 15px; margin-top: 5px; }
+  .weather { border: 2px solid var(--line); padding: 11px 13px; }
+  .weather h4 { font-family:"Shippori Mincho"; font-weight:800; font-size:15px; margin-bottom:6px; }
+  .weather .wmain { font-size: 15px; font-weight: 700; }
+  .weather .wsub { font-size: 12.5px; color: var(--ink2); margin-top: 4px; }
+  .next-issue {
+    margin-top: 14px; border-top: 3px double var(--line); padding-top: 10px;
+    font-size: 13px; text-align: center; letter-spacing: .03em;
+  }
+  .next-issue b { font-family: "Shippori Mincho"; color: var(--red); }
+
+  /* ====== 操作ボタン ====== */
+  .actions {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    margin: 22px 0 6px;
+  }
+  .act {
+    font-family: "Shippori Mincho"; font-weight: 700;
+    font-size: 14px; letter-spacing: .08em;
+    padding: 12px 18px; border-radius: 3px; cursor: pointer; border: 2px solid #d8cfa9;
+    background: #1c1814; color: #f4f0e6; transition: .15s;
+  }
+  .act:hover { background: #f4f0e6; color: #1c1814; }
+  .act.x { background: #111; border-color:#111; }
+  .act.x:hover { background:#000; color:#fff; }
+  .act.again { background: var(--red); border-color: var(--red); color:#fff; }
+  .act.again:hover { background:#fff; color: var(--red); }
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
+    background: #1c1814; color: #f4f0e6; padding: 12px 20px; border-radius: 30px;
+    font-size: 13px; opacity: 0; pointer-events: none; transition: .3s; z-index: 80;
+    border: 1px solid #4a4236;
+  }
+  .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .credit { text-align:center; color:#8a8170; font-size:11px; margin-top:18px; letter-spacing:.1em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== 入力画面 ===== -->
+  <section id="intro">
+    <div class="masthead">
+      <div class="eng">EXTRA EXTRA NEWSPAPER</div>
+      <h1>ゴウガイ</h1>
+      <div class="sub">― あなただけの号外新聞編集局 ―</div>
+    </div>
+    <div class="reception">
+      ようこそ号外編集局へ。<br>あなたのどうでもいい日常を、世界的大事件として号外で報道いたします。<br>取材内容をお書きください。
+    </div>
+
+    <div class="field">
+      <label><span class="badge">記者</span>あなたの名前</label>
+      <input type="text" id="inName" maxlength="12" placeholder="例：フミ" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label><span class="badge">特ダネ</span>今日あった出来事を一つ</label>
+      <input type="text" id="inEvent" maxlength="20" placeholder="例：二度寝した" autocomplete="off" />
+      <div class="hintrow" id="hints"></div>
+    </div>
+
+    <div class="field">
+      <label><span class="badge">心境</span>今日の気分</label>
+      <div class="moodrow" id="moodRow"></div>
+    </div>
+
+    <button class="pub-btn" id="pubBtn">号 外 を 発 行 す る</button>
+    <div class="errmsg" id="err"></div>
+
+    <div class="history-box" id="histBox" style="display:none">
+      <h3>━ バックナンバー ━</h3>
+      <div id="histList"></div>
+    </div>
+  </section>
+
+  <!-- ===== 号外新聞 ===== -->
+  <section id="paper">
+    <div class="news" id="newsRoot"></div>
+    <div class="actions">
+      <button class="act again" id="reprintBtn">号外をもう一部刷る</button>
+      <button class="act" id="saveBtn">この号外を保存（印刷）</button>
+      <button class="act x" id="shareBtn">Xでシェア</button>
+      <button class="act" id="backBtn">受付に戻る</button>
+    </div>
+    <div class="credit">※ 本紙の内容はすべてフィクションです。実在の人物・団体・事件とは一切関係ありません。</div>
+  </section>
+</div>
+
+<!-- ===== 輪転機演出 ===== -->
+<div id="press">
+  <div class="ticker"><span id="tickerTxt">号外！号外！</span></div>
+  <div class="roller"></div>
+  <div class="press-txt">輪 転 機 始 動 …</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   ゴウガイ - 号外新聞ジェネレーター
+   ネタを大量に格納し、毎回ランダム組み合わせ。
+   {name}=名前 / {event}=出来事 / {eventNoun}=出来事(体言風)
+   ========================================================= */
+
+const MOODS = [
+  { key:"最高", emo:"😆", tone:"祝福", color:"#c0231a" },
+  { key:"普通", emo:"😐", tone:"淡々", color:"#1a1714" },
+  { key:"最悪", emo:"😱", tone:"悲劇", color:"#1d4e89" },
+  { key:"眠い", emo:"😴", tone:"虚脱", color:"#5a4a7a" },
+  { key:"腹減った", emo:"🍙", tone:"飢餓", color:"#a85a12" },
+];
+
+const EVENT_HINTS = ["寝坊した","二度寝した","コンビニ行った","何もしてない","歯を磨いた","アイスを食べた","散歩した","ゲームした","昼寝した","洗濯した"];
+
+/* ---- 見出し（30種以上）---- */
+const HEADLINES = [
+  "【速報】{name}氏、ついに「{event}」 世界に衝撃走る",
+  "{name}氏「{event}」 専門家「歴史的決断」",
+  "緊急 {name}氏が「{event}」 各国が緊急声明",
+  "【独占】{name}氏、本日「{event}」していた",
+  "衝撃 {name}氏「{event}」の一報 列島騒然",
+  "{name}氏 ついに動く 「{event}」で時代が変わる",
+  "号外 {name}氏「{event}」 後世に語り継がれる一日に",
+  "【重大】{name}氏が「{event}」 国連も注視",
+  "速報 {name}氏「{event}」を敢行 関係者絶句",
+  "{name}氏「{event}」 21世紀最大の出来事か",
+  "【激震】{name}氏、まさかの「{event}」 株価乱高下",
+  "{name}氏「{event}」確認 NASAも観測",
+  "歴史が動いた {name}氏「{event}」",
+  "【緊急特番】{name}氏「{event}」 全世界が生中継",
+  "{name}氏「{event}」 ノーベル委員会が注目",
+  "速報 {name}氏「{event}」 専門家も予測できず",
+  "{name}氏、人類史上初の「{event}」か",
+  "【世界同時】{name}氏「{event}」に７０億人が涙",
+  "{name}氏「{event}」 政府が対策本部設置",
+  "号外 {name}氏「{event}」 識者「もはや事件」",
+  "【速報】{name}氏「{event}」 SNSトレンド世界一",
+  "{name}氏「{event}」 教科書改訂へ",
+  "衝撃の事実 {name}氏は「{event}」していた",
+  "{name}氏「{event}」 関係各所に激震走る",
+  "【続報】{name}氏「{event}」 真相に迫る",
+  "{name}氏「{event}」 世紀の大事件と認定",
+  "速報 {name}氏「{event}」 全人類が固唾を呑む",
+  "{name}氏「{event}」 経済界に未曾有の動揺",
+  "【独自】{name}氏「{event}」の決定的瞬間",
+  "{name}氏「{event}」 もはや天変地異の様相",
+  "号外！{name}氏「{event}」 地球が見守った一日",
+  "{name}氏「{event}」 後の歴史家はこう記す",
+  "【最終警告】{name}氏「{event}」 影響は計り知れず",
+];
+
+/* 悲劇トーン用の見出し差し替え（最悪） */
+const HEADLINES_BAD = [
+  "【悲報】{name}氏、痛恨の「{event}」 世界が暗転",
+  "絶望 {name}氏「{event}」 街は静まり返った",
+  "{name}氏「{event}」 関係者ら言葉を失う",
+  "【最悪の事態】{name}氏「{event}」 復旧の目処立たず",
+  "悲劇 {name}氏「{event}」 各国が哀悼の意",
+];
+/* 祝福トーン（最高） */
+const HEADLINES_GOOD = [
+  "【祝】{name}氏、輝かしき「{event}」 全世界が祝福",
+  "歓喜 {name}氏「{event}」 列島が祭りムード",
+  "{name}氏「{event}」 快挙に拍手鳴り止まず",
+  "【慶事】{name}氏「{event}」 号外に花吹雪",
+];
+
+/* ---- リード文（20種以上）---- {date}{name}{event} ---- */
+const LEADS = [
+  "{date}午前、世界を揺るがす事態が発生した。{name}氏が「{event}」したのである。関係者によると、その瞬間、現場は異様な緊張に包まれたという。",
+  "{date}、人類はかつてない局面を迎えた。{name}氏による「{event}」の一報は、瞬く間に全世界を駆け巡った。各国メディアは一斉に速報を打った。",
+  "ついにこの日が来た。{date}、{name}氏が「{event}」を実行に移したのだ。専門家の間でも「想定外」との声が相次いでいる。",
+  "{date}、静かな朝は突如として歴史的瞬間へと変貌した。{name}氏が「{event}」したという情報が、関係各所に激震を走らせている。",
+  "緊急速報である。{date}、{name}氏が「{event}」した。この出来事が今後の世界に与える影響は、計り知れないと見られている。",
+  "{date}、私たちは目撃者となった。{name}氏の「{event}」――それは、後世に語り継がれるであろう決定的な一幕であった。",
+  "衝撃が走った。{date}、{name}氏が「{event}」したとの報を受け、本紙は号外の発行を決定した。詳報を伝える。",
+  "{date}、世界の歯車が音を立てて動いた。{name}氏「{event}」。この四文字ならぬ報せに、地球上のあらゆる人々が息を呑んだ。",
+  "歴史は繰り返さない。{date}、{name}氏が成し遂げた「{event}」は、人類史において唯一無二の出来事として記録されるだろう。",
+  "{date}、ある一報が世界の時間を止めた。{name}氏「{event}」。その意味するところを、我々はまだ理解しきれていない。",
+  "号外である。{date}、{name}氏が「{event}」したことが本紙の取材で明らかになった。現場は今なお騒然としている。",
+  "{date}、全人類が固唾を呑んで見守る中、{name}氏は「{event}」した。その決断の重みを、誰もが噛みしめている。",
+  "速報をお伝えする。{date}、{name}氏が「{event}」を敢行。各国首脳は緊急の電話会談に入ったもようだ。",
+  "{date}、奇跡か、それとも必然か。{name}氏の「{event}」は、世界中の人々に深い感慨を与えている。",
+  "未曾有の事態だ。{date}、{name}氏が「{event}」した。専門機関は緊急の分析を開始したと発表した。",
+  "{date}、地球上のすべての視線が一点に集まった。{name}氏「{event}」。それは、静かなる大事件であった。",
+  "報道に携わる者として、これほどの瞬間に立ち会えたことを光栄に思う。{date}、{name}氏は「{event}」したのだ。",
+  "{date}、ニュース速報のテロップが世界中のテレビに流れた。「{name}氏、{event}」――。視聴者は一様に画面を凝視した。",
+  "歴史的快挙、あるいは大事件。{date}、{name}氏が「{event}」したことで、世界の常識が一つ書き換えられた。",
+  "{date}、本紙編集局に第一報が飛び込んだ。{name}氏「{event}」。記者一同、思わず椅子から立ち上がった。",
+  "誰がこの日を予想できただろう。{date}、{name}氏は淡々と「{event}」した。その何気なさが、かえって衝撃を増幅させた。",
+  "{date}、世界経済、国際政治、市民生活――そのすべてに「{name}氏が{event}した」という事実が影を落としている。",
+];
+
+/* ---- 詳細記事（20種以上）---- */
+const DETAILS = [
+  "関係者の証言を総合すると、{name}氏は「{event}」する直前、極めて自然体であったという。現場に居合わせた人物は「まさかあそこまでやるとは」と興奮気味に語った。",
+  "本紙の独自取材により、{name}氏の「{event}」には周到な準備があった可能性が浮上している。一部では「数十年に一度の出来事」との見方も出ている。",
+  "{name}氏が「{event}」に至った経緯について、複数の関係者が口を開いた。「あの判断は神がかっていた」「常人には真似できない」と、賞賛の声が絶えない。",
+  "時系列を整理する。午前、{name}氏は静かに行動を開始。やがて「{event}」を実行に移した。この間わずか数分。だが、その数分が世界を変えた。",
+  "「{event}」の一報を受け、各方面が騒然となった。政府関係者は緊急の協議に入り、経済界もこの動向を固唾を呑んで見守っている。",
+  "専門機関の分析によれば、{name}氏の「{event}」は統計学的に「極めて稀」とされる事象に該当するという。担当者は「教科書に載せたい」と興奮を隠せない。",
+  "現場周辺には早くも多くの報道陣が詰めかけた。{name}氏が「{event}」した場所は、今や聖地として注目を集めつつある。",
+  "背景には複雑な事情があったとみられる。{name}氏に近い人物は「彼/彼女が{event}するのは、ある意味で必然だった」と意味深に語った。",
+  "「{event}」の瞬間、周囲の空気が一変したと複数の目撃者が証言している。「時が止まったようだった」との声も聞かれた。",
+  "本件をめぐっては、すでに各国の研究機関が共同調査チームの結成を検討しているという。{name}氏の「{event}」は、学術的にも極めて重要な事例だ。",
+  "{name}氏は「{event}」した後、特にコメントを残していない。その沈黙が、かえって事の重大さを物語っているとの指摘もある。",
+  "情報筋によると、{name}氏の「{event}」は、当初は誰にも知られず行われた。しかしその余波は、瞬く間に世界中へと広がっていった。",
+  "「{event}」という行為そのものは些細に見えるかもしれない。だが識者は「歴史とは、こうした小さな一歩の積み重ねだ」と力説する。",
+  "現地では「{name}氏が{event}した日」を記念日に制定しようとする動きも出始めている。署名活動はすでに始まっているという。",
+  "{name}氏の「{event}」を受け、SNS上では関連投稿が爆発的に増加。トレンドは瞬く間に世界一位となり、サーバーが一時不安定になるほどの反響を呼んだ。",
+  "事態を重く見た関係当局は、念のため周辺地域に注意を呼びかけた。{name}氏が「{event}」した影響は、依然として収束の兆しを見せていない。",
+  "「{event}」――この出来事を、後の歴史家はどう記すのだろうか。{name}氏の一挙手一投足が、今や世界中の関心の的となっている。",
+  "{name}氏が「{event}」したことについて、関係者の間では早くも「あの人ならやると思っていた」という声と「信じられない」という声が真っ二つに割れている。",
+  "本紙が入手した情報によれば、{name}氏は「{event}」の前後、極めて落ち着いていたという。その胆力に、専門家からも称賛の声が上がっている。",
+  "現場検証の結果、{name}氏の「{event}」には不審な点は一切なかった。むしろ「美しいほど完璧だった」と捜査関係者は語ったとされる。",
+];
+
+/* ---- 専門家の肩書き（30種以上）---- */
+const EXPERT_TITLES = [
+  "二度寝研究所 所長","無気力学会 会長","日本だらだら協会 理事","国際ぐうたら連盟 事務局長",
+  "現代ねむけ学 教授","あくび力学 専門家","ソファ社会学 准教授","布団工学 主任研究員",
+  "コンビニ文化人類学 客員教授","間食経済学 主席エコノミスト","昼寝最適化研究センター 室長","だらだら時間学 名誉教授",
+  "空腹政治学 上級研究員","現実逃避心理学会 副会長","スマホ依存光学 研究主幹","休日無計画論 第一人者",
+  "現代ぼんやり論 教授","脱力身体論 専門医","おやつ栄養政治学 博士","非生産性研究機構 所長",
+  "やる気ホルモン学会 理事長","週末崩壊学 講師","現代ごろ寝学 教授","めんどくさい哲学 研究員",
+  "おうち時間社会学 教授","二度寝倫理委員会 委員長","怠惰経済研究所 主任","眠気予報センター 主席予報官",
+  "現代しょうもなさ学 教授","どうでもいい事象研究会 会長","平凡日常考古学 学芸員","ぼーっと脳科学 研究室長",
+  "ぐーたら統計学 データ分析官","深夜テンション物理学 教授","お腹空き応用科学 技術顧問",
+];
+
+/* ---- 専門家コメント（30種以上）---- */
+const EXPERT_COMMENTS = [
+  "「これは極めて稀なケースです。私の研究人生でも数回しか見たことがない」",
+  "「{name}氏の判断は、もはや芸術の域に達している」",
+  "「正直、理論上は不可能とされていました。常識が覆りました」",
+  "「我々の業界では、向こう100年は語り継がれるでしょう」",
+  "「これを{event}と呼ぶには、あまりに崇高すぎる」",
+  "「データを見た瞬間、震えが止まりませんでした」",
+  "「人類はまだ、この出来事の本当の意味を理解していない」",
+  "「教科書を書き換える必要がありますね。今すぐにでも」",
+  "「率直に申し上げて、鳥肌が立ちました」",
+  "「{name}氏は、時代の半歩先を行っている。いや、一歩かもしれない」",
+  "「これほど完成された{event}を、私は他に知りません」",
+  "「学会で発表すれば、間違いなく拍手喝采でしょう」",
+  "「シンプルに見えて、実は高度な計算が背後にある可能性が高い」",
+  "「自然界の摂理に、また一つ謎が増えました」",
+  "「凡人には決して真似できない領域です」",
+  "「これは事件です。間違いなく、令和を代表する事件の一つになる」",
+  "「私は今日、歴史の証人になれたことを誇りに思います」",
+  "「研究予算を全額つぎ込んででも、解明したいテーマです」",
+  "「彼/彼女のような存在を、我々は『生きる伝説』と呼ぶのです」",
+  "「{event}という行為に、これほどの深みがあったとは」",
+  "「正直に言いましょう。完敗です。私の理論では説明がつかない」",
+  "「世界中の研究者が、今この瞬間、同じことを思っているはずです」",
+  "「これは奇跡ではなく、必然です。{name}氏だからこそ成し得た」",
+  "「次世代の若者には、ぜひこの偉業を語り継いでほしい」",
+  "「観測史上、最も美しい{event}と言って差し支えないでしょう」",
+  "「私の長年の仮説が、たった今、目の前で証明されました」",
+  "「冷静に分析しようとしましたが、無理でした。ただただ圧倒された」",
+  "「もはや科学では追いつけない。哲学の領域に入っています」",
+  "「{name}氏には、国民栄誉賞を検討すべきだと個人的には思います」",
+  "「これを見て何も感じない人がいたら、その感性を疑います」",
+  "「うちの研究室の学生に、まず見せたい。これが本物だと」",
+  "「言葉を失いました。プロとして、これは敗北宣言に近い」",
+];
+
+/* ---- 街の声（30種以上）---- 年齢・職業 + コメント ---- */
+const VOICE_JOBS = [
+  "近所の主婦","自営業","会社員","大学生","年金生活","フリーター","農家","元プロ野球選手",
+  "パン屋店主","通りすがり","町内会長","郵便配達員","ラーメン店主","元市議会議員","美容師",
+  "タクシー運転手","保育士","居酒屋常連","新聞配達","畳職人","コンビニ店員","ヨガ講師",
+  "塾講師","植木職人","元銀行員","花屋","自称評論家","近所の小学生","金物屋","定食屋女将",
+];
+const VOICE_COMMENTS = [
+  "「まさか、あの{name}さんがねぇ。信じられないよ」",
+  "「朝、いつもと空気が違うと思ったんだ。これだったのか」",
+  "「うちの息子にも見習わせたいわ、ほんとに」",
+  "「正直、鳥肌が立ったね。一生忘れないと思う」",
+  "「{event}するなんて、世界も変わったもんだ」",
+  "「こういう時代になったんですねぇ。長生きはするもんだ」",
+  "「私ね、{name}さんなら絶対やると思ってたの。ほんとよ」",
+  "「腰が抜けるかと思いました。それくらいの衝撃です」",
+  "「孫に自慢します。じいちゃんはこの日を見たんだぞって」",
+  "「言葉が出ませんでした。ただただ、すごいの一言です」",
+  "「今日は商売そっちのけでニュースに釘付けですよ」",
+  "「これはもう、お祭り騒ぎですよ。町内総出で見てます」",
+  "「{name}さんが{event}した瞬間、なぜか涙が出ました」",
+  "「私の人生で三本の指に入る出来事ですね、間違いなく」",
+  "「家族みんなで拍手しましたよ。なぜかは分かりませんが」",
+  "「いやー、参った。完全に持っていかれましたね」",
+  "「これを機に、私も何か始めようかと思いまして」",
+  "「歴史の教科書に載るって、近所の人も言ってました」",
+  "「夢かと思って頬をつねりましたよ。痛かったです」",
+  "「{name}さん、見直しました。いや、元から尊敬してましたけど」",
+  "「うちの犬まで、なんだか落ち着かない様子で」",
+  "「正直どうでもいいと思ってたんですが、見てたら泣けてきて」",
+  "「ご近所の誇りですよ、本当に。回覧板に書いときます」",
+  "「あんなに堂々と{event}できるなんて、器が違う」",
+  "「私もう、今日のことは日記に三ページ書きました」",
+  "「商店街のみんなで号外を奪い合いましたよ」",
+  "「テレビの前から動けませんでした。ご飯も忘れて」",
+  "「{name}さんを応援する会、作ろうかって話してます」",
+  "「こんな歴史的瞬間に、たまたま居合わせるとはね」",
+  "「正直に言うと、ちょっとうらやましいです。私もやりたい」",
+];
+
+/* ---- 株価（15種以上）---- 銘柄 + 値動き ---- */
+const STOCKS = [
+  ["布団ホールディングス","急騰","+2,400円","ストップ高"],
+  ["二度寝製薬","暴騰","+1,980円","年初来高値"],
+  ["全国まくら工業","急伸","+870円","商い活発"],
+  ["コンビニ連合","乱高下","±1,200円","売買交錯"],
+  ["やる気エナジー","急落","-1,500円","総悲観"],
+  ["眠気フーズ","ストップ高","+3,000円","買い気配のまま"],
+  ["だらだらリゾート","続伸","+640円","四日続伸"],
+  ["あくび電機","反発","+220円","下げ止まり"],
+  ["パジャマ繊維","爆騰","+2,750円","出来高最高"],
+  ["昼寝不動産","堅調","+450円","じり高"],
+  ["空腹ベーカリー","急騰","+1,100円","ランチ需要"],
+  ["ソファ家具工業","高騰","+1,330円","個人買い殺到"],
+  ["スマホ通信","乱調","±900円","方向感なし"],
+  ["現実逃避旅行","急伸","+770円","予約殺到観測"],
+  ["毛布マテリアル","ストップ高","+2,000円","品薄懸念"],
+  ["週末崩壊エンタメ","暴落","-1,800円","利益確定売り"],
+  ["おやつ食品","続騰","+560円","好材料視"],
+];
+
+/* ---- 各国の反応（15種以上）---- */
+const REACTIONS = [
+  "【米国】ホワイトハウスは「我々は{name}氏の決断を完全に支持する」と異例の声明を発表。",
+  "【英国】BBCは特別番組を編成。司会者は開口一番「信じられない」と漏らした。",
+  "【フランス】パリ市民の間では「これぞ人生の哲学だ」と妙に評価する声が広がっている。",
+  "【ドイツ】専門家会議が緊急招集され、{event}の効率性について真剣な議論が交わされた。",
+  "【イタリア】国民は「とりあえずワインで乾杯しよう」と早くもお祭りムード。",
+  "【中国】SNS『微博』で関連ワードが検索一位に。「日本のあの人すごい」と話題沸騰。",
+  "【韓国】芸能ニュースを差し置いてトップ報道。「うらやましい」の声が殺到している。",
+  "【ロシア】「我が国でも昔から行われている」と謎の対抗心を燃やすコメントが相次ぐ。",
+  "【インド】占星術師が「これは惑星の配置が示していた」と後出しで解説。",
+  "【ブラジル】サッカー中継が一時中断され、号外の内容が読み上げられた。",
+  "【オーストラリア】「コアラも{event}する。{name}氏は自然に近い」と謎の擁護。",
+  "【カナダ】「とても平和的で良い」と概ね好意的。メープルシロップが贈られる予定。",
+  "【スペイン】シエスタの時間と重なり、多くの国民は寝ていて知らなかった。",
+  "【スイス】中立を保ちつつも「時計より正確なタイミングだった」と技術面を評価。",
+  "【エジプト】「ピラミッド建設以来の衝撃」と古代と比較する報道も。",
+  "【北欧某国】「幸福度ランキングの新指標にすべき」と国会で言及された。",
+  "【国連】事務総長が「全人類が{name}氏に学ぶべきだ」と総会で異例の言及。",
+];
+
+/* ---- 天気（15種以上）---- mood連動 ---- */
+const WEATHER = {
+  "最高": [
+    ["快晴ときどき祝福","各地で虹が二重に観測される見込み。傘の代わりに紙吹雪をご用意ください。"],
+    ["ピーカン","気圧も気分も最高潮。今日は何をしても成功する一日です。"],
+    ["祝賀晴れ","空からおめでとうの声が降り注ぐでしょう。日傘推奨。"],
+    ["お祝いムード前線","全国的に空気が浮かれ気味。落ち着いて行動してください。"],
+  ],
+  "普通": [
+    ["くもりのち平常運転","特に変わったことは起きません。それが一番です。"],
+    ["平年並み","可もなく不可もない、実に標準的な空模様です。"],
+    ["どんより無風","世界は動いたのに、空はいつも通り。安心してください。"],
+    ["薄日さす日常","ほどほどの天気。ほどほどが一番という説もあります。"],
+  ],
+  "最悪": [
+    ["土砂降りのち絶望","傘が壊れる確率80%。今日は布団から出ない判断もアリ。"],
+    ["どんより低気圧","気分と同じく重い雲が垂れ込めます。無理は禁物。"],
+    ["大荒れ","空も{name}氏に同情して荒れ模様。明日に期待しましょう。"],
+    ["哀しみのち小雨","しっとりとした一日。涙雨の可能性も否定できません。"],
+  ],
+  "眠い": [
+    ["全国的にうとうと","眠気指数MAX。午後はほぼ全員が船を漕ぐ見込み。"],
+    ["まどろみ前線通過","あくびが伝染しやすい一日。会議は危険です。"],
+    ["ねむけ濃霧注意報","視界ならぬ意識がぼんやり。二度寝日和です。"],
+    ["微睡みのち爆睡","夕方には全国的に夢の中へ。おやすみなさい。"],
+  ],
+  "腹減った": [
+    ["腹ぺこ快晴","空腹指数が危険水域。早めの補給をおすすめします。"],
+    ["グーグー前線","お腹の音が各地で観測中。冷蔵庫の前に注意。"],
+    ["飢餓注意報","間食なしでは乗り切れない一日。おやつ必携。"],
+    ["空腹のち満腹","夕食時には急回復の見込み。それまでの辛抱です。"],
+  ],
+};
+
+/* ---- 広告（15種以上）---- */
+const ADS = [
+  ["新発売","二度寝サポート枕『再眠』","一度寝たら最後、もう起きられない。罪な寝心地。","¥9,800（税込）"],
+  ["大好評","だらだらクッション『無限沼』","一度沈むと立ち上がれないと話題。社会復帰は自己責任。","¥6,400"],
+  ["数量限定","やる気スプレー『シャキッ虎』","噴射しても効果には個人差があります。むしろ眠くなる人も。","¥1,200"],
+  ["新商品","空腹をごまかす水『満腹の錯覚』","飲んでも腹は膨れません。気持ちの問題です。","¥300"],
+  ["話題沸騰","布団から出られるロボ『起こし丸』","結局あなたが布団に引きずり込みます。","¥39,800"],
+  ["特売","おやつ定期便『間食の友』","毎月どっさり。罪悪感も毎月どっさり。","月¥2,980"],
+  ["ロングセラー","昼寝専用タイマー『あと5分』","止めても勝手に5分延長。永遠に起きられません。","¥980"],
+  ["緊急入荷","現実逃避メガネ『見ないふり』","掛けると面倒事がぼやけて見えます。視力は悪化します。","¥4,500"],
+  ["新登場","めんどくさい翻訳機『はいはい』","返事だけは一人前。中身はありません。","¥2,200"],
+  ["大人気","ごろ寝マット『大地と一体』","床との境界が消えると評判。起きると体が痛い。","¥7,700"],
+  ["お試し","気合いドリンク『空元気MAX』","飲んだ気合いは30秒で切れます。あとはご想像通り。","¥160"],
+  ["再販","週末を伸ばすカレンダー『月曜よ来るな』","めくっても日曜のまま。現実は変わりません。","¥1,500"],
+  ["数量限定","スマホ封印箱『あと1分だけ』","鍵をかけても合鍵を探し始めるあなたへ。","¥3,300"],
+  ["新発売","あくび増幅マスク『うつし屋』","周囲全員を眠りに誘う迷惑グッズ。使用は計画的に。","¥1,980"],
+  ["好評につき","ぼーっとタイム保証券『無の時間』","何もしない時間を公式に許可します。額縁付き。","¥500"],
+  ["限定復刻","布団乾燥機『二度寝製造機』","ぬくぬくにしすぎて二次被害多発。自己責任で。","¥12,800"],
+];
+
+/* ---- 次号予告（15種以上）---- */
+const NEXT_ISSUES = [
+  "明日の号外：{name}氏、ついに「歯を磨く」のか? 全世界が再び注視",
+  "次号予告：{name}氏の昼食を巡る攻防、衝撃の結末は明日へ",
+  "続報を待て：{name}氏、まさかの「もう一度{event}」説が浮上",
+  "明日の一面：{name}氏が「靴下を履く」とき、世界はどう動くか",
+  "次回：専門家が緊急来日、{name}氏の偉業を徹底解剖",
+  "予告：{name}氏、伝説の「外出」に挑むか――密着取材決定",
+  "明日の号外：{name}氏の冷蔵庫の中身に、各国スパイが暗躍?",
+  "続報：{name}氏が残した謎の「あと5分」発言、その真意に迫る",
+  "次号:{name}氏の「ため息」一つで株価はどう動くのか、緊急検証",
+  "予告:{name}氏の偉業を映画化へ。主演候補が早くも難航",
+  "明日の特集：{name}氏が「水を飲んだ」瞬間の完全密着レポート",
+  "続報を待て：{name}氏、本日の偉業に「特に感想はない」と衝撃発言",
+  "次回予告：{name}氏記念館、建設の是非を巡り住民投票へ",
+  "明日の号外：{name}氏が「立ち上がった」、その歴史的瞬間を独占",
+  "予告:{name}氏の偉業、ついに切手とマンホールの蓋になるか",
+  "次号:{name}氏「明日は何もしない」と宣言、世界が再び震撼",
+];
+
+/* ---- 写真キャプション ---- */
+const PHOTO_CAPS = [
+  "「{event}」した直後とみられる{name}氏（本紙資料写真）",
+  "歴史的瞬間を伝えるべく駆けつけた報道陣（現場にて）",
+  "号外を求めて殺到する市民ら（けさ、各地で）",
+  "{name}氏が「{event}」したとされる現場周辺の様子",
+  "緊急会見の準備に追われる関係者（編集局が撮影）",
+  "世紀の出来事を見守る人々（写真はイメージです）",
+];
+
+/* ---- 新聞名サフィックス ---- */
+const PAPER_SUFFIX = ["日報","新報","タイムズ","スポーツ","経済新聞","ヘラルド","速報","通信","ジャーナル","民報","朝刊","夕刊","ウィークリー"];
+
+/* ===== ユーティリティ ===== */
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function pickN(arr,n){
+  const c=[...arr], out=[];
+  while(out.length<n && c.length){ out.push(c.splice(Math.floor(Math.random()*c.length),1)[0]); }
+  return out;
+}
+function age(){ return 18 + Math.floor(Math.random()*62); } // 18〜79
+function fill(str, ctx){
+  return str
+    .replace(/\{name\}/g, ctx.name)
+    .replace(/\{event\}/g, ctx.event)
+    .replace(/\{date\}/g, ctx.dateShort);
+}
+function todayParts(){
+  const d = new Date();
+  const wd = ["日","月","火","水","木","金","土"][d.getDay()];
+  return {
+    full: `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${wd}）`,
+    short: `${d.getMonth()+1}日`,
+  };
+}
+const GRAND_DATES = ["歴史的一日","世界が震えた日","運命の日","語り継がれる日","奇跡の一日","時代の転換点"];
+
+/* ===== 号外生成 ===== */
+function buildIssue(name, event, mood){
+  const t = todayParts();
+  const ctx = { name, event, dateShort: t.short };
+
+  // 見出し（mood考慮）
+  let headPool = HEADLINES.slice();
+  if(mood==="最悪") headPool = headPool.concat(HEADLINES_BAD, HEADLINES_BAD);
+  if(mood==="最高") headPool = headPool.concat(HEADLINES_GOOD, HEADLINES_GOOD);
+  const headline = fill(pick(headPool), ctx);
+
+  // 新聞名
+  const paperName = `${name}${pick(PAPER_SUFFIX)} 号外`;
+
+  // 専門家 2〜3名
+  const nExp = 2 + Math.floor(Math.random()*2);
+  const titles = pickN(EXPERT_TITLES, nExp);
+  const comments = pickN(EXPERT_COMMENTS, nExp);
+  const famNames = pickN(["田所","猿渡","海野","百々","茶谷","鵜飼","東雲","勅使河原","轟","綾小路","五十嵐","物部","九鬼","錦織","御手洗"], nExp);
+  const experts = titles.map((title,i)=>({
+    title,
+    name: famNames[i] + pick(["教授","博士","氏","研究員","所長","主席"]),
+    comment: fill(comments[i], ctx),
+  }));
+
+  // 街の声 3つ
+  const vJobs = pickN(VOICE_JOBS, 3);
+  const vComs = pickN(VOICE_COMMENTS, 3);
+  const voices = vJobs.map((job,i)=>({ job, age: age(), comment: fill(vComs[i], ctx) }));
+
+  // 株価2件
+  const stocks = pickN(STOCKS, 2);
+  // 各国反応2件
+  const reactions = pickN(REACTIONS, 2).map(r=>fill(r,ctx));
+  // 天気
+  const w = pick(WEATHER[mood] || WEATHER["普通"]);
+  // 広告
+  const ad = pick(ADS);
+  // 次号
+  const nextIssue = fill(pick(NEXT_ISSUES), ctx);
+  // 写真キャプ
+  const cap = fill(pick(PHOTO_CAPS), ctx);
+
+  return {
+    paperName,
+    dateFull: t.full,
+    grandDate: pick(GRAND_DATES),
+    headline,
+    subhead: fill(pick(LEADS), ctx).split("。")[0] + "。",
+    lead: fill(pick(LEADS), ctx),
+    detail1: fill(pick(DETAILS), ctx),
+    detail2: fill(pick(DETAILS), ctx),
+    experts, voices, stocks, reactions, weather:w, ad, nextIssue, cap,
+    mood,
+  };
+}
+
+/* ===== 描画 ===== */
+function renderIssue(iss){
+  const stocksHtml = iss.stocks.map(s=>{
+    const up = !/急落|暴落/.test(s[1]);
+    return `<div class="miniline"><b>${s[0]}</b> <span class="${up?'stock-up':'stock-down'}">${s[1]} ${s[2]}</span> <small>（${s[3]}）</small></div>`;
+  }).join("");
+
+  const reactHtml = iss.reactions.map(r=>`<div class="miniline">${r}</div>`).join("");
+
+  const expertsHtml = iss.experts.map(e=>
+    `<div class="expert"><span class="who">${e.title}・${e.name}</span><br>${e.comment}</div>`
+  ).join("");
+
+  const voicesHtml = iss.voices.map(v=>
+    `<div class="voice">${v.comment}<br><span class="meta">― ${v.job}（${v.age}）</span></div>`
+  ).join("");
+
+  return `
+    <div class="stamp">号外</div>
+    <div class="news-head">
+      <div class="news-title">${iss.paperName}</div>
+      <div class="news-meta">
+        <span>${iss.dateFull}　＜${iss.grandDate}＞</span>
+        <span class="price">特別価格 ¥0（緊急配布）</span>
+        <span>第壱号・特報版</span>
+      </div>
+    </div>
+
+    <div class="headline">${iss.headline.replace(/「([^」]+)」/, '「<span class="hl-red">$1</span>」')}</div>
+    <div class="subhead">${iss.subhead}</div>
+
+    <div class="columns">
+      <p class="lead">${iss.lead}</p>
+
+      <figure class="photofig">
+        <div class="photo">
+          <span class="imgtag">［ 写真はイメージです ］</span>
+          <span class="cap">${iss.cap}</span>
+        </div>
+      </figure>
+
+      <p class="body-text">${iss.detail1}</p>
+
+      <div class="box">
+        <h4>専門家はこう見る</h4>
+        ${expertsHtml}
+      </div>
+
+      <p class="body-text">${iss.detail2}</p>
+
+      <div class="box">
+        <h4>街の声</h4>
+        ${voicesHtml}
+      </div>
+
+      <div class="box">
+        <h4>株価への影響</h4>
+        ${stocksHtml}
+      </div>
+
+      <div class="box">
+        <h4>各国の反応</h4>
+        ${reactHtml}
+      </div>
+    </div>
+
+    <div class="footer-grid">
+      <div class="weather">
+        <h4>━ 本日の天気 ━</h4>
+        <div class="wmain">${iss.weather[0]}</div>
+        <div class="wsub">${fill(iss.weather[1], {name: currentInput.name, event: currentInput.event, dateShort:''})}</div>
+      </div>
+      <div class="ad">
+        <div class="tag">━ 広 告 ━</div>
+        <div class="tag" style="letter-spacing:.2em">${iss.ad[0]}</div>
+        <div class="name">${iss.ad[1]}</div>
+        <div class="copy">${iss.ad[2]}</div>
+        <div class="price2">${iss.ad[3]}</div>
+      </div>
+    </div>
+
+    <div class="next-issue">
+      <b>◆ 次号予告 ◆</b><br>${iss.nextIssue}
+    </div>
+  `;
+}
+
+/* ===== 状態 ===== */
+let selectedMood = null;
+let currentInput = { name:"", event:"", mood:"" };
+const LS_KEY = "gougai_history_v1";
+
+/* ===== DOM ===== */
+const $ = id => document.getElementById(id);
+const introEl = $("intro");
+const paperEl = $("paper");
+const pressEl = $("press");
+const newsRoot = $("newsRoot");
+
+/* ヒントチップ */
+const hintsEl = $("hints");
+EVENT_HINTS.forEach(h=>{
+  const c = document.createElement("span");
+  c.className = "chip"; c.textContent = h;
+  c.onclick = ()=>{ $("inEvent").value = h; };
+  hintsEl.appendChild(c);
+});
+
+/* 気分選択 */
+const moodRow = $("moodRow");
+MOODS.forEach(m=>{
+  const d = document.createElement("div");
+  d.className = "mood";
+  d.innerHTML = `<span class="emo">${m.emo}</span><span class="lbl">${m.key}</span>`;
+  d.onclick = ()=>{
+    document.querySelectorAll(".mood").forEach(x=>x.classList.remove("on"));
+    d.classList.add("on");
+    selectedMood = m.key;
+  };
+  moodRow.appendChild(d);
+});
+
+/* ===== 発行フロー ===== */
+function publish(){
+  const name = $("inName").value.trim();
+  const event = $("inEvent").value.trim();
+  if(!name){ showErr("記者名（あなたの名前）が未記入です"); return; }
+  if(!event){ showErr("特ダネ（今日の出来事）が未記入です"); return; }
+  if(!selectedMood){ showErr("今日の気分を選んでください"); return; }
+  showErr("");
+  currentInput = { name, event, mood: selectedMood };
+  runPress();
+}
+
+function showErr(msg){ $("err").textContent = msg; }
+
+function runPress(){
+  // テロップ文言を出来事入りに
+  $("tickerTxt").textContent = `号外！号外！　${currentInput.name}氏「${currentInput.event}」　号外！号外！　世界に衝撃　`;
+  pressEl.classList.add("on");
+  spawnFallingPapers();
+  setTimeout(()=>{
+    pressEl.classList.remove("on");
+    generateAndShow(true);
+  }, 1700);
+}
+
+function spawnFallingPapers(){
+  for(let i=0;i<14;i++){
+    const p = document.createElement("div");
+    p.className = "paper-fall";
+    p.textContent = "📰";
+    p.style.left = Math.random()*100 + "%";
+    p.style.animationDuration = (1.2 + Math.random()*1.4) + "s";
+    p.style.animationDelay = (Math.random()*0.6) + "s";
+    p.style.fontSize = (18 + Math.random()*22) + "px";
+    pressEl.appendChild(p);
+    setTimeout(()=>p.remove(), 2600);
+  }
+}
+
+function generateAndShow(save){
+  const iss = buildIssue(currentInput.name, currentInput.event, currentInput.mood);
+  newsRoot.innerHTML = renderIssue(iss);
+  introEl.style.display = "none";
+  paperEl.classList.add("on");
+  window.scrollTo({top:0, behavior:"instant"});
+  if(save) saveHistory(currentInput, iss.headline);
+}
+
+/* ===== 再生成（同じ入力で違う記事）===== */
+$("reprintBtn").onclick = ()=>{
+  paperEl.classList.remove("on");
+  // 一瞬の輪転機演出
+  pressEl.classList.add("on");
+  spawnFallingPapers();
+  setTimeout(()=>{
+    pressEl.classList.remove("on");
+    generateAndShow(false);
+    toast("刷り直しました（別記事）");
+  }, 900);
+};
+
+/* ===== 受付に戻る ===== */
+$("backBtn").onclick = ()=>{
+  paperEl.classList.remove("on");
+  introEl.style.display = "block";
+  renderHistory();
+  window.scrollTo({top:0, behavior:"instant"});
+};
+
+/* ===== 保存（印刷）===== */
+$("saveBtn").onclick = ()=>{
+  toast("印刷ダイアログから「PDFで保存」できます");
+  setTimeout(()=>window.print(), 500);
+};
+
+/* ===== Xシェア ===== */
+$("shareBtn").onclick = ()=>{
+  const head = newsRoot.querySelector(".news-title")?.textContent || "号外";
+  const hl = newsRoot.querySelector(".headline")?.textContent || "";
+  const text = `📰 私が一面を飾りました！\n\n『${head}』\n${hl}\n\n#ゴウガイ #号外新聞`;
+  const url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
+  window.open(url, "_blank", "noopener");
+};
+
+$("pubBtn").onclick = publish;
+[$("inName"), $("inEvent")].forEach(el=>{
+  el.addEventListener("keydown", e=>{ if(e.key==="Enter") publish(); });
+});
+
+/* ===== localStorage 履歴 ===== */
+function saveHistory(input, headline){
+  let h = [];
+  try { h = JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch(e){}
+  h.unshift({ name:input.name, event:input.event, mood:input.mood, headline, t: todayParts().short });
+  h = h.slice(0, 6);
+  try { localStorage.setItem(LS_KEY, JSON.stringify(h)); } catch(e){}
+}
+function renderHistory(){
+  let h = [];
+  try { h = JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch(e){}
+  const box = $("histBox"), list = $("histList");
+  if(!h.length){ box.style.display="none"; return; }
+  box.style.display = "block";
+  list.innerHTML = h.map((it,i)=>
+    `<div class="hist-item" data-i="${i}"><span><b>${it.name}</b>氏「${it.event}」</span><span>${it.t}・${it.mood}</span></div>`
+  ).join("");
+  list.querySelectorAll(".hist-item").forEach(el=>{
+    el.onclick = ()=>{
+      const it = h[+el.dataset.i];
+      $("inName").value = it.name;
+      $("inEvent").value = it.event;
+      // mood選択を反映
+      document.querySelectorAll(".mood").forEach((x,idx)=>{
+        const on = MOODS[idx].key === it.mood;
+        x.classList.toggle("on", on);
+        if(on) selectedMood = it.mood;
+      });
+      window.scrollTo({top:0, behavior:"smooth"});
+    };
+  });
+}
+
+/* ===== toast ===== */
+let toastTimer;
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("on"), 2200);
+}
+
+/* 初期表示 */
+renderHistory();
+</script>
+</body>
+</html>
