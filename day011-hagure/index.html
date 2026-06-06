@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ハグレ - みんなで遊ぶ正体さがし</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#2d1b4e;
+  --bg2:#1d1136;
+  --panel:#3a2566;
+  --panel2:#452c79;
+  --neon:#00e5ff;
+  --neon2:#ff4d9d;
+  --gold:#ffd24a;
+  --gold2:#ffb300;
+  --text:#fff;
+  --dim:#c5b6e8;
+  --good:#36e29a;
+  --bad:#ff5d6c;
+  --shadow:0 14px 40px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'M PLUS Rounded 1c',sans-serif;
+  background:radial-gradient(circle at 50% -10%,#4a2d80 0%,var(--bg) 45%,var(--bg2) 100%);
+  color:var(--text);
+  min-height:100dvh;
+  overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+  user-select:none;
+}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;position:relative}
+.screen{flex:1;display:none;flex-direction:column;padding:22px 20px 30px;animation:fade .35s ease}
+.screen.active{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- generic ---------- */
+h1,h2,h3{font-weight:900;letter-spacing:.02em}
+.logo{
+  font-weight:900;font-size:clamp(46px,15vw,72px);text-align:center;line-height:1;
+  background:linear-gradient(180deg,#fff 0%,var(--gold) 70%,var(--gold2) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 18px rgba(255,180,0,.35));
+  letter-spacing:.08em;
+}
+.tag{text-align:center;color:var(--dim);font-weight:700;font-size:15px;margin-top:10px}
+.btn{
+  border:none;border-radius:18px;font-family:inherit;font-weight:800;cursor:pointer;
+  padding:18px 22px;font-size:19px;color:#2a1a48;
+  background:linear-gradient(180deg,var(--gold) 0%,var(--gold2) 100%);
+  box-shadow:0 8px 0 #a9760a,0 14px 26px rgba(255,170,0,.32);
+  transition:transform .08s,box-shadow .08s;width:100%;
+}
+.btn:active{transform:translateY(5px);box-shadow:0 3px 0 #a9760a,0 6px 14px rgba(255,170,0,.3)}
+.btn.alt{
+  color:#fff;background:linear-gradient(180deg,var(--neon2) 0%,#d62e7c 100%);
+  box-shadow:0 8px 0 #911e57,0 14px 26px rgba(255,77,157,.3);
+}
+.btn.alt:active{box-shadow:0 3px 0 #911e57}
+.btn.ghost{
+  color:#fff;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);
+  box-shadow:none;font-size:17px;padding:15px;
+}
+.btn.ghost:active{transform:translateY(2px);background:rgba(255,255,255,.14)}
+.btn.neon{
+  color:#06222a;background:linear-gradient(180deg,#7ef6ff 0%,var(--neon) 100%);
+  box-shadow:0 8px 0 #0a8ba0,0 14px 26px rgba(0,229,255,.3);
+}
+.btn.neon:active{box-shadow:0 3px 0 #0a8ba0}
+.btn:disabled{filter:grayscale(.6) brightness(.7);box-shadow:none;cursor:not-allowed}
+.card{
+  background:linear-gradient(160deg,var(--panel) 0%,var(--panel2) 100%);
+  border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:20px;
+  box-shadow:var(--shadow);
+}
+.spacer{flex:1}
+.row{display:flex;gap:12px}
+.center{display:flex;align-items:center;justify-content:center}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;min-height:34px}
+.iconbtn{
+  width:42px;height:42px;border-radius:14px;border:none;cursor:pointer;
+  background:rgba(255,255,255,.1);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;
+}
+.iconbtn:active{background:rgba(255,255,255,.2)}
+.crumb{font-weight:800;color:var(--dim);font-size:15px}
+
+/* ---------- HOME ---------- */
+#home{justify-content:center;text-align:center}
+.home-art{font-size:64px;margin-bottom:4px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.home-btns{margin-top:34px;display:flex;flex-direction:column;gap:14px}
+.stat{margin-top:22px;color:var(--dim);font-weight:700;font-size:14px}
+
+/* ---------- SETUP ---------- */
+.section{margin-bottom:18px}
+.label{font-weight:800;font-size:16px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.label .em{font-size:20px}
+.counter{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.cbtn{
+  width:64px;height:64px;border-radius:50%;border:none;font-size:34px;font-weight:900;cursor:pointer;
+  background:linear-gradient(180deg,var(--neon) 0%,#0098b3 100%);color:#04222a;
+  box-shadow:0 6px 0 #066b7e;display:flex;align-items:center;justify-content:center;line-height:1;
+}
+.cbtn:active{transform:translateY(3px);box-shadow:0 3px 0 #066b7e}
+.cbtn:disabled{filter:grayscale(.7) brightness(.6);box-shadow:none}
+.cval{font-size:50px;font-weight:900;line-height:1}
+.cval small{display:block;font-size:14px;color:var(--dim);font-weight:700;margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{
+  border:2px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);
+  color:#fff;font-family:inherit;font-weight:800;font-size:15px;padding:11px 16px;border-radius:14px;cursor:pointer;
+  transition:.12s;flex:1 1 auto;text-align:center;white-space:nowrap;
+}
+.chip.on{
+  background:linear-gradient(180deg,var(--neon2),#d62e7c);border-color:transparent;
+  box-shadow:0 6px 16px rgba(255,77,157,.35);transform:translateY(-1px);
+}
+.warn{color:var(--gold);font-weight:800;font-size:14px;text-align:center;margin-top:4px;min-height:20px}
+
+/* ---------- PASS / DEAL ---------- */
+#deal{justify-content:center;text-align:center}
+.deal-progress{display:flex;gap:7px;justify-content:center;margin-bottom:24px;flex-wrap:wrap}
+.pdot{width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.18)}
+.pdot.done{background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.pdot.cur{background:var(--neon);box-shadow:0 0 12px var(--neon);transform:scale(1.3)}
+.passname{font-size:clamp(26px,8vw,38px);font-weight:900;margin-bottom:8px}
+.passsub{color:var(--dim);font-weight:700;font-size:16px;margin-bottom:30px;line-height:1.5}
+
+/* flip card */
+.cardwrap{perspective:1400px;width:100%;max-width:330px;margin:0 auto;aspect-ratio:3/4.1}
+.flip{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,1.3,.5,1);cursor:pointer}
+.flip.show{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-shadow:var(--shadow)}
+.face.back{
+  background:
+    repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0 14px,transparent 14px 28px),
+    linear-gradient(160deg,#5a37a0,#39236f);
+  border:2px solid rgba(255,210,74,.4);
+}
+.face.back .qm{font-size:90px;filter:drop-shadow(0 0 20px rgba(255,210,74,.5))}
+.face.back .hint{margin-top:18px;color:#ffe9a8;font-weight:800;font-size:17px}
+.face.back .tapnote{position:absolute;bottom:24px;color:var(--gold);font-weight:800;font-size:15px;animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.face.front{
+  transform:rotateY(180deg);
+  background:linear-gradient(160deg,#fff 0%,#fff3d8 100%);color:#2a1a48;
+  border:2px solid var(--gold);
+}
+.face.front .yourtopic{color:#8a6bd0;font-weight:800;font-size:16px;margin-bottom:6px}
+.face.front .word{font-size:clamp(40px,12vw,60px);font-weight:900;line-height:1.1;text-align:center}
+.face.front .gtag{margin-top:18px;background:#2d1b4e;color:#fff;font-weight:800;font-size:14px;padding:7px 16px;border-radius:20px}
+.face.front .secret{position:absolute;bottom:20px;color:#a98bd8;font-weight:800;font-size:13px;text-align:center;line-height:1.4}
+
+/* ---------- TALK ---------- */
+#talk{justify-content:center;text-align:center}
+.ring-wrap{position:relative;width:230px;height:230px;margin:6px auto 18px}
+svg.ring{transform:rotate(-90deg);width:100%;height:100%}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.1);stroke-width:14}
+.ring-fg{fill:none;stroke:var(--neon);stroke-width:14;stroke-linecap:round;transition:stroke .4s}
+.ring-time{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-time .t{font-size:54px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+.ring-time .lab{color:var(--dim);font-weight:700;font-size:14px;margin-top:4px}
+.talk-order{font-weight:800;font-size:17px;color:var(--gold);margin-bottom:8px;min-height:24px}
+.talk-guide{color:var(--dim);font-weight:700;font-size:15px;line-height:1.6;margin-bottom:6px}
+.infinity{font-size:60px;font-weight:900;color:var(--neon)}
+.talk-controls{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+
+/* ---------- VOTE ---------- */
+.vote-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:6px 0 16px}
+.pbtn{
+  border:2px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#fff;
+  font-family:inherit;font-weight:800;font-size:18px;padding:20px 8px;border-radius:18px;cursor:pointer;
+  transition:.12s;display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.pbtn .face2{font-size:30px}
+.pbtn.on{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#2a1a48;border-color:transparent;box-shadow:0 6px 18px rgba(255,200,0,.4);transform:translateY(-2px)}
+
+/* ---------- RESULT ---------- */
+#result{justify-content:center;text-align:center}
+.drum{font-size:clamp(20px,6vw,26px);font-weight:900;color:var(--gold);min-height:34px;letter-spacing:.05em}
+.reveal-name{font-size:clamp(40px,13vw,64px);font-weight:900;line-height:1;margin:8px 0;
+  background:linear-gradient(180deg,#fff,var(--neon2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.verdict{font-size:clamp(26px,8vw,38px);font-weight:900;margin:14px 0 6px}
+.verdict.citizen{color:var(--neon)}
+.verdict.hagure{color:var(--neon2)}
+.topicpair{display:flex;gap:12px;margin:18px 0;justify-content:center}
+.tp{flex:1;border-radius:18px;padding:16px 8px;font-weight:900}
+.tp small{display:block;font-size:13px;font-weight:800;margin-bottom:6px;opacity:.85}
+.tp.cit{background:rgba(0,229,255,.14);border:2px solid var(--neon)}
+.tp.cit .w{color:var(--neon);font-size:26px}
+.tp.hag{background:rgba(255,77,157,.14);border:2px solid var(--neon2)}
+.tp.hag .w{color:var(--neon2);font-size:26px}
+.result-detail{color:var(--dim);font-weight:700;font-size:15px;line-height:1.6;margin-bottom:14px}
+.comeback{background:rgba(255,210,74,.12);border:1px dashed var(--gold);border-radius:16px;padding:14px;margin-bottom:14px}
+.comeback p{font-weight:800;font-size:15px;margin-bottom:10px;color:var(--gold)}
+
+/* ---------- MODAL (rules / help) ---------- */
+.modal{position:fixed;inset:0;background:rgba(10,5,24,.78);backdrop-filter:blur(6px);z-index:50;display:none;align-items:center;justify-content:center;padding:20px;animation:fade .25s}
+.modal.active{display:flex}
+.sheet{background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid rgba(255,255,255,.12);border-radius:24px;max-width:460px;width:100%;max-height:88dvh;overflow-y:auto;padding:26px 22px;box-shadow:var(--shadow)}
+.sheet h2{font-size:24px;margin-bottom:4px;text-align:center}
+.tut-emoji{font-size:60px;text-align:center;margin:6px 0 10px}
+.tut-body{color:var(--dim);font-weight:700;font-size:16px;line-height:1.7;text-align:center}
+.tut-body b{color:var(--gold)}
+.tut-body .neon{color:var(--neon)}
+.tut-body .pink{color:var(--neon2)}
+.dots{display:flex;gap:8px;justify-content:center;margin:18px 0}
+.dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.25)}
+.dot.on{background:var(--gold);width:22px;border-radius:5px}
+.rule-list{color:var(--dim);font-weight:700;font-size:15px;line-height:1.8}
+.rule-list li{margin-bottom:10px;list-style:none;padding-left:28px;position:relative}
+.rule-list li::before{content:"▸";position:absolute;left:6px;color:var(--gold)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid rgba(255,255,255,.1)}
+.switch{width:54px;height:30px;border-radius:30px;background:rgba(255,255,255,.2);position:relative;cursor:pointer;transition:.2s;flex-shrink:0}
+.switch.on{background:var(--good)}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}
+.switch.on::after{left:27px}
+
+/* confetti & overlay */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:40}
+.countdown-ov{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(15,8,32,.92);flex-direction:column}
+.countdown-ov.active{display:flex}
+.cd-num{font-size:clamp(120px,40vw,200px);font-weight:900;color:var(--gold);line-height:1;
+  filter:drop-shadow(0 0 30px rgba(255,210,74,.6))}
+.cd-go{color:var(--neon)!important;filter:drop-shadow(0 0 40px rgba(0,229,255,.7))}
+@keyframes pop{0%{transform:scale(.3);opacity:0}40%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}
+.cd-anim{animation:pop .5s ease}
+.cd-label{color:var(--dim);font-weight:800;font-size:18px;margin-top:10px}
+
+.flash{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;font-weight:800;padding:12px 22px;border-radius:30px;z-index:70;font-size:15px;opacity:0;transition:.3s;pointer-events:none}
+.flash.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="fx"></canvas>
+
+  <!-- ===== HOME ===== -->
+  <section class="screen active" id="home">
+    <div class="home-art">🕵️</div>
+    <div class="logo">ハグレ</div>
+    <div class="tag">みんなで遊ぶ正体さがし</div>
+    <div class="home-btns">
+      <button class="btn" id="toSetup">▶ あそぶ</button>
+      <button class="btn ghost" id="homeRules">📖 あそびかた</button>
+    </div>
+    <div class="stat" id="playStat"></div>
+  </section>
+
+  <!-- ===== SETUP ===== -->
+  <section class="screen" id="setup">
+    <div class="topbar">
+      <button class="iconbtn" data-back="home">‹</button>
+      <span class="crumb">ゲーム設定</span>
+      <button class="iconbtn" id="setupHelp">?</button>
+    </div>
+
+    <div class="section card">
+      <div class="label"><span class="em">👥</span>あそぶ人数</div>
+      <div class="counter">
+        <button class="cbtn" id="pMinus">−</button>
+        <div class="cval"><span id="pNum">4</span><small>にん</small></div>
+        <button class="cbtn" id="pPlus">＋</button>
+      </div>
+    </div>
+
+    <div class="section card">
+      <div class="label"><span class="em">🎯</span>お題のジャンル</div>
+      <div class="chips" id="genreChips"></div>
+    </div>
+
+    <div class="section card">
+      <div class="label"><span class="em">⏱️</span>トーク時間</div>
+      <div class="chips" id="timeChips"></div>
+    </div>
+
+    <div class="warn" id="setupWarn"></div>
+    <div class="spacer"></div>
+    <button class="btn" id="startGame">ゲーム開始 ▶</button>
+  </section>
+
+  <!-- ===== DEAL (pass & play) ===== -->
+  <section class="screen" id="deal">
+    <div class="topbar">
+      <button class="iconbtn" data-back="setup">‹</button>
+      <span class="crumb">お題の配布</span>
+      <span style="width:42px"></span>
+    </div>
+    <div class="deal-progress" id="dealDots"></div>
+    <div class="passname" id="passName">プレイヤー1</div>
+    <div class="passsub" id="passSub">スマホを受け取ったらタップ</div>
+
+    <div class="cardwrap">
+      <div class="flip" id="flip">
+        <div class="face back">
+          <div class="qm">？</div>
+          <div class="hint">あなたのお題</div>
+          <div class="tapnote">タップして確認</div>
+        </div>
+        <div class="face front">
+          <div class="yourtopic">あなたのお題は</div>
+          <div class="word" id="cardWord">―</div>
+          <div class="gtag" id="cardGenre">ジャンル</div>
+          <div class="secret">他の人に見られないように！<br>同じお題か、ちょっと違うか…？</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <button class="btn neon" id="dealNext">確認した → 次の人へ</button>
+  </section>
+
+  <!-- ===== TALK ===== -->
+  <section class="screen" id="talk">
+    <div class="topbar">
+      <button class="iconbtn" id="talkBack">‹</button>
+      <span class="crumb">トークタイム</span>
+      <button class="iconbtn" id="talkHelp">?</button>
+    </div>
+
+    <div class="talk-order" id="talkOrder"></div>
+    <div class="ring-wrap" id="ringWrap">
+      <svg class="ring" viewBox="0 0 200 200">
+        <circle class="ring-bg" cx="100" cy="100" r="86"></circle>
+        <circle class="ring-fg" id="ringFg" cx="100" cy="100" r="86"></circle>
+      </svg>
+      <div class="ring-time">
+        <div class="t" id="ringT">3:00</div>
+        <div class="lab" id="ringLab">のこり</div>
+      </div>
+    </div>
+    <div class="talk-guide">
+      お題について<b>1人1言ずつ</b>話そう。<br>
+      ハグレ者はバレないように、市民は見破ろう！
+    </div>
+
+    <div class="talk-controls">
+      <button class="btn ghost" id="pauseBtn">⏸ 一時停止</button>
+      <button class="btn alt" id="toVote">🗳️ 話し合い終了 → 投票へ</button>
+    </div>
+  </section>
+
+  <!-- ===== VOTE ===== -->
+  <section class="screen" id="vote">
+    <div class="topbar">
+      <button class="iconbtn" id="voteBack">‹</button>
+      <span class="crumb">投票</span>
+      <span style="width:42px"></span>
+    </div>
+    <h2 style="text-align:center;font-size:23px;margin:6px 0 4px">誰がハグレ者？</h2>
+    <p style="text-align:center;color:var(--dim);font-weight:700;font-size:15px;margin-bottom:6px">
+      せーので指差し！🫵<br>多数決で選ばれた人をタップ</p>
+    <div class="vote-grid" id="voteGrid"></div>
+    <div class="spacer"></div>
+    <button class="btn" id="reveal" disabled>正体を暴く ▶</button>
+  </section>
+
+  <!-- ===== RESULT ===== -->
+  <section class="screen" id="result">
+    <div class="topbar">
+      <span style="width:42px"></span>
+      <span class="crumb">結果発表</span>
+      <span style="width:42px"></span>
+    </div>
+    <div class="spacer"></div>
+    <div class="drum" id="drum"></div>
+    <div id="revealBox" style="display:none">
+      <div style="color:var(--dim);font-weight:800;font-size:16px;margin-bottom:2px">ハグレ者は…</div>
+      <div class="reveal-name" id="hagureName">―</div>
+      <div class="verdict" id="verdict">―</div>
+      <div class="topicpair">
+        <div class="tp cit"><small>市民のお題</small><div class="w" id="citWord">―</div></div>
+        <div class="tp hag"><small>ハグレのお題</small><div class="w" id="hagWord">―</div></div>
+      </div>
+      <div class="result-detail" id="resultDetail"></div>
+      <div class="comeback" id="comebackBox" style="display:none">
+        <p>🔥 ハグレ逆転チャンス！<br>ハグレ者は「市民のお題」が何か分かった？</p>
+        <div class="row">
+          <button class="btn neon" id="cbYes" style="flex:1">当てた！逆転勝ち</button>
+          <button class="btn ghost" id="cbNo" style="flex:1">外した…</button>
+        </div>
+      </div>
+      <button class="btn" id="playAgain">🔁 もう一回あそぶ</button>
+      <button class="btn ghost" id="toHome" style="margin-top:10px">ホームへ</button>
+    </div>
+    <div class="spacer"></div>
+  </section>
+</div>
+
+<!-- ===== TUTORIAL MODAL ===== -->
+<div class="modal" id="tutModal">
+  <div class="sheet">
+    <div class="tut-emoji" id="tutEmoji">🕵️</div>
+    <h2 id="tutTitle">ハグレって？</h2>
+    <div class="tut-body" id="tutBody"></div>
+    <div class="dots" id="tutDots"></div>
+    <div class="row">
+      <button class="btn ghost" id="tutPrev" style="flex:1">戻る</button>
+      <button class="btn" id="tutNext" style="flex:2">次へ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HELP / SETTINGS MODAL ===== -->
+<div class="modal" id="helpModal">
+  <div class="sheet">
+    <h2>📖 あそびかた</h2>
+    <ul class="rule-list">
+      <li>スマホ1台を回して<b style="color:var(--gold)">3〜10人</b>であそびます</li>
+      <li>ほとんどの人は<span style="color:var(--neon)">同じお題</span>。でも1人だけ<span style="color:var(--neon2)">ちがうお題</span>＝<b style="color:var(--gold)">ハグレ者</b></li>
+      <li>自分のお題しか見えないので、最初は誰がハグレか分かりません</li>
+      <li>お題について1人1言ずつ話し、ズレてる人＝ハグレ者を探します</li>
+      <li>最後にみんなで投票。多数決でハグレ者を当てれば<span style="color:var(--neon)">市民の勝ち</span></li>
+      <li>バレずに逃げ切れば<span style="color:var(--neon2)">ハグレ者の勝ち</span></li>
+    </ul>
+    <div style="margin-top:14px">
+      <div class="toggle-row">
+        <span style="font-weight:800">🔊 サウンド</span>
+        <div class="switch" id="soundSwitch"></div>
+      </div>
+      <div class="toggle-row">
+        <span style="font-weight:800">🔥 ハグレ逆転ルール</span>
+        <div class="switch" id="comebackSwitch"></div>
+      </div>
+      <div style="color:var(--dim);font-size:13px;font-weight:700;padding-top:4px;line-height:1.5">
+        逆転ルール：ハグレ者はバレても、市民のお題を当てれば逆転勝ち！
+      </div>
+    </div>
+    <button class="btn" id="helpClose" style="margin-top:18px">閉じる</button>
+  </div>
+</div>
+
+<!-- countdown overlay -->
+<div class="countdown-ov" id="cdOverlay">
+  <div class="cd-num" id="cdNum">3</div>
+  <div class="cd-label">トークスタートまで…</div>
+</div>
+
+<div class="flash" id="flash"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   ハグレ - Party Identity Game
+   ============================================================ */
+
+/* ---------- お題ペア（50ペア以上 / ジャンル別） ---------- */
+const PAIRS = {
+  "食べ物":[
+    ["寿司","刺身"],["ラーメン","うどん"],["カレー","シチュー"],["コーヒー","紅茶"],
+    ["ハンバーガー","サンドイッチ"],["うどん","そば"],["チョコレート","クッキー"],
+    ["焼肉","ステーキ"],["餃子","春巻き"],["たこ焼き","お好み焼き"],
+    ["アイスクリーム","かき氷"],["みそ汁","スープ"],["おにぎり","サンドイッチ"],
+    ["ピザ","パスタ"],["プリン","ゼリー"],["せんべい","ポテトチップス"],
+    ["緑茶","麦茶"],["パン","おにぎり"],["天ぷら","フライ"],["梅干し","レモン"],
+  ],
+  "場所":[
+    ["海","プール"],["映画館","劇場"],["図書館","本屋"],["公園","遊園地"],
+    ["温泉","銭湯"],["山","森"],["カフェ","レストラン"],["学校","会社"],
+    ["コンビニ","スーパー"],["病院","薬局"],["神社","お寺"],["空港","駅"],
+    ["ホテル","旅館"],["美術館","博物館"],["居酒屋","バー"],
+  ],
+  "動物":[
+    ["猫","犬"],["ライオン","トラ"],["ウサギ","ハムスター"],["カラス","スズメ"],
+    ["イルカ","クジラ"],["カエル","ヘビ"],["馬","ロバ"],["パンダ","コアラ"],
+    ["金魚","メダカ"],["チーター","ヒョウ"],["カメ","カタツムリ"],["ペンギン","アザラシ"],
+  ],
+  "季節イベント":[
+    ["夏祭り","花火大会"],["入学式","卒業式"],["クリスマス","お正月"],
+    ["サンタクロース","トナカイ"],["お花見","紅葉狩り"],["七夕","お盆"],
+    ["バレンタイン","ホワイトデー"],["運動会","遠足"],["節分","ひな祭り"],
+    ["大晦日","元日"],
+  ],
+  "乗り物":[
+    ["電車","バス"],["飛行機","ヘリコプター"],["自転車","バイク"],["船","ヨット"],
+    ["タクシー","救急車"],["新幹線","特急"],["トラック","ダンプカー"],
+    ["ロケット","気球"],["スケボー","キックボード"],
+  ],
+  "人物":[
+    ["医者","看護師"],["先生","教授"],["警察官","警備員"],["歌手","アイドル"],
+    ["俳優","声優"],["サッカー選手","野球選手"],["大工","建築家"],
+    ["パイロット","客室乗務員"],["コック","パティシエ"],["社長","部長"],
+  ],
+  "日用品":[
+    ["傘","レインコート"],["時計","目覚まし時計"],["メガネ","サングラス"],
+    ["枕","クッション"],["歯ブラシ","くし"],["ハサミ","カッター"],
+    ["タオル","ハンカチ"],["財布","ポーチ"],["スマホ","タブレット"],
+    ["扇風機","エアコン"],["鉛筆","ボールペン"],["ノート","手帳"],
+  ],
+};
+const GENRES = Object.keys(PAIRS); // 7ジャンル
+const TIME_OPTS = [
+  {label:"1分",sec:60},{label:"3分",sec:180},{label:"5分",sec:300},{label:"無制限",sec:0}
+];
+
+/* ---------- 状態 ---------- */
+const store = {
+  get(k,d){try{const v=localStorage.getItem("hagure_"+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("hagure_"+k,JSON.stringify(v))}catch(e){}}
+};
+let cfg = {
+  players: store.get("players",4),
+  genre: store.get("genre","おまかせ"),
+  timeIdx: store.get("timeIdx",1),
+  sound: store.get("sound",true),
+  comeback: store.get("comeback",true),
+};
+let game = null; // 現在のゲーム
+
+/* ---------- DOM helper ---------- */
+const $ = s=>document.querySelector(s);
+const $$ = s=>[...document.querySelectorAll(s)];
+function show(id){
+  $$(".screen").forEach(s=>s.classList.remove("active"));
+  $("#"+id).classList.add("active");
+  window.scrollTo(0,0);
+}
+function flash(msg){
+  const f=$("#flash");f.textContent=msg;f.classList.add("show");
+  clearTimeout(f._t);f._t=setTimeout(()=>f.classList.remove("show"),1600);
+}
+
+/* ============================================================
+   サウンド（Web Audio API）
+   ============================================================ */
+let actx=null;
+function AC(){ if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}} return actx; }
+function tone(freq,dur,type="sine",vol=.25,when=0){
+  if(!cfg.sound) return; const ac=AC(); if(!ac) return;
+  const t=ac.currentTime+when;
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type=type;o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(vol,t+.01);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+dur+.02);
+}
+const SFX={
+  tap(){tone(520,.08,"triangle",.2)},
+  flip(){tone(380,.12,"sine",.22);tone(720,.16,"sine",.18,.06)},
+  next(){tone(620,.1,"triangle",.2);tone(880,.12,"triangle",.16,.07)},
+  tick(){tone(900,.05,"square",.12)},
+  warn(){tone(420,.12,"sawtooth",.18)},
+  timeup(){tone(300,.5,"sawtooth",.25);tone(200,.6,"sawtooth",.2,.05)},
+  count(n){tone(n>0?500:760,.18,"triangle",.28)},
+  vote(){tone(660,.07,"triangle",.2)},
+  drum(){ // ドラムロール
+    if(!cfg.sound)return;const ac=AC();if(!ac)return;
+    for(let i=0;i<26;i++){tone(140+Math.random()*40,.04,"square",.12,i*.06);}
+  },
+  tada(){ // ジャジャーン
+    if(!cfg.sound)return;
+    [523,659,784,1047].forEach((f,i)=>tone(f,.5,"triangle",.26,i*.05));
+    tone(1318,.6,"sine",.2,.2);
+  },
+  win(){[660,830,990,1320].forEach((f,i)=>tone(f,.3,"triangle",.24,i*.09))},
+};
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function refreshHome(){
+  const n=store.get("totalPlays",0);
+  $("#playStat").textContent = n>0 ? `これまで ${n} ゲーム遊ばれました 🎉` : "スマホ1台・3〜10人でワイワイ";
+}
+$("#toSetup").onclick=()=>{SFX.tap();initSetup();show("setup");};
+$("#homeRules").onclick=()=>{SFX.tap();openTutorial();};
+
+/* ============================================================
+   TUTORIAL (3 screens)
+   ============================================================ */
+const TUT=[
+  {e:"🕵️",t:"ハグレって？",b:`スマホ1台を回して<b>3〜10人</b>であそぶ正体さがしゲーム。<br><br>みんな似たお題をもらうけど、<span class="pink">1人だけちがうお題</span>を持つ<b>ハグレ者</b>が紛れています。`},
+  {e:"🗣️",t:"話して見破る",b:`お題について<b>1人1言ずつ</b>話します。<br><br>例えばお題が<span class="neon">「寿司」</span>なのに、1人だけ<span class="pink">「刺身」</span>を持っていたら…<br>少しだけ会話がズレるはず。<br>その<b>ハグレ者</b>を探し出そう！`},
+  {e:"🗳️",t:"投票で決着",b:`最後にみんなで投票。<br><br>多数決でハグレ者を当てれば<span class="neon">市民の勝ち</span>。<br>バレずに逃げ切れば<span class="pink">ハグレ者の勝ち</span>！<br><br>さあ、はじめよう 🎉`},
+];
+let tutI=0;
+function openTutorial(){tutI=0;renderTut();$("#tutModal").classList.add("active");}
+function renderTut(){
+  const t=TUT[tutI];
+  $("#tutEmoji").textContent=t.e;$("#tutTitle").textContent=t.t;$("#tutBody").innerHTML=t.b;
+  $("#tutDots").innerHTML=TUT.map((_,i)=>`<span class="dot ${i===tutI?'on':''}"></span>`).join("");
+  $("#tutPrev").style.visibility = tutI===0?"hidden":"visible";
+  $("#tutNext").textContent = tutI===TUT.length-1?"はじめる ▶":"次へ";
+}
+$("#tutNext").onclick=()=>{SFX.tap();if(tutI<TUT.length-1){tutI++;renderTut();}else{$("#tutModal").classList.remove("active");}};
+$("#tutPrev").onclick=()=>{SFX.tap();if(tutI>0){tutI--;renderTut();}};
+
+/* ============================================================
+   SETUP
+   ============================================================ */
+function initSetup(){
+  $("#pNum").textContent=cfg.players;
+  updatePlayerBtns();
+  // genre chips
+  const genreList=["おまかせ",...GENRES];
+  $("#genreChips").innerHTML=genreList.map(g=>
+    `<button class="chip ${g===cfg.genre?'on':''}" data-genre="${g}">${g}</button>`).join("");
+  $$("#genreChips .chip").forEach(c=>c.onclick=()=>{
+    SFX.tap();cfg.genre=c.dataset.genre;store.set("genre",cfg.genre);
+    $$("#genreChips .chip").forEach(x=>x.classList.remove("on"));c.classList.add("on");
+  });
+  // time chips
+  $("#timeChips").innerHTML=TIME_OPTS.map((t,i)=>
+    `<button class="chip ${i===cfg.timeIdx?'on':''}" data-ti="${i}">${t.label}</button>`).join("");
+  $$("#timeChips .chip").forEach(c=>c.onclick=()=>{
+    SFX.tap();cfg.timeIdx=+c.dataset.ti;store.set("timeIdx",cfg.timeIdx);
+    $$("#timeChips .chip").forEach(x=>x.classList.remove("on"));c.classList.add("on");
+  });
+  $("#setupWarn").textContent="";
+}
+function updatePlayerBtns(){
+  $("#pMinus").disabled = cfg.players<=3;
+  $("#pPlus").disabled = cfg.players>=10;
+}
+$("#pMinus").onclick=()=>{if(cfg.players>3){cfg.players--;SFX.tap();$("#pNum").textContent=cfg.players;store.set("players",cfg.players);updatePlayerBtns();}};
+$("#pPlus").onclick=()=>{if(cfg.players<10){cfg.players++;SFX.tap();$("#pNum").textContent=cfg.players;store.set("players",cfg.players);updatePlayerBtns();}};
+
+$("#startGame").onclick=()=>{
+  if(cfg.players<3){$("#setupWarn").textContent="⚠ 3人以上で遊んでください";SFX.warn();return;}
+  SFX.next();
+  startGame();
+};
+
+/* ============================================================
+   ゲーム生成
+   ============================================================ */
+function pickPair(){
+  let pool;
+  if(cfg.genre==="おまかせ"){ pool=GENRES.flatMap(g=>PAIRS[g].map(p=>({g,p}))); }
+  else { pool=PAIRS[cfg.genre].map(p=>({g:cfg.genre,p})); }
+  const choice=pool[Math.floor(Math.random()*pool.length)];
+  // どちらを市民/ハグレにするかもランダム
+  const pair=choice.p.slice();
+  if(Math.random()<.5) pair.reverse();
+  return {genre:choice.g, citizen:pair[0], hagure:pair[1]};
+}
+function startGame(){
+  const n=cfg.players;
+  const sel=pickPair();
+  const hagureIdx=Math.floor(Math.random()*n);
+  // 発言順をシャッフル
+  const order=[...Array(n).keys()];
+  for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+  game={
+    n, genre:sel.genre, citizen:sel.citizen, hagure:sel.hagure, hagureIdx,
+    order, dealIdx:0, sec:TIME_OPTS[cfg.timeIdx].sec, votes:null,
+  };
+  initDeal();
+  show("deal");
+}
+
+/* ============================================================
+   DEAL (pass & play)
+   ============================================================ */
+function initDeal(){
+  game.dealIdx=0;
+  renderDeal();
+}
+function renderDeal(){
+  const i=game.dealIdx, n=game.n;
+  // dots
+  $("#dealDots").innerHTML=[...Array(n)].map((_,k)=>{
+    let cls = k<i?"done":(k===i?"cur":"");
+    return `<span class="pdot ${cls}"></span>`;
+  }).join("");
+  $("#passName").textContent=`プレイヤー${i+1}`;
+  $("#passSub").innerHTML=`スマホを受け取ったら<br>カードをタップして自分のお題を確認`;
+  // reset flip
+  const flip=$("#flip");flip.classList.remove("show");
+  $("#dealNext").style.display="none";
+  $("#dealNext").disabled=true;
+  // set hidden word in advance (revealed on flip)
+  const isHag = (i===game.hagureIdx);
+  $("#cardWord").textContent = isHag ? game.hagure : game.citizen;
+  $("#cardGenre").textContent = game.genre;
+}
+$("#flip").onclick=function(){
+  if(this.classList.contains("show")) return;
+  this.classList.add("show");SFX.flip();
+  setTimeout(()=>{
+    $("#dealNext").style.display="block";
+    $("#dealNext").disabled=false;
+  },350);
+};
+$("#dealNext").onclick=()=>{
+  SFX.next();
+  game.dealIdx++;
+  if(game.dealIdx>=game.n){
+    // 全員配布完了 → トーク
+    startTalkSequence();
+  }else{
+    renderDeal();
+  }
+};
+
+/* ============================================================
+   TALK
+   ============================================================ */
+let timer=null, timeLeft=0, paused=false;
+const RING_LEN=2*Math.PI*86;
+function startTalkSequence(){
+  // 発言順テキスト
+  const ord=game.order.map(k=>`P${k+1}`).join(" → ");
+  $("#talkOrder").innerHTML=`📣 発言順：${ord}`;
+  $("#ringFg").style.strokeDasharray=RING_LEN;
+  $("#ringFg").style.strokeDashoffset=0;
+  paused=false;
+  // countdown overlay then talk
+  show("talk");
+  runCountdown(()=>{ startTimer(); });
+}
+function runCountdown(done){
+  const ov=$("#cdOverlay"), num=$("#cdNum");
+  ov.classList.add("active");
+  let seq=["3","2","1","START!"], i=0;
+  function step(){
+    num.textContent=seq[i];
+    num.classList.remove("cd-anim");void num.offsetWidth;num.classList.add("cd-anim");
+    num.classList.toggle("cd-go", seq[i]==="START!");
+    SFX.count(i<3?1:0);
+    i++;
+    if(i<seq.length){ setTimeout(step,750); }
+    else { setTimeout(()=>{ov.classList.remove("active");num.classList.remove("cd-go");done();},700); }
+  }
+  step();
+}
+function startTimer(){
+  if(game.sec===0){ // 無制限
+    $("#ringT").innerHTML='<span class="infinity">∞</span>';
+    $("#ringLab").textContent="無制限";
+    $("#ringFg").style.strokeDashoffset=0;
+    $("#ringFg").style.stroke="var(--neon)";
+    $("#pauseBtn").style.display="none";
+    return;
+  }
+  $("#pauseBtn").style.display="block";
+  timeLeft=game.sec;
+  updateRing();
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    if(paused) return;
+    timeLeft--;
+    updateRing();
+    if(timeLeft<=5 && timeLeft>0) SFX.tick();
+    if(timeLeft<=0){
+      clearInterval(timer);
+      SFX.timeup();
+      $("#ringLab").textContent="終了！";
+      flash("⏰ 時間です！投票へ進もう");
+    }
+  },1000);
+}
+function updateRing(){
+  const m=Math.floor(timeLeft/60), s=timeLeft%60;
+  $("#ringT").textContent=`${m}:${String(s).padStart(2,"0")}`;
+  const frac=timeLeft/game.sec;
+  $("#ringFg").style.strokeDashoffset=RING_LEN*(1-frac);
+  let col = frac>.5?"var(--neon)":frac>.2?"var(--gold)":"var(--bad)";
+  $("#ringFg").style.stroke=col;
+  $("#ringT").style.color = frac<=.2?"var(--bad)":"#fff";
+}
+$("#pauseBtn").onclick=function(){
+  paused=!paused;SFX.tap();
+  this.textContent=paused?"▶ 再開":"⏸ 一時停止";
+  $("#ringLab").textContent=paused?"一時停止中":"のこり";
+};
+$("#toVote").onclick=()=>{clearInterval(timer);SFX.next();initVote();show("vote");};
+$("#talkBack").onclick=()=>{clearInterval(timer);initDeal();show("deal");};
+
+/* ============================================================
+   VOTE
+   ============================================================ */
+function initVote(){
+  game.votes=null;
+  $("#voteGrid").innerHTML=[...Array(game.n)].map((_,k)=>
+    `<button class="pbtn" data-p="${k}"><span class="face2">🧑</span>プレイヤー${k+1}</button>`).join("");
+  $$("#voteGrid .pbtn").forEach(b=>b.onclick=()=>{
+    SFX.vote();
+    $$("#voteGrid .pbtn").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    game.votes=+b.dataset.p;
+    $("#reveal").disabled=false;
+  });
+  $("#reveal").disabled=true;
+}
+$("#voteBack").onclick=()=>{startTalkSequence();};
+$("#reveal").onclick=()=>{SFX.tap();runReveal();};
+
+/* ============================================================
+   RESULT
+   ============================================================ */
+function runReveal(){
+  show("result");
+  $("#revealBox").style.display="none";
+  $("#comebackBox").style.display="none";
+  const drum=$("#drum");
+  drum.textContent="🥁 ドラムロール…";
+  SFX.drum();
+  let dots=0;
+  const di=setInterval(()=>{dots=(dots+1)%4;drum.textContent="🥁 ドラムロール"+".".repeat(dots);},300);
+  setTimeout(()=>{
+    clearInterval(di);
+    drum.textContent="";
+    SFX.tada();
+    revealResult();
+  },2200);
+}
+function revealResult(){
+  const correct = (game.votes===game.hagureIdx);
+  $("#hagureName").textContent=`プレイヤー${game.hagureIdx+1}`;
+  $("#citWord").textContent=game.citizen;
+  $("#hagWord").textContent=game.hagure;
+  const v=$("#verdict");
+  if(correct){
+    v.textContent="🎉 市民の勝利！";
+    v.className="verdict citizen";
+    $("#resultDetail").innerHTML=`投票で見事ハグレ者を当てました！<br>みんなで「プレイヤー${game.votes+1}」を指差しました。`;
+  }else{
+    v.textContent="😈 ハグレ者の勝利！";
+    v.className="verdict hagure";
+    $("#resultDetail").innerHTML=`ハグレ者は逃げ切りました！<br>みんなは「プレイヤー${game.votes+1}」を疑いましたが、ハズレ…`;
+  }
+  $("#revealBox").style.display="block";
+  // 紙吹雪（市民勝利でも盛り上げる）
+  confetti(correct?"cit":"hag");
+  SFX.win();
+  // 逆転ルール：ハグレがバレた(correct)時だけ逆転チャンス
+  if(cfg.comeback && correct){
+    $("#comebackBox").style.display="block";
+  }
+  // 通算プレイ回数
+  store.set("totalPlays", store.get("totalPlays",0)+1);
+}
+$("#cbYes").onclick=()=>{
+  SFX.win();
+  $("#comebackBox").style.display="none";
+  const v=$("#verdict");
+  v.textContent="🔥 ハグレ大逆転！";
+  v.className="verdict hagure";
+  $("#resultDetail").innerHTML=`バレたけど…市民のお題「<b style="color:var(--neon)">${game.citizen}</b>」を当てて<b>大逆転勝利</b>！`;
+  confetti("hag");
+  flash("🔥 逆転勝ち！");
+};
+$("#cbNo").onclick=()=>{
+  SFX.tap();
+  $("#comebackBox").style.display="none";
+  $("#resultDetail").innerHTML+=`<br><br>逆転ならず。<span style="color:var(--neon)">市民の完全勝利</span>！`;
+};
+$("#playAgain").onclick=()=>{SFX.next();startGame();};
+$("#toHome").onclick=()=>{SFX.tap();refreshHome();show("home");};
+
+/* ============================================================
+   CONFETTI
+   ============================================================ */
+const cv=$("#fx"), ctx=cv.getContext("2d");
+let confParts=[], confRAF=null;
+function resizeCv(){cv.width=innerWidth;cv.height=innerHeight;}
+addEventListener("resize",resizeCv);resizeCv();
+function confetti(kind){
+  const colors = kind==="cit"
+    ? ["#00e5ff","#7ef6ff","#ffd24a","#ffffff","#36e29a"]
+    : ["#ff4d9d","#ffd24a","#ffffff","#c084fc","#ff8fbf"];
+  for(let i=0;i<120;i++){
+    confParts.push({
+      x:innerWidth/2+(Math.random()-.5)*120,
+      y:innerHeight*0.35,
+      vx:(Math.random()-.5)*9,
+      vy:-Math.random()*13-4,
+      g:0.32+Math.random()*0.12,
+      s:6+Math.random()*7,
+      rot:Math.random()*6.28,
+      vr:(Math.random()-.5)*.4,
+      c:colors[Math.floor(Math.random()*colors.length)],
+      life:0,
+    });
+  }
+  if(!confRAF) loopConf();
+}
+function loopConf(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  confParts.forEach(p=>{
+    p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.life++;
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);
+    ctx.fillStyle=p.c;ctx.globalAlpha=Math.max(0,1-p.life/150);
+    ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);
+    ctx.restore();
+  });
+  confParts=confParts.filter(p=>p.y<cv.height+40 && p.life<160);
+  if(confParts.length){confRAF=requestAnimationFrame(loopConf);}
+  else{ctx.clearRect(0,0,cv.width,cv.height);confRAF=null;}
+}
+
+/* ============================================================
+   HELP / SETTINGS MODAL
+   ============================================================ */
+function openHelp(){
+  $("#soundSwitch").classList.toggle("on",cfg.sound);
+  $("#comebackSwitch").classList.toggle("on",cfg.comeback);
+  $("#helpModal").classList.add("active");
+}
+$("#setupHelp").onclick=()=>{SFX.tap();openHelp();};
+$("#talkHelp").onclick=()=>{SFX.tap();openHelp();};
+$("#helpClose").onclick=()=>{SFX.tap();$("#helpModal").classList.remove("active");};
+$("#soundSwitch").onclick=function(){
+  cfg.sound=!cfg.sound;store.set("sound",cfg.sound);
+  this.classList.toggle("on",cfg.sound);
+  if(cfg.sound)SFX.tap();
+};
+$("#comebackSwitch").onclick=function(){
+  cfg.comeback=!cfg.comeback;store.set("comeback",cfg.comeback);
+  this.classList.toggle("on",cfg.comeback);SFX.tap();
+};
+
+/* back buttons */
+$$("[data-back]").forEach(b=>b.onclick=()=>{SFX.tap();show(b.dataset.back);if(b.dataset.back==="home")refreshHome();});
+
+/* close modal on backdrop */
+$$(".modal").forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove("active");});
+
+/* ---------- init ---------- */
+refreshHome();
+// 初回ならチュートリアル
+if(!store.get("seen",false)){
+  setTimeout(()=>{openTutorial();store.set("seen",true);},500);
+}
+</script>
+</body>
+</html>
