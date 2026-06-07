@@ -334,9 +334,7 @@ function onTap(e){
 }
 cv.addEventListener('mousedown', onTap);
 cv.addEventListener('touchstart', onTap, {passive:false});
-// also allow tap on title/result background overlay area
-titleScreen.addEventListener('mousedown', onTap);
-titleScreen.addEventListener('touchstart', onTap, {passive:false});
+// Note: overlays use pointer-events:none, so taps fall through to the canvas above.
 
 window.addEventListener('keydown', e=>{
   if(e.code==='Space'||e.code==='ArrowUp'){
