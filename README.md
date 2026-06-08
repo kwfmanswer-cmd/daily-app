@@ -18,6 +18,7 @@
 | 010 | ゴウガイ - あなただけの号外新聞 | [day010-gougai](./day010-gougai/) |
 | 011 | ハグレ - みんなで遊ぶ正体さがし | [day011-hagure](./day011-hagure/) |
 | 012 | ハンテン - 重力をひっくり返せ | [day012-hanten](./day012-hanten/) |
+| 013 | シキ - 色を見抜け | [day013-shiki](./day013-shiki/) |
 
 ## ルール
 
