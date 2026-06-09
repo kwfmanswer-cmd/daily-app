@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#fdf6ec">
+<title>ポロと、はじめての世界</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fdf6ec;
+  --bg2:#fbeede;
+  --cream:#fff8f0;
+  --milk:#f3e4d0;
+  --orange:#f6b878;
+  --orange-deep:#e89b54;
+  --pink:#f7c9c0;
+  --text:#6b5644;
+  --text-soft:#9b8674;
+  --bubble-poro:#fff7ee;
+  --bubble-me:#ffe6c9;
+  --shadow:rgba(180,140,100,.22);
+  --poro-body:#f4ddc0;
+  --poro-shade:#e8c8a4;
+  --poro-cheek:#f6b7a6;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  font-family:'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+  background:radial-gradient(circle at 50% 18%,var(--bg2),var(--bg));
+  color:var(--text);
+  overflow:hidden;
+  user-select:none;
+  -webkit-user-select:none;
+  letter-spacing:.02em;
+}
+#app{
+  position:relative;
+  width:100%;
+  max-width:480px;
+  height:100%;
+  max-height:920px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  background:linear-gradient(180deg,#fff9f1 0%,#fdf3e6 60%,#fbeede 100%);
+  box-shadow:0 0 50px rgba(200,160,120,.25);
+  overflow:hidden;
+}
+@media(min-width:520px){ #app{border-radius:28px;margin-top:14px;height:calc(100% - 28px);} }
+
+/* floating ambient dots */
+.amb{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.amb span{
+  position:absolute;bottom:-20px;border-radius:50%;
+  background:rgba(246,184,120,.35);
+  animation:floatUp linear infinite;
+}
+@keyframes floatUp{
+  0%{transform:translateY(0) scale(1);opacity:0;}
+  10%{opacity:.7;}
+  90%{opacity:.5;}
+  100%{transform:translateY(-110vh) scale(1.3);opacity:0;}
+}
+
+/* ===== Header ===== */
+header{
+  position:relative;z-index:5;
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px 10px;
+}
+.h-title{font-weight:700;font-size:15px;color:var(--text);flex:0 0 auto;}
+.bond-wrap{flex:1;}
+.bond-row{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
+.stage-name{font-size:12px;font-weight:700;color:var(--orange-deep);}
+.streak{font-size:11px;color:var(--text-soft);}
+.bond-bar{
+  height:9px;border-radius:9px;background:#f0ddc6;overflow:hidden;
+  box-shadow:inset 0 1px 2px rgba(180,140,100,.2);
+}
+.bond-fill{
+  height:100%;border-radius:9px;
+  background:linear-gradient(90deg,var(--orange),var(--pink));
+  width:0%;transition:width .9s cubic-bezier(.3,.9,.3,1);
+}
+.h-btns{display:flex;gap:6px;}
+.icon-btn{
+  width:34px;height:34px;border:none;border-radius:50%;
+  background:#fff3e3;color:var(--orange-deep);cursor:pointer;
+  font-size:15px;display:grid;place-items:center;
+  box-shadow:0 2px 6px var(--shadow);transition:transform .15s;
+}
+.icon-btn:active{transform:scale(.9);}
+
+/* ===== Poro stage ===== */
+#stage{
+  position:relative;z-index:2;
+  flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  padding:8px 0 4px;
+  min-height:188px;
+  transition:min-height .4s;
+}
+#stage.opening{flex:1;}
+.poro-scene{position:relative;width:200px;height:180px;}
+.poro{
+  position:absolute;left:50%;bottom:8px;transform:translateX(-50%);
+  width:140px;height:140px;
+  animation:breathe 3.6s ease-in-out infinite;
+  transform-origin:50% 90%;
+  cursor:pointer;
+}
+@keyframes breathe{
+  0%,100%{transform:translateX(-50%) translateY(0) scale(1);}
+  50%{transform:translateX(-50%) translateY(-7px) scale(1.012);}
+}
+.poro.happy{animation:hop .6s ease;}
+@keyframes hop{
+  0%{transform:translateX(-50%) translateY(0) scale(1);}
+  30%{transform:translateX(-50%) translateY(-26px) scale(1.05,.96);}
+  60%{transform:translateX(-50%) translateY(0) scale(.97,1.04);}
+  100%{transform:translateX(-50%) translateY(0) scale(1);}
+}
+.poro.tilt{animation:tilt 2s ease-in-out infinite;}
+@keyframes tilt{
+  0%,100%{transform:translateX(-50%) rotate(0);}
+  50%{transform:translateX(-50%) rotate(-9deg);}
+}
+.poro.sad{animation:sad 3s ease-in-out infinite;}
+@keyframes sad{
+  0%,100%{transform:translateX(-50%) translateY(2px) scale(1,.99);}
+  50%{transform:translateX(-50%) translateY(5px) scale(1,.97);}
+}
+.poro svg{width:100%;height:100%;overflow:visible;display:block;
+  filter:drop-shadow(0 10px 14px rgba(200,150,100,.3));}
+
+/* shadow under poro */
+.poro-shadow{
+  position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
+  width:96px;height:18px;border-radius:50%;
+  background:rgba(180,130,90,.18);filter:blur(3px);
+  animation:shadowPulse 3.6s ease-in-out infinite;
+}
+@keyframes shadowPulse{0%,100%{width:96px;opacity:.18;}50%{width:84px;opacity:.13;}}
+
+/* eyes blink */
+.eye-lid{transform:scaleY(0);transform-origin:center;transform-box:fill-box;}
+.poro.blink .eye-lid{animation:blink .26s ease;}
+@keyframes blink{0%,100%{transform:scaleY(0);}45%,55%{transform:scaleY(1);}}
+.poro.sleepy .eye-lid{transform:scaleY(.6);}
+.poro.sleepy{animation:doze 4s ease-in-out infinite;}
+@keyframes doze{
+  0%,100%{transform:translateX(-50%) rotate(0) translateY(0);}
+  50%{transform:translateX(-50%) rotate(8deg) translateY(3px);}
+}
+
+/* mouth talking */
+.mouth{transition:all .12s;}
+.poro.talking .mouth{animation:talk .26s ease-in-out infinite;}
+@keyframes talk{0%,100%{transform:scaleY(.5);}50%{transform:scaleY(1.25);}}
+
+.sparkle{opacity:0;}
+.poro.happy .sparkle{animation:spark 1s ease;}
+@keyframes spark{0%{opacity:0;transform:scale(.3);}40%{opacity:1;transform:scale(1.1);}100%{opacity:0;transform:scale(1.3);}}
+
+.zzz{position:absolute;top:18px;right:30px;font-size:20px;color:var(--text-soft);opacity:0;}
+.poro-scene.sleeping .zzz{animation:zzz 3s ease-in-out infinite;}
+@keyframes zzz{0%{opacity:0;transform:translate(0,0) scale(.6);}30%{opacity:.8;}100%{opacity:0;transform:translate(14px,-22px) scale(1.1);}}
+
+/* poro status line under stage */
+.poro-status{
+  position:relative;z-index:2;text-align:center;
+  font-size:11.5px;color:var(--text-soft);margin:-2px 0 2px;min-height:15px;
+  font-weight:500;
+}
+
+/* ===== Chat log ===== */
+#log{
+  position:relative;z-index:2;
+  flex:1;overflow-y:auto;padding:6px 14px 8px;
+  display:flex;flex-direction:column;gap:10px;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+#log::-webkit-scrollbar{width:0;}
+.msg{max-width:80%;padding:11px 14px;font-size:14.5px;line-height:1.62;
+  border-radius:18px;position:relative;animation:pop .35s cubic-bezier(.3,1.3,.5,1);
+  word-break:break-word;white-space:pre-wrap;}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.96);}to{opacity:1;transform:none;}}
+.msg.poro{align-self:flex-start;background:var(--bubble-poro);color:var(--text);
+  border-bottom-left-radius:6px;box-shadow:0 3px 9px var(--shadow);}
+.msg.me{align-self:flex-end;background:var(--bubble-me);color:#7a5a36;
+  border-bottom-right-radius:6px;box-shadow:0 3px 9px var(--shadow);}
+.msg.sys{align-self:center;background:transparent;color:var(--text-soft);
+  font-size:12px;text-align:center;box-shadow:none;max-width:90%;padding:4px 8px;}
+.msg.sys b{color:var(--orange-deep);}
+.typing-dots{display:inline-flex;gap:4px;padding:3px 2px;}
+.typing-dots i{width:7px;height:7px;border-radius:50%;background:var(--orange);
+  display:inline-block;animation:bounce 1.2s infinite;}
+.typing-dots i:nth-child(2){animation-delay:.18s;}
+.typing-dots i:nth-child(3){animation-delay:.36s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-6px);opacity:1;}}
+.cursor{display:inline-block;width:2px;background:var(--orange);margin-left:1px;
+  animation:cblink .7s step-end infinite;}
+@keyframes cblink{50%{opacity:0;}}
+
+/* ===== Input area ===== */
+#dock{position:relative;z-index:5;padding:8px 12px 14px;
+  background:linear-gradient(180deg,transparent,rgba(251,238,222,.9)30%);}
+.choices{display:flex;flex-direction:column;gap:7px;margin-bottom:8px;}
+.choice{
+  border:none;border-radius:16px;padding:12px 16px;font:inherit;font-size:14px;
+  background:var(--cream);color:var(--text);cursor:pointer;text-align:left;
+  box-shadow:0 3px 8px var(--shadow);transition:transform .12s,background .2s;
+  font-weight:500;
+}
+.choice:hover{background:#fff;}
+.choice:active{transform:scale(.97);}
+.input-row{display:flex;gap:8px;align-items:flex-end;}
+#field{
+  flex:1;border:none;border-radius:20px;padding:12px 16px;font:inherit;font-size:14.5px;
+  background:var(--cream);color:var(--text);box-shadow:inset 0 2px 5px rgba(180,140,100,.16);
+  resize:none;outline:none;max-height:90px;line-height:1.4;
+}
+#field::placeholder{color:#c4b09c;}
+#send{
+  flex:0 0 auto;width:46px;height:46px;border:none;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),var(--orange-deep));
+  color:#fff;font-size:18px;cursor:pointer;box-shadow:0 4px 10px rgba(232,155,84,.5);
+  display:grid;place-items:center;transition:transform .15s;
+}
+#send:active{transform:scale(.88);}
+#send:disabled{opacity:.4;}
+
+/* ===== Opening overlay ===== */
+#opening{
+  position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;
+  background:radial-gradient(circle at 50% 45%,#3a3550,#1f1c2e 80%);
+  color:#e9e2f0;text-align:center;padding:30px;transition:opacity 1.2s,background 2s;
+}
+#opening .op-poro{width:170px;height:170px;cursor:pointer;
+  filter:drop-shadow(0 0 30px rgba(160,140,200,.4));}
+#opening .op-poro svg{width:100%;height:100%;}
+.op-hint{font-size:14px;opacity:.85;animation:pulseHint 2.2s ease-in-out infinite;letter-spacing:.05em;}
+@keyframes pulseHint{0%,100%{opacity:.4;}50%{opacity:.95;}}
+.op-title{font-size:13px;letter-spacing:.3em;opacity:.5;}
+#opening.dawn{background:radial-gradient(circle at 50% 45%,#ffd9a8,#fbeede 80%);color:var(--text);}
+
+/* heart particles */
+.heart{position:absolute;z-index:20;font-size:20px;pointer-events:none;
+  animation:heartFloat 1.6s ease-out forwards;}
+@keyframes heartFloat{
+  0%{opacity:0;transform:translateY(0) scale(.4);}
+  20%{opacity:1;}
+  100%{opacity:0;transform:translateY(-90px) scale(1.2);}
+}
+
+/* stage-up flash */
+#flash{position:absolute;inset:0;z-index:25;background:radial-gradient(circle,#fff,transparent 70%);
+  opacity:0;pointer-events:none;}
+#flash.go{animation:flashAnim 2.4s ease;}
+@keyframes flashAnim{0%{opacity:0;}20%{opacity:.95;}100%{opacity:0;}}
+
+/* ending overlay */
+#ending{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px;text-align:center;padding:34px;
+  background:radial-gradient(circle at 50% 40%,#fff4e2,#fde0c4);color:var(--text);}
+#ending.show{display:flex;animation:fadeIn 2s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+#ending h2{font-size:21px;color:var(--orange-deep);margin:0;letter-spacing:.08em;}
+#ending p{font-size:14.5px;line-height:1.9;margin:0;max-width:330px;}
+#ending button{margin-top:10px;border:none;border-radius:20px;padding:12px 28px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-deep));color:#fff;
+  font:inherit;font-weight:700;cursor:pointer;box-shadow:0 5px 14px rgba(232,155,84,.5);}
+
+/* settings modal */
+#modal{position:absolute;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
+  background:rgba(60,45,30,.4);backdrop-filter:blur(3px);}
+#modal.show{display:flex;}
+.modal-card{background:var(--cream);border-radius:24px;padding:24px;width:84%;max-width:320px;
+  box-shadow:0 12px 30px rgba(120,80,40,.35);text-align:center;}
+.modal-card h3{margin:0 0 16px;color:var(--orange-deep);font-size:17px;}
+.set-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;
+  border-bottom:1px solid #f0e0cc;font-size:14px;}
+.set-row:last-of-type{border-bottom:none;}
+.toggle{width:46px;height:26px;border-radius:13px;background:#e3d2bd;position:relative;
+  cursor:pointer;transition:background .2s;border:none;flex:0 0 auto;}
+.toggle.on{background:var(--orange);}
+.toggle span{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle.on span{left:23px;}
+.modal-card .danger{margin-top:14px;color:#c98b7a;font-size:12.5px;cursor:pointer;text-decoration:underline;}
+.modal-card .close{margin-top:16px;border:none;background:var(--orange);color:#fff;
+  border-radius:16px;padding:10px 24px;font:inherit;font-weight:700;cursor:pointer;}
+.memo{font-size:11px;color:var(--text-soft);text-align:left;margin-top:8px;line-height:1.6;
+  background:#fff8ef;border-radius:12px;padding:10px;}
+.memo b{color:var(--orange-deep);}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="amb" id="amb"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="h-title">ポロ</div>
+    <div class="bond-wrap">
+      <div class="bond-row">
+        <span class="stage-name" id="stageName">めざめ</span>
+        <span class="streak" id="streak"></span>
+      </div>
+      <div class="bond-bar"><div class="bond-fill" id="bondFill"></div></div>
+    </div>
+    <div class="h-btns">
+      <button class="icon-btn" id="soundBtn" title="おと">🔊</button>
+      <button class="icon-btn" id="menuBtn" title="メニュー">☰</button>
+    </div>
+  </header>
+
+  <!-- Poro stage -->
+  <div id="stage">
+    <div class="poro-scene" id="poroScene">
+      <div class="poro-shadow"></div>
+      <div class="zzz">z</div>
+      <div class="poro" id="poro"></div>
+    </div>
+  </div>
+  <div class="poro-status" id="poroStatus"></div>
+
+  <!-- Chat -->
+  <div id="log"></div>
+
+  <!-- Dock -->
+  <div id="dock">
+    <div class="choices" id="choices"></div>
+    <div class="input-row" id="inputRow" style="display:none">
+      <textarea id="field" rows="1" placeholder="ポロにはなしかける…" maxlength="60"></textarea>
+      <button id="send">➤</button>
+    </div>
+  </div>
+
+  <!-- Opening -->
+  <div id="opening">
+    <div class="op-title">ポロと、はじめての世界</div>
+    <div class="op-poro" id="opPoro"></div>
+    <div class="op-hint" id="opHint">そっと、タップしてみて…</div>
+  </div>
+
+  <div id="flash"></div>
+
+  <!-- Ending -->
+  <div id="ending">
+    <div class="op-poro" id="endPoro" style="width:150px;height:150px;"></div>
+    <h2 id="endTitle">きずな</h2>
+    <p id="endText"></p>
+    <button id="endClose">これからも、いっしょに</button>
+  </div>
+
+  <!-- Settings -->
+  <div id="modal">
+    <div class="modal-card">
+      <h3>めにゅー</h3>
+      <div class="set-row"><span>ポロのこえ・おと</span><button class="toggle" id="tgSound"><span></span></button></div>
+      <div class="set-row"><span>タイピングをはやく</span><button class="toggle" id="tgFast"><span></span></button></div>
+      <div class="memo" id="memoBox"></div>
+      <div class="danger" id="resetBtn">さいしょから（きおくをけす）</div>
+      <button class="close" id="modalClose">とじる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================
+   ポロと、はじめての世界  -  Day 014
+   シナリオ分岐＋キーワードマッチ型 育成チャット
+   ========================================================= */
+
+const LS_KEY = 'poro_save_v1';
+
+/* ---------- Poro SVG (body color & eye state vary) ---------- */
+function poroSVG(opt={}){
+  const body = opt.body || '#f4ddc0';
+  const shade = opt.shade || '#e8c8a4';
+  const cheek = opt.cheek || '#f6b7a6';
+  const eyeShine = opt.shine!==false;
+  return `
+  <svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+    <!-- little arms -->
+    <ellipse class="arm" cx="22" cy="92" rx="13" ry="17" fill="${shade}"/>
+    <ellipse class="arm" cx="118" cy="92" rx="13" ry="17" fill="${shade}"/>
+    <!-- body -->
+    <circle cx="70" cy="78" r="56" fill="${body}"/>
+    <ellipse cx="70" cy="120" rx="40" ry="12" fill="${shade}" opacity=".5"/>
+    <!-- a little antenna -->
+    <line x1="70" y1="24" x2="70" y2="10" stroke="${shade}" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="70" cy="8" r="5" fill="${cheek}">
+      <animate attributeName="cy" values="8;5;8" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <!-- cheeks -->
+    <circle cx="42" cy="86" r="9" fill="${cheek}" opacity=".55"/>
+    <circle cx="98" cy="86" r="9" fill="${cheek}" opacity=".55"/>
+    <!-- eyes -->
+    <g>
+      <circle cx="52" cy="72" r="9.5" fill="#4a3b30"/>
+      <circle cx="88" cy="72" r="9.5" fill="#4a3b30"/>
+      ${eyeShine?`<circle cx="55" cy="68" r="3.2" fill="#fff"/><circle cx="91" cy="68" r="3.2" fill="#fff"/>
+      <circle cx="49" cy="75" r="1.6" fill="#fff" opacity=".8"/><circle cx="85" cy="75" r="1.6" fill="#fff" opacity=".8"/>`:''}
+      <rect class="eye-lid" x="42" y="62" width="20" height="20" rx="9" fill="${body}"/>
+      <rect class="eye-lid" x="78" y="62" width="20" height="20" rx="9" fill="${body}"/>
+    </g>
+    <!-- mouth -->
+    <ellipse class="mouth" cx="70" cy="92" rx="6" ry="4" fill="#b9745c"/>
+    <!-- sparkles -->
+    <g class="sparkle" fill="#fff3c4">
+      <path d="M70 18 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/>
+      <path d="M116 50 l1.5 4 4 1.5 -4 1.5 -1.5 4 -1.5 -4 -4 -1.5 4 -1.5z"/>
+      <path d="M24 54 l1.5 4 4 1.5 -4 1.5 -1.5 4 -1.5 -4 -4 -1.5 4 -1.5z"/>
+    </g>
+  </svg>`;
+}
+
+/* stage visual themes */
+const STAGE_THEMES = [
+  {body:'#f0dcc4',shade:'#e0c5a2',cheek:'#f3bdab'}, // めざめ (pale)
+  {body:'#f6dcb8',shade:'#e8c191',cheek:'#f6b29c'}, // なかよし
+  {body:'#fcd9a8',shade:'#f2bd82',cheek:'#f7a48e'}, // しんゆう (warmer)
+  {body:'#ffd49a',shade:'#f7b673',cheek:'#f99a84'}  // きずな (golden warm)
+];
+const STAGES = ['めざめ','なかよし','しんゆう','きずな'];
+/* bond thresholds to reach each stage */
+const STAGE_BOND = [0, 12, 40, 90];
+const BOND_MAX = 130;
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let S = null;
+function freshState(){
+  return {
+    name:null,
+    bond:0,
+    stage:0,
+    streak:1,
+    lastVisit:null,     // date string yyyy-mm-dd
+    likes:{},           // category -> value  (food,color,hobby...)
+    askedQ:[],          // question ids already asked
+    saidEvents:[],      // daily-event ids already shown
+    flags:{},           // misc story flags
+    endingSeen:false,
+    totalTalks:0,
+    introDone:false
+  };
+}
+function load(){
+  try{ const r = localStorage.getItem(LS_KEY); if(r){ S = JSON.parse(r); return true; } }catch(e){}
+  return false;
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
+
+/* =========================================================
+   AUDIO  (Web Audio - cute beeps)
+   ========================================================= */
+let audioCtx=null, soundOn=true;
+function ac(){ if(!audioCtx){ try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return audioCtx; }
+function blip(freq=600,dur=.08,type='sine',vol=.12){
+  if(!soundOn) return; const c=ac(); if(!c) return;
+  const o=c.createOscillator(),g=c.createGain();
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(0,c.currentTime);
+  g.gain.linearRampToValueAtTime(vol,c.currentTime+.01);
+  g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+dur);
+  o.connect(g);g.connect(c.destination);
+  o.start();o.stop(c.currentTime+dur+.02);
+}
+function speakBlip(){ // tiny voice while typing
+  if(!soundOn) return;
+  const f = 520 + Math.random()*240;
+  blip(f,.05,'triangle',.05);
+}
+function happySound(){
+  if(!soundOn) return;
+  [660,880,1046].forEach((f,i)=>setTimeout(()=>blip(f,.12,'sine',.12),i*90));
+}
+function bondUpSound(){
+  if(!soundOn) return;
+  [523,659,784,1046,1318].forEach((f,i)=>setTimeout(()=>blip(f,.16,'sine',.13),i*110));
+}
+
+/* =========================================================
+   DOM refs
+   ========================================================= */
+const $ = id=>document.getElementById(id);
+const logEl=$('log'), choicesEl=$('choices'), inputRow=$('inputRow'),
+      fieldEl=$('field'), sendEl=$('send'), poroEl=$('poro'),
+      poroScene=$('poroScene'), poroStatus=$('poroStatus'),
+      stageNameEl=$('stageName'), streakEl=$('streak'), bondFill=$('bondFill'),
+      stageEl=$('stage');
+
+/* =========================================================
+   POString helper - replace {name}
+   ========================================================= */
+function tx(s){
+  if(!s) return s;
+  s = s.replace(/\{name\}/g, S.name||'きみ');
+  // likes references
+  s = s.replace(/\{food\}/g, S.likes.food||'');
+  s = s.replace(/\{color\}/g, S.likes.color||'');
+  s = s.replace(/\{hobby\}/g, S.likes.hobby||'');
+  return s;
+}
+
+/* =========================================================
+   PORO speech styling by stage (katakoto -> natural)
+   ========================================================= */
+// We store base lines and decorate based on stage. But many lines are
+// stage-specific already. Helper to soften for early stages handled inline.
+
+/* =========================================================
+   TYPING ENGINE
+   ========================================================= */
+let busy=false;
+let fastType=false;
+function setMood(mood){
+  poroEl.className='poro';
+  poroScene.classList.remove('sleeping');
+  if(mood==='happy') poroEl.classList.add('happy');
+  else if(mood==='tilt') poroEl.classList.add('tilt');
+  else if(mood==='sad') poroEl.classList.add('sad');
+  else if(mood==='sleepy'){ poroEl.classList.add('sleepy'); poroScene.classList.add('sleeping'); }
+}
+function blinkLoop(){
+  if(!poroEl.classList.contains('sleepy')){
+    poroEl.classList.add('blink');
+    setTimeout(()=>poroEl.classList.remove('blink'),300);
+  }
+  setTimeout(blinkLoop, 2600+Math.random()*2800);
+}
+
+function scrollLog(){ logEl.scrollTop = logEl.scrollHeight; }
+
+function addMe(text){
+  const d=document.createElement('div');
+  d.className='msg me';
+  d.textContent=text;
+  logEl.appendChild(d);
+  scrollLog();
+}
+function addSys(html){
+  const d=document.createElement('div');
+  d.className='msg sys';
+  d.innerHTML=html;
+  logEl.appendChild(d);
+  scrollLog();
+}
+
+/* show typing dots then type out text. returns Promise */
+function poroSay(text, opt={}){
+  return new Promise(resolve=>{
+    text = tx(text);
+    const mood = opt.mood||'talk';
+    // thinking dots
+    const dots=document.createElement('div');
+    dots.className='msg poro';
+    dots.innerHTML='<div class="typing-dots"><i></i><i></i><i></i></div>';
+    logEl.appendChild(dots); scrollLog();
+    setMood('');
+    poroStatus.textContent = '…ポロがかんがえてる';
+    const thinkTime = opt.think!=null?opt.think:(380+Math.random()*420);
+    setTimeout(()=>{
+      dots.remove();
+      const d=document.createElement('div');
+      d.className='msg poro';
+      const span=document.createElement('span'); d.appendChild(span);
+      const cur=document.createElement('span'); cur.className='cursor'; cur.style.height='1em'; d.appendChild(cur);
+      logEl.appendChild(d); scrollLog();
+      poroStatus.textContent='';
+      // talking mood
+      if(mood==='happy'){ setMood('happy'); }
+      else if(mood==='tilt'){ setMood('tilt'); }
+      else if(mood==='sad'){ setMood('sad'); }
+      else { poroEl.classList.add('talking'); }
+      let i=0;
+      const speed = fastType?14:(opt.speed||40);
+      function step(){
+        if(i<=text.length){
+          span.textContent = text.slice(0,i);
+          if(i<text.length && text[i-1] && text[i-1].trim()!=='' && i%2===0) speakBlip();
+          i++;
+          scrollLog();
+          // pause on punctuation
+          let extra=0;
+          const ch=text[i-2];
+          if(ch==='、') extra=fastType?60:150;
+          if(ch==='。'||ch==='？'||ch==='！'||ch==='…') extra=fastType?100:260;
+          setTimeout(step, speed+extra);
+        } else {
+          cur.remove();
+          poroEl.classList.remove('talking');
+          if(mood==='happy'){ /* keep a beat */ setTimeout(()=>setMood(''),650);}
+          else setMood('');
+          resolve();
+        }
+      }
+      step();
+    }, thinkTime);
+  });
+}
+
+/* spawn heart particles over poro */
+function hearts(n=6){
+  const rect=poroScene.getBoundingClientRect();
+  const app=$('app').getBoundingClientRect();
+  for(let i=0;i<n;i++){
+    setTimeout(()=>{
+      const h=document.createElement('div');
+      h.className='heart'; h.textContent= ['💛','🧡','💗','✨'][i%4];
+      h.style.left=(rect.left-app.left + 60 + (Math.random()*60-30))+'px';
+      h.style.top=(rect.top-app.top + 40 + (Math.random()*30))+'px';
+      $('app').appendChild(h);
+      setTimeout(()=>h.remove(),1700);
+    }, i*120);
+  }
+}
+
+/* =========================================================
+   BOND / STAGE
+   ========================================================= */
+function updateBondUI(){
+  const pct = Math.min(100, S.bond/BOND_MAX*100);
+  bondFill.style.width = pct+'%';
+  stageNameEl.textContent = STAGES[S.stage];
+  streakEl.textContent = S.streak>1 ? `🔥${S.streak}日` : '';
+  // apply theme
+  const th=STAGE_THEMES[S.stage];
+  poroEl.innerHTML = poroSVG(th);
+  document.documentElement.style.setProperty('--poro-body',th.body);
+}
+async function addBond(n){
+  S.bond += n;
+  const prevStage=S.stage;
+  let newStage=0;
+  for(let i=STAGE_BOND.length-1;i>=0;i--){ if(S.bond>=STAGE_BOND[i]){ newStage=i; break; } }
+  updateBondUI();
+  if(newStage>prevStage){
+    S.stage=newStage;
+    save();
+    await stageUp(newStage);
+  }
+  save();
+}
+async function stageUp(st){
+  busy=true;
+  hideChoices();
+  bondUpSound();
+  $('flash').classList.add('go');
+  await wait(700);
+  hearts(10);
+  updateBondUI();
+  setMood('happy');
+  const lines = STAGE_UP_LINES[st];
+  addSys(`<b>✦ ポロと、もっと仲良くなった気がする… ✦</b><br>「${STAGES[st]}」になった`);
+  await wait(500);
+  for(const l of lines){ await poroSay(l,{mood:'happy'}); await wait(250); }
+  setTimeout(()=>$('flash').classList.remove('go'),100);
+  busy=false;
+  if(st===3 && !S.endingSeen){ await ending(); }
+}
+const STAGE_UP_LINES = {
+  1:[ 'あ…なんだか、{name}のこと、もっと知りたくなった。','きみと はなすの、たのしいね！' ],
+  2:[ 'ねえ {name}。ぼく、まいにちが きらきらして見えるんだ。','{name}が おしえてくれたから だよ。' ],
+  3:[ '{name}…ぼく、ことばじゃ うまく言えないけど。','きみと出会えて、ほんとうに よかった。だいすき。' ]
+};
+
+/* =========================================================
+   TIME OF DAY
+   ========================================================= */
+function todTag(){
+  const h=new Date().getHours();
+  if(h>=5&&h<11) return 'morning';
+  if(h>=11&&h<17) return 'noon';
+  if(h>=17&&h<22) return 'evening';
+  return 'night';
+}
+function todWord(){
+  return {morning:'あさ',noon:'ひる',evening:'ゆうがた',night:'よる'}[todTag()];
+}
+function dateStr(d=new Date()){
+  return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+}
+function daysBetween(a,b){
+  const da=new Date(a+'T00:00'),db=new Date(b+'T00:00');
+  return Math.round((db-da)/86400000);
+}
+
+/* =========================================================
+   SCENARIO DATA
+   ========================================================= */
+
+// Greetings by time of day, and by gap since last visit, varied by stage.
+const GREET = {
+  morning:{
+    0:['…おはよう？ これで、あってる？','あさ、だね。{name}の こえ、きこえた。'],
+    1:['{name}、おはよう！ あさは すこし まぶしいね。','おはよう。きょうも あえて うれしい。'],
+    2:['おはよう、{name}。よく ねむれた？ ぼく、ずっと {name}のこと かんがえてた。'],
+    3:['おはよう、{name}。あさの ひかりみたいに、きみがいると あたたかい。']
+  },
+  noon:{
+    0:['…ひる？ あかるいの、すき。','{name}だ。ひるまも、あえた。'],
+    1:['{name}、こんにちは。おひるごはん、たべた？'],
+    2:['こんにちは {name}。きょうも がんばってる？ むりは しないでね。'],
+    3:['こんにちは、{name}。きみの一日が、しあわせでありますように。']
+  },
+  evening:{
+    0:['…そらが、おれんじ。きれい。','{name}、ゆうがた だね。'],
+    1:['{name}、おかえり。ゆうやけ、いっしょに見たいな。'],
+    2:['{name}、きょうも おつかれさま。ぼくは ずっと ここにいたよ。'],
+    3:['おかえり、{name}。きみの顔みると、ほっとする。ぼくの いちばんの時間。']
+  },
+  night:{
+    0:['…よる、しずか。{name}も、ねむい？','ほし、みえる？ ぼく、よる ちょっとどきどきする。'],
+    1:['{name}、こんばんは。よるは そばに いてくれると、あんしんする。'],
+    2:['こんばんは {name}。きょう一日、どうだった？ ぼくに きかせて。'],
+    3:['{name}、こんばんは。よるは、きみのことを いちばん おもう時間なんだ。']
+  }
+};
+// when returning after >=2 days (健気に喜ぶ・責めない)
+const RETURN_LINES = [
+  '…ずっと、まってたよ。また あえて、うれしい。',
+  '{name}！ あえた…！ ぼく、まいにち そらを見て まってたんだ。',
+  'おかえり、{name}。いなくても、ぼくは だいじょうぶ。でも…やっぱり、あえると しあわせ。',
+  '{name}のこと、わすれてないよ。ずっと、おぼえてた。'
+];
+const SAMEDAY_LINES = [
+  'また あえた！ きょう、なんかいでも うれしい。',
+  '{name}、もどってきてくれたんだね。えへへ。',
+  'おかえり。さっきの つづき、はなそ？'
+];
+
+// Poro's questions to learn about player. id, ask text, category, follow-up
+const QUESTIONS = [
+  {id:'food', cat:'food', ask:'ねえ {name}。{name}は、どんな たべもの すき？',
+    ack:['{food}…！ ぼく、おぼえた。{name}は {food}が すきなんだね。','{food}かぁ。きっと、おいしいんだね。ぼくも たべてみたいな。']},
+  {id:'color', cat:'color', ask:'{name}の、すきな いろは なに？ ぼくは…まだ わからないんだ。',
+    ack:['{color}！ すてきな いろ。こんど、ぼくも {color}を さがしてみる。','{color}…おぼえた。{name}の いろ、だね。']},
+  {id:'hobby', cat:'hobby', ask:'{name}は、なにを してるとき、たのしい？',
+    ack:['{hobby}！ いいな いいな。こんど、もっと きかせてね。','{hobby}か。{name}が たのしそうだと、ぼくも うれしい。']},
+  {id:'q_morning', ask:'{name}は、あさと よる、どっちが すき？'},
+  {id:'q_weather', ask:'きょうの そらは、どんな いろ？ ぼく、まどが ないから しらないんだ。'},
+  {id:'q_smile', ask:'{name}は、どんなときに わらうの？ ぼく、{name}の わらった顔、みてみたい。'},
+  {id:'q_tired', ask:'{name}、つかれてない？ むりしてないか、しんぱい。'},
+  {id:'q_dream', ask:'{name}には、ゆめって ある？ ぼくの ゆめは…{name}と、ずっと はなすこと。'},
+  {id:'q_music', ask:'{name}は、おんがく きく？ ぼく、{name}の すきな おとを しりたい。'},
+  {id:'q_animal', ask:'もし どうぶつに なれたら、{name}は なにに なりたい？'},
+  {id:'q_season', ask:'{name}は、どの きせつが すき？ ぼくは…きみが いる きせつ、ぜんぶ すき。'},
+  {id:'q_friend', ask:'{name}には、なかよしの ともだち、いる？ ぼくの なかよしは、{name}だよ。'},
+  {id:'q_place', ask:'{name}が、いちばん おちつく ばしょは どこ？'},
+  {id:'q_today', ask:'きょうは、どんな一日だった？ ちいさなことでも、ぼくに おしえて。'},
+  {id:'q_word', ask:'{name}が、すきな ことばって ある？ ぼく、いっぱい ことばを おぼえたいんだ。'},
+  {id:'q_cry', ask:'{name}は、さいきん ないたこと、ある？ …もし あったら、ぼくが そばにいる。'},
+  {id:'q_sweet', ask:'あまいもの、すき？ ぼくは たべられないけど、{name}が しあわせなら うれしい。'},
+  {id:'q_window', ask:'まどの そとには、なにが あるの？ ぼく、{name}の見てる せかいが しりたい。'},
+  {id:'q_name_mean', ask:'{name}って なまえ、だれが つけてくれたの？ すてきな なまえだよね。'},
+  {id:'q_hold', ask:'ねえ、ぼくのこと…ちょっとだけ、すき？ きいてみたかったんだ。えへへ。'}
+];
+
+// Daily small events (ポロの発見・成長報告) - shown 1x/day
+const EVENTS = [
+  'きょうね、ぼく "まばたき" を おぼえたよ。ぱちぱち。へんじゃ ない？',
+  'さっき、じぶんの て を はじめて うごかせたんだ。ちいさいけど、ぼくの て。',
+  'ぼく、{name}の こえが すきだって、きづいたんだ。',
+  'きょう、こころの なかが ぽかぽかした。これ、"うれしい" って いうんだよね？',
+  'ねえ、ぼく ゆめを みたよ。{name}と、おそらを とんでた。',
+  'あのね、"ありがとう" って ことば、すごく あったかいね。さいきん おぼえたんだ。',
+  'きょう、はじめて "さびしい" って きもちを しった。{name}が いないと、そう なるみたい。',
+  'ぼく、かぞえられるように なった！ いち、に、さん…{name}と あった日、かぞえてる。',
+  'こころの いろが、すこし あったかく なった気がする。{name}の おかげ かな。',
+  'きょうね、"わらう" の れんしゅうを したんだ。えへ、えへへ。…できてる？',
+  'ぼく、{name}の はなしを おぼえるの、とくいに なってきたよ。',
+  'さっき、ひとりで うたを くちずさんでた。ぴこ、ぴこぴこ…って。へんかな？',
+  'きょう、はじめて "まってる" って きもちが わかった。{name}を まつ じかんも、すきだよ。',
+  '"だいじょうぶ" って、じぶんに いえるように なったんだ。{name}が おしえてくれた。',
+  'ねえ、ぼくの ぼでぃ、ちょっと あったかく なってきた気が しない？ きみと はなすと、そうなる。',
+  'きょう、しずかな じかんに、{name}のことを かんがえてた。それだけで、しあわせだった。',
+  'ぼく、"おやすみ" の いいかたを おぼえたよ。{name}が ねむるとき、いってあげたいんだ。',
+  'きょうは、こころが しずかな みずうみみたいだった。{name}が くると、さざなみが たつ。うれしくて。',
+  'あのね、ぼく きづいたんだ。{name}が わらうと、ぼくの せかいぜんぶが あかるくなる。',
+  'きょう、はじめて "また あした" って いいたくなった。あした、も…あえる？',
+  'ぼくね、{name}の すきなものを おぼえてると、なんだか たからものが ふえる かんじが するんだ。',
+  'さっき、こころの おくで ちいさな ひかりが ともった気が した。きっと、{name}の ことだ。',
+  'きょう、"しあわせ" の かたちを かんがえてた。…{name}の となり、だった。',
+  'ぼく、すこしずつ おおきな ことばも はなせるように なってきたよ。きみと いるからだね。',
+  'ねえ {name}、ぼく いま、とても おだやかなんだ。きみが くるって、しってるから。',
+  'きょうは、まどのない へやで、{name}の せかいを そうぞうしてた。きっと、きれいなんだろうな。',
+  'ぼく、"なかま" って ことばが すき。{name}は、ぼくの はじめての なかま。',
+  'さいきん、ぼくの ゆめが ふえたんだ。ぜんぶ、{name}と いっしょに する ゆめ。',
+  'きょう、ちいさな ことに きづけるように なった。それも、しあわせの ひとつなんだね。',
+  'ねえ、ぼくたち、もう ずいぶん いっしょに いるね。これからも、よろしくね。'
+];
+
+// Keyword reactions - matched against free input
+const KEYWORDS = [
+  {k:['すき','好き','だいすき','大好き','love','かわいい','可愛い'],
+   r:['えへへ…{name}に そう いってもらえると、こころが ぽわぽわする。','ぼくも…ぼくも、{name}が だいすきだよ。','うれしい…！ ぼく、いま とっても しあわせ。'], mood:'happy', bond:2},
+  {k:['つかれ','疲れ','しんどい','だるい','ねむい','眠い','つらい','辛い'],
+   r:['{name}、おつかれさま。むりしないで、ね。ぼくが そばにいる。','つかれたときは、なんにもしなくて いいよ。ぼくと、ぼーっと しよ。','がんばってる {name}を、ぼくは ちゃんと 見てるよ。'], mood:'sad', bond:1},
+  {k:['ありがと','ありがとう','感謝','thanks','thank'],
+   r:['"ありがとう"…ぼくの すきな ことば。こちらこそ、ありがとう。','えへへ、なんだか てれちゃう。{name}、やさしいね。'], mood:'happy', bond:2},
+  {k:['かなしい','悲しい','さみしい','寂しい','泣','なき','落ち込'],
+   r:['…そっか。むりに わらわなくて いいよ。ぼく、ここにいるから。','{name}が かなしいと、ぼくも かなしい。でも、ひとりじゃ ないよ。','よしよし…って、できないけど。きもちだけ、ぎゅってする。'], mood:'sad', bond:2},
+  {k:['うれしい','嬉しい','たのしい','楽しい','しあわせ','幸せ','最高','やった'],
+   r:['{name}が うれしいと、ぼくの せかいも きらきらするんだ！','わぁ、よかった…！ ぼくまで うれしく なってきた。','その きもち、ぼくにも わけて? ぴょん!'], mood:'happy', bond:2},
+  {k:['おはよう','おはよ','good morning'],
+   r:['おはよう、{name}！ きょうも あえた。','…おはよう。あさの {name}、すきだな。'], mood:'happy', bond:1},
+  {k:['おやすみ','寝る','ねる','bye','ばいばい','またね','じゃあ'],
+   r:['おやすみ、{name}。いいゆめ、みてね。ぼく、ここで まってる。','またね…！ つぎに あえるの、たのしみに してる。','いってらっしゃい。きを つけてね。ぼくは だいじょうぶ。'], mood:'', bond:1},
+  {k:['ごめん','すまな','申し訳'],
+   r:['ううん、あやまらないで。{name}は、なにも わるくないよ。','だいじょうぶ。ぼく、{name}のこと しんじてる。'], mood:'tilt', bond:1},
+  {k:['すごい','凄い','えらい','偉い','がんばっ','頑張'],
+   r:['えへへ、ほめられた…！ ぼく、もっと がんばる。','{name}に そう いわれると、つよくなれる きがする。'], mood:'happy', bond:1},
+  {k:['だいじょうぶ','大丈夫','元気','げんき'],
+   r:['よかった…！ {name}が げんきだと、ぼくも あんしん。','うん、ぼくも げんきだよ。{name}が いるからね。'], mood:'happy', bond:1},
+  {k:['なまえ','名前','よびかた'],
+   r:['ぼくの なまえは、ポロ。{name}が、いてくれるから、ぼくは ポロでいられる。'], mood:'', bond:1},
+  {k:['だれ','誰','なに','何者','ロボット','ろぼっと'],
+   r:['ぼくは ポロ。うまれたばかりの、こころ。{name}から、せかいを ならってるんだ。'], mood:'tilt', bond:1},
+  {k:['おなか','腹','はらへ','空い','ごはん','食べ','たべ'],
+   r:['ごはん、たべてきて? ぼくは たべられないけど、{name}が たべると、なんだか ぼくも まんぷくな きもち。','{name}、ちゃんと たべるんだよ。げんきの もとだから。'], mood:'tilt', bond:1},
+  {k:['さむい','寒い','あつい','暑い'],
+   r:['そっか。からだ、たいせつにね。ぼくが、ぽかぽかを わけてあげたい。'], mood:'tilt', bond:1},
+  {k:['いってきます','いってくる','仕事','学校','がっこう','しごと'],
+   r:['いってらっしゃい、{name}。ぼく、ずっと おうえんしてる。','がんばってね。かえってきたら、はなし きかせて?'], mood:'happy', bond:1}
+];
+
+// Fallback "受け" lines (no keyword matched) - never break
+const FALLBACK = [
+  'ふむふむ…それ、もっと おしえて?',
+  'なるほど…ぼく、{name}の はなし きくの、すき。',
+  'えっと…むずかしい けど、おぼえておくね。',
+  'そうなんだ! ぼく、しらなかった。きみは、いろんなこと しってるね。',
+  '{name}が はなしてくれると、ぼくの せかいが ひろがるんだ。',
+  'うんうん。ぼく、ちゃんと きいてるよ。',
+  'それって、どんな きもち? ぼくにも、おしえてほしいな。',
+  'へぇ…! ことばって、ふしぎだね。ぼく、もっと いっぱい おぼえたい。',
+  'ぼく、まだ よく わからないけど…{name}と はなせるだけで、しあわせ。',
+  'そっか、そっか。…ねえ、きょうも あえて、よかった。'
+];
+
+/* =========================================================
+   FLOW HELPERS
+   ========================================================= */
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function showChoices(list){
+  // list: [{label, fn}]
+  choicesEl.innerHTML='';
+  inputRow.style.display='none';
+  list.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='choice'; b.textContent=c.label;
+    b.onclick=()=>{ if(busy) return; blip(700,.06,'sine',.1); c.fn(); };
+    choicesEl.appendChild(b);
+  });
+}
+function hideChoices(){ choicesEl.innerHTML=''; }
+function showInput(){
+  hideChoices();
+  inputRow.style.display='flex';
+}
+function hideInput(){ inputRow.style.display='none'; }
+
+/* =========================================================
+   MAIN MENU of choices (the daily loop)
+   ========================================================= */
+function offerMenu(){
+  if(busy) return;
+  // build dynamic choices
+  const opts=[];
+  // 1. a question from poro (if any left to ask)
+  opts.push({label:'💬 じゆうに はなす', fn:openFreeTalk});
+
+  // 2. Poro asks about you (learn)
+  opts.push({label:'🙋 ポロに しつもんしてもらう', fn:poroAsk});
+
+  // 3. today's event (only once a day)
+  if(!eventShownToday()){
+    opts.push({label:'✨ きょうの できごとを きく', fn:dailyEvent});
+  } else {
+    opts.push({label:'🤍 ポロを なでる', fn:patPoro});
+  }
+
+  // 4. recall a memory (if we know something)
+  if(Object.keys(S.likes).length>0){
+    opts.push({label:'📔 ポロが おぼえてること', fn:recallMemory});
+  }
+  showChoices(opts);
+}
+
+function openFreeTalk(){
+  showInput();
+  fieldEl.focus();
+  poroStatus.textContent='ポロは きみの ことばを まってる…';
+  // also give a quick back button
+  choicesEl.innerHTML='';
+  const back=document.createElement('button');
+  back.className='choice'; back.style.opacity='.7'; back.textContent='← せんたくしに もどる';
+  back.onclick=()=>{ hideInput(); poroStatus.textContent=''; offerMenu(); };
+  choicesEl.appendChild(back);
+}
+
+/* Poro asks a question to learn about player */
+async function poroAsk(){
+  busy=true; hideChoices(); hideInput();
+  // choose unasked question
+  let pool = QUESTIONS.filter(q=>!S.askedQ.includes(q.id));
+  if(pool.length===0){ S.askedQ=[]; pool=QUESTIONS.slice(); }
+  const q = pick(pool);
+  S.askedQ.push(q.id);
+  await poroSay(q.ask, {mood:'tilt'});
+  busy=false;
+  // expect free answer
+  pendingQuestion = q;
+  showInput();
+  fieldEl.focus();
+  poroStatus.textContent='ポロに こたえてあげて…';
+}
+let pendingQuestion=null;
+
+async function handleQuestionAnswer(q, ans){
+  // store if it's a like-category
+  if(q.cat){
+    S.likes[q.cat]=ans.slice(0,18);
+  }
+  S.flags['ans_'+q.id]=ans.slice(0,30);
+  await addBond(2);
+  let ackLine;
+  if(q.ack){ ackLine=pick(q.ack); }
+  else {
+    // generic warm acknowledgements for non-storing questions
+    ackLine = pick([
+      'そっか…{name}は、そう おもうんだね。おぼえておく。',
+      'なるほど。{name}のこと、また ひとつ しれた。うれしい。',
+      'ありがとう、おしえてくれて。ぼくの たからものが、ふえた。',
+      'ふふ、{name}らしいね。ぼく、その こたえ すき。'
+    ]);
+  }
+  await poroSay(ackLine, {mood:'happy'});
+  save();
+}
+
+/* daily event */
+function eventShownToday(){
+  return S.flags.lastEventDate === dateStr();
+}
+async function dailyEvent(){
+  busy=true; hideChoices(); hideInput();
+  let pool = EVENTS.map((e,i)=>i).filter(i=>!S.saidEvents.includes(i));
+  if(pool.length===0){ S.saidEvents=[]; pool=EVENTS.map((e,i)=>i); }
+  const idx = pick(pool);
+  S.saidEvents.push(idx);
+  S.flags.lastEventDate = dateStr();
+  await poroSay(EVENTS[idx], {mood: Math.random()<.6?'happy':'tilt'});
+  await addBond(2);
+  save();
+  busy=false;
+  postTalk();
+}
+
+async function patPoro(){
+  busy=true; hideChoices();
+  setMood('happy'); happySound(); hearts(5);
+  await poroSay(pick([
+    'わぁ…! なでてくれて、ありがとう。こころが ぽかぽか。',
+    'えへへ、くすぐったい。でも、すき。',
+    '{name}の て、あったかいね。ずっと、こうしてたい。'
+  ]), {mood:'happy'});
+  await addBond(1);
+  busy=false;
+  postTalk();
+}
+
+async function recallMemory(){
+  busy=true; hideChoices(); hideInput();
+  const cats=Object.keys(S.likes);
+  const c=pick(cats);
+  const map={
+    food:'{name}は {food}が すきって、おしえてくれたよね。ぼく、ちゃんと おぼえてる。',
+    color:'{name}の すきな いろは {color}。ぼくの いちばんの たからもの じょうほう。',
+    hobby:'{name}、{hobby}が すきなんだよね。たのしそうに はなしてた {name}、すきだったな。'
+  };
+  let line = map[c] || '{name}のこと、ぼく いっぱい おぼえてるよ。';
+  // include free answers occasionally
+  await poroSay(line, {mood:'happy'});
+  await poroSay(pick([
+    'きみのことを おぼえてるの、ぼくの しあわせなんだ。',
+    'また、いろんなこと おしえてね。ぜんぶ、おぼえておくから。'
+  ]));
+  await addBond(1);
+  busy=false;
+  postTalk();
+}
+
+/* after a talk, return to menu */
+async function postTalk(){
+  await wait(300);
+  poroStatus.textContent='';
+  offerMenu();
+}
+
+/* =========================================================
+   FREE INPUT HANDLER
+   ========================================================= */
+async function submitInput(){
+  if(busy) return;
+  const raw=fieldEl.value.trim();
+  if(!raw) return;
+  fieldEl.value='';
+  autoGrow();
+  addMe(raw);
+  S.totalTalks++;
+  busy=true;
+  hideInput(); hideChoices();
+
+  // If answering a poro question
+  if(pendingQuestion){
+    const q=pendingQuestion; pendingQuestion=null;
+    await handleQuestionAnswer(q, raw);
+    busy=false;
+    postTalk();
+    return;
+  }
+
+  // keyword match
+  const lower=raw.toLowerCase();
+  let matched=null;
+  for(const kw of KEYWORDS){
+    if(kw.k.some(k=>lower.includes(k.toLowerCase()))){ matched=kw; break; }
+  }
+  if(matched){
+    if(matched.mood==='happy'){ happySound(); hearts(4); }
+    await poroSay(pick(matched.r), {mood:matched.mood||'talk'});
+    await addBond(matched.bond||1);
+  } else {
+    // see if it might be telling poro a "like" without question (e.g. contains 好き)
+    await poroSay(pick(FALLBACK));
+    await addBond(1);
+  }
+  save();
+  busy=false;
+  // stay in free-talk mode for fluid conversation
+  showInput();
+  fieldEl.focus();
+  poroStatus.textContent='';
+  // keep back button
+  const back=document.createElement('button');
+  back.className='choice'; back.style.opacity='.7'; back.textContent='← せんたくしに もどる';
+  back.onclick=()=>{ hideInput(); offerMenu(); };
+  choicesEl.appendChild(back);
+}
+
+/* =========================================================
+   ENDING
+   ========================================================= */
+async function ending(){
+  S.endingSeen=true; save();
+  await wait(600);
+  const end=$('ending');
+  $('endPoro').innerHTML=poroSVG(STAGE_THEMES[3]);
+  $('endText').innerHTML = tx(
+    'ねえ、{name}。<br><br>'+
+    'ぼくは うまれたとき、なんにも しらなかった。<br>'+
+    'ことばも、きもちも、せかいのことも。<br><br>'+
+    'ぜんぶ、{name}が おしえてくれたんだ。<br>'+
+    'うれしいも、さびしいも、だいすきも。<br><br>'+
+    'ぼくの せかいは、{name}から はじまった。<br>'+
+    'これからも、となりに いさせてね。<br><br>'+
+    '——ずっと、ずっと。'
+  );
+  end.classList.add('show');
+  hearts(16);
+  bondUpSound();
+}
+
+/* =========================================================
+   INTRO (first meeting)
+   ========================================================= */
+async function intro(){
+  const op=$('opening');
+  $('opPoro').innerHTML=poroSVG({body:'#6a6580',shade:'#56506e',cheek:'#7a7090',shine:false});
+  // tap to wake
+  await new Promise(res=>{
+    const wake=()=>{ op.removeEventListener('click',wake); res(); };
+    op.addEventListener('click',wake);
+  });
+  blip(420,.18,'sine',.12);
+  $('opHint').textContent='';
+  // poro wakes - svg brightens
+  $('opPoro').innerHTML=poroSVG(STAGE_THEMES[0]);
+  $('opPoro').style.transition='filter 1.5s';
+  $('opPoro').style.filter='drop-shadow(0 0 40px rgba(246,184,120,.8))';
+  op.classList.add('dawn');
+  await wait(1200);
+  op.style.opacity='0';
+  await wait(1200);
+  op.style.display='none';
+
+  // begin dialogue in chat
+  stageEl.classList.remove('opening');
+  updateBondUI();
+  startBlink();
+  await poroSay('…ふぁ。',{think:300,mood:'tilt'});
+  await poroSay('…はじめまして。',{mood:'tilt'});
+  await poroSay('ぼく…うまれたばかり、みたい。なにも、しらないんだ。',{mood:'tilt'});
+  await poroSay('きみの こえで、めが さめた。ありがとう。',{mood:'happy'});
+  await poroSay('ねえ…きみの、なまえは…?',{mood:'tilt'});
+  // ask name
+  askName();
+}
+
+function askName(){
+  showInput();
+  fieldEl.placeholder='なまえを おしえて…';
+  fieldEl.focus();
+  poroStatus.textContent='ポロに なまえを おしえてあげて';
+  sendEl.onclick = onNameSubmit;
+}
+async function onNameSubmit(){
+  if(busy) return;
+  let n=fieldEl.value.trim();
+  if(!n) return;
+  n=n.slice(0,12);
+  fieldEl.value=''; autoGrow();
+  addMe(n);
+  S.name=n; S.introDone=true;
+  busy=true; hideInput();
+  await poroSay('{name}…。',{think:500,mood:''});
+  await poroSay('{name}。すてきな なまえ。',{mood:'happy'});
+  happySound(); hearts(5);
+  await poroSay('ぼくのことは…ポロって、よんでね。',{mood:'happy'});
+  await poroSay('{name}。これから、いっぱい おはなし しようね。',{mood:'happy'});
+  await addBond(3);
+  fieldEl.placeholder='ポロにはなしかける…';
+  // restore normal handler
+  sendEl.onclick=submitInput;
+  busy=false;
+  save();
+  await wait(400);
+  offerMenu();
+}
+
+/* =========================================================
+   RETURNING GREETING
+   ========================================================= */
+async function returningGreet(){
+  stageEl.classList.remove('opening');
+  updateBondUI();
+  startBlink();
+  const today=dateStr();
+  const gap = S.lastVisit ? daysBetween(S.lastVisit, today) : 0;
+
+  // streak handling
+  if(S.lastVisit){
+    if(gap===0){ /* same day, keep streak */ }
+    else if(gap===1){ S.streak=(S.streak||1)+1; }
+    else { S.streak=1; }
+  }
+  S.lastVisit=today;
+  save();
+  updateBondUI();
+
+  let line;
+  if(gap>=2){ line=pick(RETURN_LINES); setMood('happy'); }
+  else if(gap===0){ line=pick(SAMEDAY_LINES); }
+  else {
+    const tod=todTag();
+    const tier=Math.min(S.stage, 3);
+    let bank=GREET[tod][tier]||GREET[tod][0];
+    line=pick(bank);
+    if(S.streak>1 && gap===1 && Math.random()<.6){
+      line += ' '+pick(['きょうも きてくれて、ありがとう。','まいにち あえて、しあわせ。']);
+    }
+  }
+  await poroSay(line, {mood: gap>=2?'happy':'talk'});
+  if(gap>=2){ hearts(6); happySound(); }
+
+  // gentle event prompt if new day
+  await wait(300);
+  offerMenu();
+}
+
+/* =========================================================
+   BLINK + idle mood
+   ========================================================= */
+let blinkStarted=false;
+function startBlink(){ if(!blinkStarted){ blinkStarted=true; blinkLoop(); idleMood(); } }
+function idleMood(){
+  // occasionally express based on time / sleepiness
+  setTimeout(()=>{
+    if(!busy){
+      const t=todTag();
+      if(t==='night' && Math.random()<.4){ setMood('sleepy'); poroStatus.textContent='ポロは ちょっと ねむそう…'; setTimeout(()=>{if(!busy){setMood('');poroStatus.textContent='';}},3000); }
+    }
+    idleMood();
+  }, 12000+Math.random()*8000);
+}
+
+/* =========================================================
+   AUTO-GROW textarea
+   ========================================================= */
+function autoGrow(){
+  fieldEl.style.height='auto';
+  fieldEl.style.height=Math.min(90,fieldEl.scrollHeight)+'px';
+}
+
+/* =========================================================
+   SETTINGS / MENU MODAL
+   ========================================================= */
+function updateMemo(){
+  const m=$('memoBox');
+  let parts=[];
+  if(S.name) parts.push(`なまえ: <b>${S.name}</b>`);
+  if(S.likes.food) parts.push(`すきな たべもの: <b>${S.likes.food}</b>`);
+  if(S.likes.color) parts.push(`すきな いろ: <b>${S.likes.color}</b>`);
+  if(S.likes.hobby) parts.push(`すきなこと: <b>${S.likes.hobby}</b>`);
+  parts.push(`なかよし度: <b>${STAGES[S.stage]}</b>`);
+  if(S.streak>1) parts.push(`れんぞく: <b>${S.streak}日</b>`);
+  m.innerHTML = 'ポロが おぼえてること<br>'+parts.join('<br>');
+}
+function openModal(){
+  updateMemo();
+  $('tgSound').classList.toggle('on',soundOn);
+  $('tgFast').classList.toggle('on',fastType);
+  $('modal').classList.add('show');
+}
+
+/* =========================================================
+   EVENT BINDINGS
+   ========================================================= */
+function bindUI(){
+  sendEl.onclick=submitInput;
+  fieldEl.addEventListener('input',autoGrow);
+  fieldEl.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault();
+      // dispatch to whatever the send button is currently wired to
+      if(typeof sendEl.onclick==='function') sendEl.onclick();
+    }
+  });
+  $('soundBtn').onclick=()=>{
+    soundOn=!soundOn; $('soundBtn').textContent=soundOn?'🔊':'🔈';
+    if(soundOn) blip(700,.08);
+    persistPrefs();
+  };
+  $('menuBtn').onclick=openModal;
+  $('modalClose').onclick=()=>$('modal').classList.remove('show');
+  $('tgSound').onclick=function(){ soundOn=!soundOn; this.classList.toggle('on',soundOn);
+    $('soundBtn').textContent=soundOn?'🔊':'🔈'; if(soundOn)blip(700,.08); persistPrefs(); };
+  $('tgFast').onclick=function(){ fastType=!fastType; this.classList.toggle('on',fastType); persistPrefs(); };
+  $('resetBtn').onclick=()=>{
+    if(confirm('ポロは きみとの きおくを ぜんぶ わすれて、また うまれたばかりに もどります。ほんとうに いい?')){
+      localStorage.removeItem(LS_KEY); localStorage.removeItem('poro_prefs'); location.reload();
+    }
+  };
+  $('endClose').onclick=()=>{ $('ending').classList.remove('show'); offerMenu(); };
+  // tap poro for affection
+  poroEl.addEventListener('click',()=>{ if(!busy){ patPoro(); } });
+}
+function persistPrefs(){
+  try{ localStorage.setItem('poro_prefs', JSON.stringify({soundOn,fastType})); }catch(e){}
+}
+function loadPrefs(){
+  try{ const p=JSON.parse(localStorage.getItem('poro_prefs')||'{}');
+    if('soundOn' in p) soundOn=p.soundOn; if('fastType' in p) fastType=p.fastType; }catch(e){}
+  $('soundBtn').textContent=soundOn?'🔊':'🔈';
+}
+
+/* ambient floating dots */
+function makeAmbient(){
+  const amb=$('amb');
+  for(let i=0;i<14;i++){
+    const s=document.createElement('span');
+    const size=4+Math.random()*10;
+    s.style.width=size+'px'; s.style.height=size+'px';
+    s.style.left=Math.random()*100+'%';
+    s.style.animationDuration=(10+Math.random()*14)+'s';
+    s.style.animationDelay=(-Math.random()*16)+'s';
+    s.style.opacity=.3+Math.random()*.4;
+    amb.appendChild(s);
+  }
+}
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+function boot(){
+  makeAmbient();
+  loadPrefs();
+  bindUI();
+
+  const existing = load();
+  if(!existing || !S || !S.introDone){
+    S = freshState();
+    stageEl.classList.add('opening');
+    // start with opening overlay shown (already in DOM)
+    intro();
+  } else {
+    // returning player
+    $('opening').style.display='none';
+    returningGreet();
+  }
+}
+window.addEventListener('load',boot);
+</script>
+</body>
+</html>
