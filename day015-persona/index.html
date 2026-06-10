@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ペルソナ — あなたという一枚</title>
+<meta name="description" content="10の問いに答えると、あなたを表す美しいペルソナカードが生成される自己分析ジェネレーター。">
+<meta name="theme-color" content="#0d1117">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;
+  --bg2:#0a0d13;
+  --ink:#eef2f8;
+  --ink-soft:#aeb7c6;
+  --ink-faint:#6b7585;
+  --line:rgba(255,255,255,.10);
+  --line-2:rgba(255,255,255,.06);
+  --accent:#7c8cff;
+  --accent-2:#5ad1ff;
+  --gold:#ffd56b;
+  --r-n:#aab4c4;
+  --r-r:#5ad1ff;
+  --r-sr:#c08bff;
+  --r-ssr:#ffd56b;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --font-en:'Space Grotesk','Outfit',sans-serif;
+  --font-ja:'Zen Kaku Gothic New',sans-serif;
+  --font-min:'Shippori Mincho',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:var(--font-ja);
+  background:var(--bg);
+  color:var(--ink);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  position:relative;
+  min-height:100dvh;
+}
+/* ambient background */
+.aura{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.aura::before,.aura::after{
+  content:"";position:absolute;border-radius:50%;filter:blur(80px);opacity:.5;
+  background:radial-gradient(circle,rgba(124,140,255,.55),transparent 70%);
+  width:60vmax;height:60vmax;left:-10vmax;top:-15vmax;
+  animation:drift 22s var(--ease) infinite alternate;
+}
+.aura::after{
+  background:radial-gradient(circle,rgba(90,209,255,.4),transparent 70%);
+  left:auto;right:-15vmax;top:auto;bottom:-20vmax;
+  animation-duration:28s;animation-delay:-6s;
+}
+@keyframes drift{to{transform:translate(8vmax,6vmax) scale(1.15)}}
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.045;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+.wrap{position:relative;z-index:2;width:100%;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px calc(24px + env(safe-area-inset-bottom));}
+
+/* energy meter behind quiz */
+#energy{position:fixed;left:0;bottom:0;width:100%;height:0%;z-index:1;pointer-events:none;
+  background:linear-gradient(0deg,rgba(124,140,255,.16),rgba(90,209,255,.04) 60%,transparent);
+  transition:height 1.2s var(--ease);}
+
+/* screens */
+.screen{width:100%;max-width:560px;display:none;animation:scrIn .6s var(--ease) both}
+.screen.on{display:block}
+@keyframes scrIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- HOME ---------- */
+.brand-mark{width:60px;height:60px;margin:0 auto 22px;position:relative}
+.brand-mark svg{width:100%;height:100%;filter:drop-shadow(0 0 14px rgba(124,140,255,.6));animation:spin 18s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.eyebrow{font-family:var(--font-en);letter-spacing:.42em;text-transform:uppercase;font-size:11px;color:var(--ink-faint);text-align:center;margin-bottom:14px}
+.home h1{font-family:var(--font-min);font-weight:800;text-align:center;line-height:1.18;font-size:clamp(34px,9vw,52px);letter-spacing:.02em;
+  background:linear-gradient(180deg,#fff,#c8d0e4);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.home .sub{font-family:var(--font-min);font-size:14px;color:var(--accent-2);text-align:center;margin-top:8px;letter-spacing:.18em}
+.home p.lead{color:var(--ink-soft);text-align:center;line-height:1.85;font-size:14.5px;margin:26px auto 0;max-width:400px;font-weight:400}
+.cta{margin-top:34px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.btn{font-family:var(--font-ja);font-weight:700;border:none;cursor:pointer;border-radius:100px;
+  font-size:16px;letter-spacing:.04em;padding:17px 40px;color:#0b0e14;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#fff,#cdd6ff 60%,#a9d8ff);
+  box-shadow:0 8px 30px rgba(124,140,255,.35),inset 0 1px 0 rgba(255,255,255,.7);
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease);width:min(320px,86vw)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(124,140,255,.5)}
+.btn:active{transform:translateY(0) scale(.98)}
+.btn .shine{position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.9) 50%,transparent 70%);transform:translateX(-120%);animation:sweep 4.5s var(--ease) infinite}
+@keyframes sweep{0%,55%{transform:translateX(-120%)}80%,100%{transform:translateX(120%)}}
+.btn.ghost{background:rgba(255,255,255,.045);color:var(--ink);border:1px solid var(--line);box-shadow:none;font-weight:500;font-size:14px;padding:13px 30px}
+.btn.ghost:hover{background:rgba(255,255,255,.08);box-shadow:none}
+.home .meta{margin-top:30px;text-align:center;font-family:var(--font-en);font-size:11px;color:var(--ink-faint);letter-spacing:.1em}
+
+/* ---------- QUIZ ---------- */
+.q-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px}
+.q-count{font-family:var(--font-en);font-size:13px;color:var(--ink-soft);letter-spacing:.1em}
+.q-count b{color:#fff;font-size:22px;font-weight:600}
+.q-count i{font-style:normal;color:var(--ink-faint)}
+.progress{flex:1;margin-left:18px;height:4px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;position:relative}
+.progress span{position:absolute;left:0;top:0;height:100%;border-radius:4px;width:0;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));box-shadow:0 0 12px var(--accent-2);transition:width .6s var(--ease)}
+.q-stage{position:relative;min-height:330px}
+.q-card{position:absolute;inset:0}
+.q-num{font-family:var(--font-en);font-size:12px;letter-spacing:.3em;color:var(--accent-2);margin-bottom:14px;font-weight:600}
+.q-text{font-family:var(--font-min);font-weight:700;font-size:clamp(22px,6vw,28px);line-height:1.5;margin-bottom:28px}
+.opts{display:flex;flex-direction:column;gap:11px}
+.opt{font-family:var(--font-ja);font-weight:500;text-align:left;cursor:pointer;color:var(--ink);
+  background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+  border:1px solid var(--line);border-radius:16px;padding:17px 20px;font-size:15.5px;line-height:1.5;
+  display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;
+  transition:transform .3s var(--ease),border-color .3s,background .3s,box-shadow .3s}
+.opt .dot{width:9px;height:9px;border-radius:50%;background:var(--line);flex-shrink:0;transition:.3s;box-shadow:0 0 0 0 var(--accent-2)}
+.opt:hover{transform:translateX(5px);border-color:rgba(124,140,255,.6);background:linear-gradient(135deg,rgba(124,140,255,.14),rgba(90,209,255,.05));box-shadow:0 8px 24px rgba(124,140,255,.18)}
+.opt:hover .dot{background:var(--accent-2);box-shadow:0 0 12px 2px var(--accent-2)}
+.opt:active{transform:translateX(5px) scale(.985)}
+.opt.chosen{border-color:var(--accent-2);background:linear-gradient(135deg,rgba(90,209,255,.25),rgba(124,140,255,.12))}
+
+/* slide transition */
+.q-card.exit{animation:qOut .42s var(--ease) forwards}
+.q-card.enter{animation:qIn .5s var(--ease) both}
+@keyframes qOut{to{opacity:0;transform:translateX(-40px) scale(.97)}}
+@keyframes qIn{from{opacity:0;transform:translateX(40px) scale(.97)}to{opacity:1;transform:none}}
+
+/* ---------- GENERATING ---------- */
+.gen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60dvh;text-align:center}
+.gen-orb{width:160px;height:160px;position:relative;margin-bottom:40px}
+.gen-orb .ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(124,140,255,.35)}
+.gen-orb .ring:nth-child(1){animation:r1 3s linear infinite}
+.gen-orb .ring:nth-child(2){inset:18px;border-color:rgba(90,209,255,.4);animation:r1 2.2s linear infinite reverse}
+.gen-orb .ring:nth-child(3){inset:36px;border-color:rgba(255,213,107,.35);animation:r1 1.6s linear infinite}
+@keyframes r1{to{transform:rotate(360deg)}}
+.gen-orb .core{position:absolute;inset:54px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,var(--accent) 55%,var(--accent-2));
+  box-shadow:0 0 50px 10px rgba(124,140,255,.7);animation:pulse 1.4s var(--ease) infinite alternate}
+@keyframes pulse{to{transform:scale(1.22);box-shadow:0 0 80px 24px rgba(90,209,255,.8)}}
+.gen-orb .spark{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;left:50%;top:50%;box-shadow:0 0 8px 2px var(--accent-2)}
+.gen-text{font-family:var(--font-min);font-size:18px;letter-spacing:.16em;color:var(--ink);min-height:1.6em}
+.gen-text .cur{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- RESULT / CARD ---------- */
+.result{display:flex;flex-direction:column;align-items:center}
+.reveal-tag{font-family:var(--font-en);letter-spacing:.4em;text-transform:uppercase;font-size:10px;color:var(--ink-faint);margin-bottom:18px}
+.card-scene{perspective:1100px;width:min(340px,84vw);margin-bottom:8px}
+.card{
+  position:relative;width:100%;aspect-ratio:63/88;border-radius:22px;
+  transform-style:preserve-3d;transition:transform .25s var(--ease);
+  will-change:transform;cursor:grab;
+}
+.card.revealing{animation:cardReveal 1.1s var(--ease) both}
+@keyframes cardReveal{0%{opacity:0;transform:rotateY(180deg) scale(.6)}50%{opacity:1}100%{opacity:1;transform:rotateY(0) scale(1)}}
+.card-inner{position:absolute;inset:0;border-radius:22px;overflow:hidden;
+  background:linear-gradient(160deg,#161c2b,#0c0f18);
+  border:1.5px solid var(--rar);
+  box-shadow:0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04) inset, 0 0 40px var(--rar-glow);}
+.card-bg{position:absolute;inset:0;opacity:.9;
+  background:
+    radial-gradient(120% 80% at 50% 0%,var(--key-soft),transparent 60%),
+    radial-gradient(100% 60% at 50% 110%,rgba(0,0,0,.6),transparent);}
+.card-pattern{position:absolute;inset:0;opacity:.10;mix-blend-mode:screen;
+  background-image:repeating-linear-gradient(60deg,transparent 0 12px,var(--key) 12px 13px);}
+/* holographic gloss */
+.holo{position:absolute;inset:0;mix-blend-mode:color-dodge;pointer-events:none;opacity:var(--holo-op,.45);
+  background:
+   conic-gradient(from var(--ang,0deg) at var(--gx,50%) var(--gy,40%),
+     rgba(255,0,170,.0),rgba(255,0,170,.35),rgba(120,0,255,.25),rgba(0,200,255,.35),rgba(0,255,150,.25),rgba(255,220,0,.35),rgba(255,0,170,.0));
+  filter:saturate(1.4);transition:opacity .3s}
+.holo.gleam{position:absolute;inset:0;mix-blend-mode:overlay;
+  background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);
+  background-size:240% 240%;background-position:var(--shx,50%) var(--shy,50%);opacity:.6}
+.rar-N .holo{opacity:.16}
+.rar-R .holo{opacity:.4}
+.card-content{position:absolute;inset:0;display:flex;flex-direction:column;padding:18px 18px 16px;z-index:3}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start}
+.rar-badge{font-family:var(--font-en);font-weight:700;font-size:14px;letter-spacing:.12em;padding:5px 11px;border-radius:8px;
+  color:#0b0e14;background:var(--rar);box-shadow:0 0 18px var(--rar-glow);position:relative;overflow:hidden}
+.rar-badge.ssr{background:linear-gradient(115deg,#ffd56b,#ff8bd0,#9b8bff,#5ad1ff,#ffd56b);background-size:300% 300%;animation:rainbow 4s linear infinite;color:#1a1206}
+@keyframes rainbow{to{background-position:300% 50%}}
+.card-no{font-family:var(--font-en);font-size:10px;letter-spacing:.14em;color:var(--ink-soft);text-align:right;line-height:1.5}
+.card-type-wrap{margin-top:14px;text-align:center}
+.card-type-en{font-family:var(--font-en);font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--key-bright);margin-bottom:5px}
+.card-type{font-family:var(--font-min);font-weight:800;font-size:clamp(23px,7.4vw,30px);line-height:1.25;
+  background:linear-gradient(180deg,#fff,var(--key-bright));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 1px 6px var(--rar-glow))}
+.radar-box{flex:1;display:flex;align-items:center;justify-content:center;margin:6px 0;position:relative}
+.radar-box svg{width:100%;max-width:230px;overflow:visible}
+.card-foot{border-top:1px solid rgba(255,255,255,.12);padding-top:10px}
+.foot-row{display:flex;gap:8px;margin-bottom:8px}
+.foot-cell{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--line-2);border-radius:9px;padding:7px 9px}
+.foot-cell .lbl{font-family:var(--font-en);font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px}
+.foot-cell .val{font-size:11px;font-weight:700;line-height:1.35;color:#fff}
+.foot-cell.color .swatch{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--key);box-shadow:0 0 8px var(--key);margin-right:5px;vertical-align:-1px}
+.card-essence{font-family:var(--font-min);font-size:10.5px;line-height:1.65;color:#dde3ee;text-align:center}
+
+/* result detail panel */
+.detail{width:min(360px,90vw);margin-top:26px;display:flex;flex-direction:column;gap:14px}
+.dpanel{background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:18px;padding:18px 20px}
+.dpanel h4{font-family:var(--font-en);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--accent-2);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.dpanel h4::before{content:"";width:14px;height:1px;background:var(--accent-2)}
+.dpanel p{font-family:var(--font-min);font-size:14px;line-height:1.85;color:var(--ink)}
+.stat-list{display:flex;flex-direction:column;gap:11px}
+.stat{display:flex;align-items:center;gap:12px}
+.stat .sname{width:64px;font-size:12.5px;font-weight:700;flex-shrink:0}
+.stat .sbar{flex:1;height:7px;background:rgba(255,255,255,.07);border-radius:6px;overflow:hidden}
+.stat .sbar i{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--key-bright));transition:width 1s var(--ease)}
+.stat .sval{font-family:var(--font-en);font-size:13px;font-weight:600;width:30px;text-align:right;color:var(--key-bright)}
+
+.actions{margin-top:28px;display:flex;flex-direction:column;gap:11px;align-items:center;width:100%}
+.actions .row{display:flex;gap:10px;width:min(360px,90vw)}
+.actions .row .btn{flex:1;padding:14px 10px;font-size:14px;width:auto}
+.hint{font-size:11px;color:var(--ink-faint);text-align:center;line-height:1.7;max-width:300px;margin-top:4px}
+
+/* ---------- COLLECTION ---------- */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.sec-head h2{font-family:var(--font-min);font-weight:800;font-size:24px}
+.sec-head .back{font-family:var(--font-en);font-size:12px;color:var(--ink-soft);cursor:pointer;letter-spacing:.08em;background:none;border:none;padding:6px}
+.sec-head .back:hover{color:#fff}
+.coll-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:12px}
+.mini{aspect-ratio:63/88;border-radius:12px;border:1.5px solid var(--rar,#444);overflow:hidden;position:relative;cursor:pointer;
+  background:linear-gradient(160deg,#161c2b,#0c0f18);box-shadow:0 8px 22px rgba(0,0,0,.4),0 0 16px var(--rar-glow);
+  transition:transform .3s var(--ease)}
+.mini:hover{transform:translateY(-4px) scale(1.03)}
+.mini .mbg{position:absolute;inset:0;opacity:.8;background:radial-gradient(110% 70% at 50% 0%,var(--key-soft),transparent 65%)}
+.mini .mr{position:absolute;top:6px;left:6px;font-family:var(--font-en);font-weight:700;font-size:9px;padding:2px 5px;border-radius:5px;background:var(--rar);color:#0b0e14}
+.mini .mt{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-family:var(--font-min);font-weight:700;font-size:11px;padding:0 6px;line-height:1.3;color:#fff;text-shadow:0 1px 4px #000}
+.mini .mno{position:absolute;top:7px;right:6px;font-family:var(--font-en);font-size:7px;color:var(--ink-soft)}
+.coll-empty{text-align:center;color:var(--ink-faint);padding:60px 20px;font-size:14px;line-height:2}
+.coll-tools{display:flex;gap:10px;margin-top:22px}
+.coll-tools .btn{flex:1;width:auto}
+
+/* ---------- COMPAT ---------- */
+.compat-pick{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0 24px}
+.cslot{width:120px;aspect-ratio:63/88;border-radius:14px;border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;
+  text-align:center;font-size:12px;color:var(--ink-faint);cursor:pointer;overflow:hidden;position:relative;transition:.3s;background:rgba(255,255,255,.02)}
+.cslot.filled{border-style:solid}
+.cslot:hover{border-color:var(--accent-2)}
+.cslot .mt{font-family:var(--font-min);font-weight:700;color:#fff;font-size:11px}
+.cvs{font-family:var(--font-min);font-weight:800;font-size:20px;color:var(--gold)}
+.compat-score{text-align:center;margin:8px 0 18px;min-height:120px}
+.compat-score .ring-svg{width:130px;height:130px}
+.compat-score .pct{font-family:var(--font-en);font-weight:700;font-size:34px;fill:#fff}
+.compat-score .verdict{font-family:var(--font-min);font-weight:700;font-size:18px;margin-top:6px;color:var(--gold)}
+.compat-score .cdesc{font-size:13px;color:var(--ink-soft);line-height:1.8;margin-top:8px;max-width:340px;margin-left:auto;margin-right:auto}
+.cpicker{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;margin-top:6px}
+
+/* sound toggle */
+.snd{position:fixed;top:14px;right:14px;z-index:40;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
+  background:rgba(13,17,23,.6);backdrop-filter:blur(10px);color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.3s}
+.snd:hover{color:#fff;border-color:var(--accent-2)}
+.snd svg{width:20px;height:20px}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);z-index:60;
+  background:rgba(20,25,35,.95);border:1px solid var(--line);border-radius:12px;padding:12px 22px;font-size:13px;color:#fff;
+  opacity:0;transition:.4s var(--ease);pointer-events:none;backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:380px){.detail,.actions .row{width:92vw}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important}}
+</style>
+</head>
+<body>
+<div class="aura"></div>
+<canvas id="stars"></canvas>
+<div class="grain"></div>
+<div id="energy"></div>
+
+<button class="snd" id="sndBtn" aria-label="サウンド切替"></button>
+
+<div class="wrap">
+
+  <!-- HOME -->
+  <section class="screen on home" id="s-home">
+    <div class="brand-mark">
+      <svg viewBox="0 0 100 100" fill="none">
+        <polygon points="50,6 90,32 76,82 24,82 10,32" stroke="url(#g1)" stroke-width="2.5"/>
+        <polygon points="50,24 74,40 65,70 35,70 26,40" stroke="url(#g1)" stroke-width="1.5" opacity=".6"/>
+        <circle cx="50" cy="50" r="6" fill="#7c8cff"/>
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="100" y2="100"><stop stop-color="#7c8cff"/><stop offset="1" stop-color="#5ad1ff"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div class="eyebrow">Persona &middot; A Single Card of You</div>
+    <h1>ペルソナ</h1>
+    <div class="sub">— あなたという一枚 —</div>
+    <p class="lead">10の問いに、直感で答えて。<br>あなたの本質が、世界に一枚だけの<br>美しいカードになる。</p>
+    <div class="cta">
+      <button class="btn" id="startBtn"><span class="shine"></span>診断をはじめる</button>
+      <button class="btn ghost" id="collBtn">コレクションを見る</button>
+    </div>
+    <div class="meta">10 QUESTIONS &middot; 5 STATS &middot; INFINITE PERSONAS</div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="screen" id="s-quiz">
+    <div class="q-top">
+      <div class="q-count"><b id="qNow">1</b><i> / 10</i></div>
+      <div class="progress"><span id="qBar"></span></div>
+    </div>
+    <div class="q-stage" id="qStage"></div>
+  </section>
+
+  <!-- GENERATING -->
+  <section class="screen" id="s-gen">
+    <div class="gen">
+      <div class="gen-orb" id="genOrb">
+        <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+        <div class="core"></div>
+      </div>
+      <div class="gen-text" id="genText"></div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="s-result">
+    <div class="result">
+      <div class="reveal-tag" id="revealTag">Your Persona</div>
+      <div class="card-scene"><div class="card" id="card"></div></div>
+      <div class="detail" id="detail"></div>
+      <div class="actions">
+        <button class="btn" id="saveBtn"><span class="shine"></span>カードを保存する</button>
+        <div class="row">
+          <button class="btn ghost" id="shareBtn">Xでシェア</button>
+          <button class="btn ghost" id="againBtn">もう一度診断</button>
+        </div>
+        <p class="hint" id="resultHint"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLLECTION -->
+  <section class="screen" id="s-coll">
+    <div class="sec-head">
+      <h2>コレクション</h2>
+      <button class="back" id="collBack">&larr; 戻る</button>
+    </div>
+    <div id="collBody"></div>
+    <div class="coll-tools" id="collTools" style="display:none">
+      <button class="btn ghost" id="compatBtn">相性チェック</button>
+      <button class="btn ghost" id="newFromColl">新しく診断</button>
+    </div>
+  </section>
+
+  <!-- COMPAT -->
+  <section class="screen" id="s-compat">
+    <div class="sec-head">
+      <h2>相性チェック</h2>
+      <button class="back" id="compatBack">&larr; 戻る</button>
+    </div>
+    <div class="compat-pick">
+      <div class="cslot" id="slotA" data-slot="0">1枚目を<br>選ぶ</div>
+      <div class="cvs">VS</div>
+      <div class="cslot" id="slotB" data-slot="1">2枚目を<br>選ぶ</div>
+    </div>
+    <div class="compat-score" id="compatScore"></div>
+    <p class="hint" style="margin:0 auto 14px">下のカードをタップして2枚選んでください</p>
+    <div class="cpicker" id="compatPicker"></div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   PERSONA — あなたという一枚
+   ============================================================ */
+
+const ABIL = [
+  {key:'INT', ja:'知性',   en:'INTELLECT',   hue:212},
+  {key:'SEN', ja:'感性',   en:'SENSITIVITY', hue:286},
+  {key:'DRV', ja:'行動力', en:'DRIVE',       hue:8},
+  {key:'EMP', ja:'共感力', en:'EMPATHY',     hue:42},
+  {key:'ORI', ja:'独創性', en:'ORIGINALITY', hue:162},
+];
+
+/* ---------- QUESTIONS ---------- */
+const QUESTIONS = [
+  { q:'初めての場所に立ったとき、あなたは？', o:[
+    {t:'先頭を歩いて切り拓く', w:{DRV:3,ORI:1}},
+    {t:'まず全体を観察する',   w:{INT:3,SEN:1}},
+    {t:'誰かと一緒に進む',     w:{EMP:3}},
+    {t:'自分のペースで漂う',   w:{SEN:2,ORI:1}},
+  ]},
+  { q:'大事な決断をするとき、いちばん重視するのは？', o:[
+    {t:'筋の通った論理',     w:{INT:3}},
+    {t:'心が動くかどうか',   w:{SEN:2,EMP:1}},
+    {t:'直感のひらめき',     w:{ORI:2,SEN:1}},
+    {t:'これまでの経験',     w:{INT:1,DRV:1,EMP:1}},
+  ]},
+  { q:'理想の休日の過ごし方は？', o:[
+    {t:'大切な人と会って話す', w:{EMP:3}},
+    {t:'一人で何かに没頭する', w:{INT:2,ORI:1}},
+    {t:'新しいことに挑戦する', w:{DRV:2,ORI:1}},
+    {t:'ただ静かに休む',       w:{SEN:2}},
+  ]},
+  { q:'あなたを心から動かすものは？', o:[
+    {t:'未知への好奇心',       w:{ORI:3,INT:1}},
+    {t:'やり遂げる達成感',     w:{DRV:3}},
+    {t:'人とのつながり',       w:{EMP:3}},
+    {t:'守られた安心感',       w:{SEN:1,EMP:1}},
+  ]},
+  { q:'困難にぶつかったとき、まず？', o:[
+    {t:'正面から突破する',     w:{DRV:3}},
+    {t:'冷静に分析し攻略する', w:{INT:3}},
+    {t:'仲間と力を合わせる',   w:{EMP:2,DRV:1}},
+    {t:'まったく別の道を探す', w:{ORI:3}},
+  ]},
+  { q:'いちばん心を揺さぶられるのは？', o:[
+    {t:'息をのむ景色や音楽',   w:{SEN:3}},
+    {t:'鮮やかなアイデア',     w:{ORI:3}},
+    {t:'さりげない優しさ',     w:{EMP:3}},
+    {t:'知らなかった真実',     w:{INT:3}},
+  ]},
+  { q:'グループの中での、あなたの役割は？', o:[
+    {t:'みんなを率いる人',     w:{DRV:2,EMP:1}},
+    {t:'知恵を出す参謀',       w:{INT:3}},
+    {t:'場を和ませる人',       w:{EMP:2,SEN:1}},
+    {t:'独自の視点を出す人',   w:{ORI:3}},
+  ]},
+  { q:'未来について、あなたは？', o:[
+    {t:'緻密に計画を立てる',   w:{INT:2,DRV:1}},
+    {t:'大きな夢を描く',       w:{ORI:2,SEN:1}},
+    {t:'流れに身をまかせる',   w:{SEN:2}},
+    {t:'みんなと共に進みたい', w:{EMP:2,DRV:1}},
+  ]},
+  { q:'自分でいちばん信じている力は？', o:[
+    {t:'深く考え抜く力',       w:{INT:3}},
+    {t:'機微を感じ取る力',     w:{SEN:3}},
+    {t:'最後までやり遂げる力', w:{DRV:3}},
+    {t:'人に寄り添う力',       w:{EMP:3}},
+  ]},
+  { q:'最後に。大切にしたい生き方は？', o:[
+    {t:'真理を追い求める',     w:{INT:2,ORI:1}},
+    {t:'心のままに生きる',     w:{SEN:2,ORI:1}},
+    {t:'世界を切り拓く',       w:{DRV:2,ORI:1}},
+    {t:'人を大切にする',       w:{EMP:3}},
+  ]},
+];
+
+/* ---------- TYPES (primary_secondary) ---------- */
+const TYPES = {
+  INT_SEN:{name:'静謐の賢者', en:'THE SERENE SAGE',
+    essence:'騒がしさから一歩引き、物事の奥にある本質を静かに見つめる人。鋭い論理と繊細な感受性を併せ持ち、誰も気づかない美しい法則を見つけ出す。その落ち着きが、まわりに深い安心を与える。',
+    talent:'複雑なものを、すっと腑に落ちる言葉に変える力', compat:'SEN_EMP'},
+  INT_DRV:{name:'燃える理論家', en:'THE BLAZING STRATEGIST',
+    essence:'頭の中で組み上げた理論を、ためらいなく現実へ叩きつける人。考えるだけで終わらせず、必ず動いて確かめる。その熱量と論理が噛み合ったとき、誰も止められない推進力になる。',
+    talent:'机上の空論を、動く仕組みへ落とし込む力', compat:'ORI_INT'},
+  INT_EMP:{name:'導きの智将', en:'THE GUIDING MIND',
+    essence:'冷静な頭脳と、人の心を読む温かさを兼ね備えた人。状況を俯瞰しながらも、一人ひとりの気持ちを置き去りにしない。あなたの助言は、いつも論理と思いやりの両方でできている。',
+    talent:'最適解と、人の納得を同時に作り出す力', compat:'EMP_DRV'},
+  INT_ORI:{name:'孤高の発明家', en:'THE LONE INVENTOR',
+    essence:'常識の地図を疑い、自分だけの問いを立てる人。深い思考と尽きない発想で、まだ世界にない答えを作り出す。理解されにくくても、あなたの頭の中ではいつも新しい宇宙が回っている。',
+    talent:'「そもそも」から問い直し、別解を生む力', compat:'ORI_SEN'},
+
+  SEN_INT:{name:'透明な観測者', en:'THE CLEAR OBSERVER',
+    essence:'世界のかすかな揺らぎを感じ取り、それを澄んだ言葉で捉え直す人。感情に飲まれず、しかし冷たくもない。あなたのまなざしは、見過ごされがちな美しさをそっと拾い上げる。',
+    talent:'言葉にならない感覚を、輪郭ある形にする力', compat:'INT_SEN'},
+  SEN_DRV:{name:'衝動の表現者', en:'THE VIVID ARTIST',
+    essence:'湧き上がる感情を、そのまま行動や表現へ放つ人。理屈より先に体が動き、その瞬間の鮮やかさが人を惹きつける。あなたの生き方そのものが、ひとつの作品になっている。',
+    talent:'感じたものを、その熱量のまま形にする力', compat:'ORI_DRV'},
+  SEN_EMP:{name:'共鳴する詩人', en:'THE RESONANT POET',
+    essence:'人の感情にそっと波長を合わせ、その奥にあるものまで感じ取る人。豊かな感受性で世界の機微を受け止め、誰かの痛みも喜びも、自分のことのように味わえる優しい魂。',
+    talent:'言葉にできない気持ちに、寄り添う力', compat:'INT_SEN'},
+  SEN_ORI:{name:'幻想の旅人', en:'THE DREAMING WANDERER',
+    essence:'目に映る世界の向こうに、もう一つの景色を見ている人。豊かな感性と自由な発想で、ありふれた日常を物語に変えてしまう。あなたの内側には、誰も知らない美しい国が広がっている。',
+    talent:'平凡な瞬間に、特別な意味を見つける力', compat:'ORI_SEN'},
+
+  DRV_INT:{name:'戦略の開拓者', en:'THE TACTICAL PIONEER',
+    essence:'まだ道のない場所へ、計算しながら踏み出す人。勢いだけでなく、勝ち筋を見極めてから動く。あなたが進めば、後から確かな道ができている。挑戦と知略、その両輪で前へ進む。',
+    talent:'混沌の中から、最初の一手を見つける力', compat:'INT_DRV'},
+  DRV_SEN:{name:'情熱の旗手', en:'THE PASSIONATE BANNER',
+    essence:'胸の奥の熱を、まっすぐ行動に変える人。感じたことを我慢できず、その純度の高い情熱が周りの心まで燃やしていく。あなたが本気になる姿そのものが、誰かの勇気になる。',
+    talent:'場の空気を、一瞬で熱に変える力', compat:'SEN_DRV'},
+  DRV_EMP:{name:'旗を掲げる者', en:'THE STANDARD-BEARER',
+    essence:'みんなの想いを背負い、先頭で旗を掲げる人。強い行動力と、人を思う心が同居している。あなたが「行こう」と言えば、不思議とみんながついていきたくなる。生まれながらの推進者。',
+    talent:'バラバラな想いを、一つの方向へ束ねる力', compat:'EMP_DRV'},
+  DRV_ORI:{name:'嵐を呼ぶ革命家', en:'THE STORM-BORN REBEL',
+    essence:'既存のルールに収まらず、自分の手で流れを変えていく人。斬新な発想を、すさまじい行動力で現実にねじ込む。あなたが通り過ぎたあとには、世界が少しだけ作り変えられている。',
+    talent:'「当たり前」を壊して、新しい常識を作る力', compat:'ORI_DRV'},
+
+  EMP_INT:{name:'慈愛の戦略家', en:'THE KIND TACTICIAN',
+    essence:'人の心の機微を読み解き、誰も傷つけない道を冷静に設計する人。優しさを感情で終わらせず、知性で形にする。あなたのそばにいると、守られていると感じる人が多いはず。',
+    talent:'対立を、みんなが納得する形へ解く力', compat:'INT_EMP'},
+  EMP_SEN:{name:'心を映す癒し手', en:'THE GENTLE HEALER',
+    essence:'人の感情をまるで自分の鏡のように映し取り、そっと寄り添う人。繊細さと優しさで、言葉にならない想いまで受け止める。あなたの存在そのものが、誰かの避難所になっている。',
+    talent:'張りつめた心を、ほどいてあげる力', compat:'SEN_EMP'},
+  EMP_DRV:{name:'共感する革命家', en:'THE EMPATHIC LEADER',
+    essence:'人の痛みに突き動かされ、それを変えるために自ら動く人。優しさが原動力で、その行動力が周りを巻き込んでいく。「誰かのために」が、あなたを最も強くする。',
+    talent:'人の想いを、現実を動かす力に変える力', compat:'DRV_EMP'},
+  EMP_ORI:{name:'夢を紡ぐ世話役', en:'THE DREAMWEAVER',
+    essence:'まわりの人の可能性を信じ、その背中をそっと押す人。温かさと自由な発想で、誰かの「やってみたい」を育てる。あなたのまなざしの中で、人は本来の自分を取り戻していく。',
+    talent:'人の中に眠る才能を、見つけ出す力', compat:'ORI_EMP'},
+
+  ORI_INT:{name:'孤高の夢想家', en:'THE SOLITARY VISIONARY',
+    essence:'誰も見ていない遠くを、たった一人で見つめている人。自由な発想と深い思考で、まだ存在しない未来を心に描く。理解されるより前に、あなたはもうその先を歩いている。',
+    talent:'まだ無い未来を、ありありと描き出す力', compat:'INT_ORI'},
+  ORI_SEN:{name:'色を生む創造者', en:'THE COLOR-MAKER',
+    essence:'世界をまっさらな目で見つめ、そこに新しい色を加えていく人。発想の豊かさと繊細な感性が溶け合い、触れるものすべてを少しだけ美しくする。あなたの感性は、それ自体がひとつの才能。',
+    talent:'ありふれたものを、作品に変えてしまう力', compat:'SEN_ORI'},
+  ORI_DRV:{name:'世界を変える奇才', en:'THE GAME-CHANGER',
+    essence:'人がためらう発想を、平然と実行に移してしまう人。独創性と行動力が一体となり、不可能と言われたことを「やってみた」で覆す。あなたの存在が、未来の選択肢を増やしていく。',
+    talent:'誰もやらなかったことを、最初にやる力', compat:'DRV_ORI'},
+  ORI_EMP:{name:'やさしき革命児', en:'THE TENDER MAVERICK',
+    essence:'独自の世界を持ちながら、人への優しさを忘れない人。新しい発想で道を切り拓きつつ、置いていかれる人がいないか必ず振り返る。あなたの革命は、いつも温かい。',
+    talent:'新しさと優しさを、両立させる力', compat:'EMP_ORI'},
+};
+
+/* ---------- RARITY ---------- */
+const RARITY = {
+  N:  {label:'N',  full:'NORMAL',     glow:'rgba(170,180,196,.4)', tag:'バランスのとれた、穏やかな個性'},
+  R:  {label:'R',  full:'RARE',       glow:'rgba(90,209,255,.55)', tag:'はっきりとした、魅力的な個性'},
+  SR: {label:'SR', full:'SUPER RARE', glow:'rgba(192,139,255,.6)', tag:'際立った、希少な個性'},
+  SSR:{label:'SSR',full:'SSR',        glow:'rgba(255,213,107,.7)', tag:'あなただけの、唯一無二の輝き'},
+};
+const RAR_COLOR = {N:'#aab4c4',R:'#5ad1ff',SR:'#c08bff',SSR:'#ffd56b'};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let answers = [];
+let curQ = 0;
+let lastResult = null;
+let soundOn = true;
+
+/* ============================================================
+   AUDIO (Web Audio API)
+   ============================================================ */
+let actx = null;
+function ac(){ if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return actx; }
+function tone(freq,dur,type='sine',vol=.18,when=0){
+  if(!soundOn)return; const c=ac(); if(!c)return;
+  const t=c.currentTime+when;
+  const o=c.createOscillator(),g=c.createGain();
+  o.type=type;o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(vol,t+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+.05);
+}
+function sfxSelect(){ tone(520,.12,'triangle',.14); tone(780,.14,'sine',.08,.02); }
+function sfxStep(){ tone(360,.18,'sine',.1); }
+function sfxRise(){
+  if(!soundOn)return; const c=ac(); if(!c)return;
+  const o=c.createOscillator(),g=c.createGain();
+  o.type='sawtooth';o.frequency.setValueAtTime(120,c.currentTime);
+  o.frequency.exponentialRampToValueAtTime(880,c.currentTime+3);
+  g.gain.setValueAtTime(.0001,c.currentTime);
+  g.gain.linearRampToValueAtTime(.08,c.currentTime+2.4);
+  g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+3.2);
+  o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+3.3);
+}
+function sfxFanfare(rar){
+  if(!soundOn)return;
+  const base=[523,659,784,1047];
+  const seq = rar==='SSR'?[523,659,784,1047,1319,1568]:rar==='SR'?[523,659,784,1047,1319]:rar==='R'?[523,659,784,1047]:[523,659,784];
+  seq.forEach((f,i)=>tone(f,.5,'triangle',.16,i*0.09));
+  if(rar==='SSR'||rar==='SR'){ seq.forEach((f,i)=>tone(f*2,.6,'sine',.06,i*0.09+.04)); }
+}
+
+/* ============================================================
+   COMPUTE PERSONA (deterministic)
+   ============================================================ */
+function computeMaxRaw(){
+  const max={INT:0,SEN:0,DRV:0,EMP:0,ORI:0};
+  QUESTIONS.forEach(q=>{
+    const best={INT:0,SEN:0,DRV:0,EMP:0,ORI:0};
+    q.o.forEach(o=>{ for(const k in o.w){ if(o.w[k]>best[k]) best[k]=o.w[k]; }});
+    for(const k in best) max[k]+=best[k];
+  });
+  return max;
+}
+const MAXRAW = computeMaxRaw();
+
+function compute(ans){
+  const raw={INT:0,SEN:0,DRV:0,EMP:0,ORI:0};
+  ans.forEach((oi,qi)=>{
+    const w=QUESTIONS[qi].o[oi].w;
+    for(const k in w) raw[k]+=w[k];
+  });
+  // scale to flattering 32–98 band, preserving relative shape
+  const stats={};
+  ABIL.forEach(a=>{
+    const pct = raw[a.key]/MAXRAW[a.key]; // 0..1
+    stats[a.key]=Math.round(32 + pct*66);
+  });
+  // order by value (tiebreak by ABIL order for determinism)
+  const ordered=[...ABIL].sort((a,b)=> (stats[b.key]-stats[a.key]) || (ABIL.indexOf(a)-ABIL.indexOf(b)));
+  const primary=ordered[0].key, secondary=ordered[1].key;
+  const typeKey = primary+'_'+secondary;
+  const type = TYPES[typeKey] || TYPES.INT_SEN;
+
+  // rarity
+  const vals=ABIL.map(a=>stats[a.key]);
+  const peak=Math.max(...vals), lo=Math.min(...vals);
+  const avg=vals.reduce((s,v)=>s+v,0)/5;
+  const range=peak-lo;
+  const variance=vals.reduce((s,v)=>s+(v-avg)*(v-avg),0)/5;
+  const sd=Math.sqrt(variance);
+  let score = Math.max(0,peak-58)*1.5 + range*0.55 + sd*1.4;
+  const balanced = range<=15;
+  if(balanced) score += (avg-50)*2.2; // balanced-high gets its own specialness
+  let rar='N';
+  if(score>=64) rar='SSR'; else if(score>=40) rar='SR'; else if(score>=18) rar='R';
+
+  // key color: weighted circular mean of ability hues
+  let x=0,y=0;
+  ABIL.forEach(a=>{ const v=stats[a.key]; const rad=a.hue*Math.PI/180; x+=v*Math.cos(rad); y+=v*Math.sin(rad); });
+  let hue=Math.atan2(y,x)*180/Math.PI; if(hue<0)hue+=360;
+  const sat = Math.round(62 + Math.min(28, sd*1.4));
+  const key=`hsl(${hue.toFixed(0)},${sat}%,62%)`;
+  const keyBright=`hsl(${hue.toFixed(0)},${Math.min(96,sat+18)}%,72%)`;
+  const keySoft=`hsla(${hue.toFixed(0)},${sat}%,55%,.45)`;
+  const colorName = hueName(hue);
+
+  // serial — deterministic from answers + type
+  let h=2166136261;
+  const sstr=ans.join('')+typeKey;
+  for(let i=0;i<sstr.length;i++){ h^=sstr.charCodeAt(i); h=Math.imul(h,16777619); }
+  const serial = (Math.abs(h)%999000+1000);
+
+  return {
+    stats, primary, secondary, typeKey, type, rar,
+    key, keyBright, keySoft, colorName, hue:Math.round(hue),
+    serial, answers:[...ans], ts:Date.now()
+  };
+}
+
+function hueName(h){
+  const names=[[15,'燃える紅'],[40,'黄金'],[65,'陽だまりの黄'],[95,'若葉の緑'],[150,'翡翠'],[185,'静かな青緑'],[215,'深い蒼'],[255,'藍'],[290,'神秘の紫'],[325,'紅紫'],[360,'燃える紅']];
+  for(const [lim,nm] of names){ if(h<=lim) return nm; }
+  return '蒼';
+}
+
+/* ============================================================
+   SCREENS
+   ============================================================ */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+/* ---------- QUIZ ---------- */
+function startQuiz(){
+  if(actx&&actx.state==='suspended')actx.resume();
+  answers=[]; curQ=0;
+  document.getElementById('energy').style.height='0%';
+  show('s-quiz');
+  renderQ(0,false);
+}
+function renderQ(i,animate){
+  const stage=document.getElementById('qStage');
+  const q=QUESTIONS[i];
+  const el=document.createElement('div');
+  el.className='q-card'+(animate?' enter':'');
+  el.innerHTML=`
+    <div class="q-num">QUESTION ${String(i+1).padStart(2,'0')}</div>
+    <div class="q-text">${q.q}</div>
+    <div class="opts">${q.o.map((o,oi)=>`<button class="opt" data-oi="${oi}"><span class="dot"></span>${o.t}</button>`).join('')}</div>`;
+  if(!animate) stage.innerHTML='';
+  stage.appendChild(el);
+  el.querySelectorAll('.opt').forEach(b=>{
+    b.addEventListener('click',()=>choose(parseInt(b.dataset.oi),b));
+  });
+  document.getElementById('qNow').textContent=i+1;
+  document.getElementById('qBar').style.width=(i/QUESTIONS.length*100)+'%';
+}
+function choose(oi,btn){
+  if(btn.parentElement.querySelector('.locked'))return;
+  btn.classList.add('chosen');
+  btn.classList.add('locked');
+  sfxSelect();
+  answers[curQ]=oi;
+  // energy fill
+  document.getElementById('energy').style.height=((curQ+1)/QUESTIONS.length*100)+'%';
+  const cur=document.querySelectorAll('.q-card');
+  const curEl=cur[cur.length-1];
+  setTimeout(()=>{
+    if(curQ<QUESTIONS.length-1){
+      curEl.classList.add('exit');
+      sfxStep();
+      setTimeout(()=>{ curEl.remove(); curQ++; renderQ(curQ,true); },380);
+    }else{
+      document.getElementById('qBar').style.width='100%';
+      curEl.classList.add('exit');
+      setTimeout(()=>generate(),420);
+    }
+  },330);
+}
+
+/* ---------- GENERATING ---------- */
+function generate(){
+  show('s-gen');
+  sfxRise();
+  spawnSparks();
+  const result=compute(answers);
+  lastResult=result;
+  const lines=['あなたの答えを読み解いています','5つの力が静かに目を覚ます','ペルソナが、かたちを得ていく','まもなく — あなたという一枚'];
+  const gt=document.getElementById('genText');
+  let li=0;
+  gt.innerHTML=lines[0]+'<span class="cur">_</span>';
+  const iv=setInterval(()=>{
+    li++;
+    if(li<lines.length){ gt.innerHTML=lines[li]+'<span class="cur">_</span>'; }
+  },950);
+  // intensify orb for high rarity
+  const orb=document.getElementById('genOrb');
+  if(result.rar==='SSR'||result.rar==='SR'){ orb.style.filter='drop-shadow(0 0 30px '+RARITY[result.rar].glow+')'; }
+  setTimeout(()=>{ clearInterval(iv); orb.style.filter=''; showResult(result,true); },3600);
+}
+function spawnSparks(){
+  const orb=document.getElementById('genOrb');
+  orb.querySelectorAll('.spark').forEach(s=>s.remove());
+  for(let i=0;i<14;i++){
+    const s=document.createElement('div');s.className='spark';
+    const ang=i/14*Math.PI*2, dist=70+Math.random()*30;
+    s.animate([
+      {transform:`translate(-50%,-50%) translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px) scale(0)`,opacity:0},
+      {opacity:1,offset:.3},
+      {transform:`translate(-50%,-50%) translate(0,0) scale(1.4)`,opacity:0}
+    ],{duration:1400+Math.random()*800,iterations:Infinity,delay:i*90,easing:'cubic-bezier(.4,0,.2,1)'});
+    orb.appendChild(s);
+  }
+}
+
+/* ============================================================
+   RADAR CHART (SVG)
+   ============================================================ */
+function radarSVG(stats,key,keyBright,animate){
+  const cx=120,cy=118,R=82;
+  const N=5;
+  const pt=(i,r)=>{ const a=-Math.PI/2 + i*2*Math.PI/N; return [cx+Math.cos(a)*r, cy+Math.sin(a)*r]; };
+  let grid='';
+  [0.25,0.5,0.75,1].forEach(f=>{
+    const p=Array.from({length:N},(_,i)=>pt(i,R*f).join(',')).join(' ');
+    grid+=`<polygon points="${p}" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="1"/>`;
+  });
+  let axes='';
+  for(let i=0;i<N;i++){ const[x,y]=pt(i,R); axes+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="rgba(255,255,255,.08)" stroke-width="1"/>`; }
+  const valsPts=ABIL.map((a,i)=>pt(i, R*Math.max(0.06,stats[a.key]/100)));
+  const poly=valsPts.map(p=>p.join(',')).join(' ');
+  const zero=Array.from({length:N},(_,i)=>pt(i,0.001).join(',')).join(' ');
+  // labels
+  let labels='';
+  ABIL.forEach((a,i)=>{
+    const [lx,ly]=pt(i,R+18);
+    const anchor = Math.abs(lx-cx)<3?'middle':(lx>cx?'start':'end');
+    labels+=`<text x="${lx}" y="${ly+3}" text-anchor="${anchor}" fill="${keyBright}" font-family="Zen Kaku Gothic New" font-size="11" font-weight="700">${a.ja}</text>`;
+    const [vx,vy]=valsPts[i];
+    labels+=`<circle cx="${vx}" cy="${vy}" r="2.6" fill="#fff"/>`;
+  });
+  const anim = animate?`<animate attributeName="points" from="${zero}" to="${poly}" dur="1s" begin="0.2s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1" keyTimes="0;1"/>`:'';
+  return `<svg viewBox="0 0 240 236">
+    <defs>
+      <radialGradient id="rg" cx="50%" cy="48%" r="60%">
+        <stop offset="0%" stop-color="${keyBright}" stop-opacity=".55"/>
+        <stop offset="100%" stop-color="${key}" stop-opacity=".25"/>
+      </radialGradient>
+    </defs>
+    ${grid}${axes}
+    <polygon points="${animate?zero:poly}" fill="url(#rg)" stroke="${keyBright}" stroke-width="2" stroke-linejoin="round" filter="drop-shadow(0 0 6px ${key})">${anim}</polygon>
+    ${labels}
+  </svg>`;
+}
+
+/* ============================================================
+   CARD RENDER
+   ============================================================ */
+function cardHTML(r,animate){
+  const rc=RAR_COLOR[r.rar];
+  const rarBadgeCls = r.rar==='SSR'?'rar-badge ssr':'rar-badge';
+  return `
+  <div class="card-inner">
+    <div class="card-bg"></div>
+    <div class="card-pattern"></div>
+    <div class="holo"></div>
+    <div class="holo gleam"></div>
+    <div class="card-content">
+      <div class="card-head">
+        <span class="${rarBadgeCls}">${RARITY[r.rar].label}</span>
+        <span class="card-no">No.${String(r.serial).padStart(6,'0')}<br>${RARITY[r.rar].full}</span>
+      </div>
+      <div class="card-type-wrap">
+        <div class="card-type-en">${r.type.en}</div>
+        <div class="card-type">${r.type.name}</div>
+      </div>
+      <div class="radar-box">${radarSVG(r.stats,r.key,r.keyBright,animate)}</div>
+      <div class="card-foot">
+        <div class="foot-row">
+          <div class="foot-cell"><div class="lbl">Talent / 秘めた才能</div><div class="val">${r.type.talent}</div></div>
+        </div>
+        <div class="foot-row">
+          <div class="foot-cell"><div class="lbl">Best Match / 相性</div><div class="val">${TYPES[r.type.compat].name}</div></div>
+          <div class="foot-cell color"><div class="lbl">Key Color</div><div class="val"><span class="swatch"></span>${r.colorName}</div></div>
+        </div>
+        <div class="card-essence">${r.type.essence}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function applyCardVars(el,r){
+  el.style.setProperty('--rar',RAR_COLOR[r.rar]);
+  el.style.setProperty('--rar-glow',RARITY[r.rar].glow);
+  el.style.setProperty('--key',r.key);
+  el.style.setProperty('--key-bright',r.keyBright);
+  el.style.setProperty('--key-soft',r.keySoft);
+  el.className='card rar-'+r.rar;
+}
+
+function showResult(r,animate){
+  show('s-result');
+  const card=document.getElementById('card');
+  card.innerHTML=cardHTML(r,animate);
+  applyCardVars(card,r);
+  if(animate){ card.classList.add('revealing'); setTimeout(()=>card.classList.remove('revealing'),1200); sfxFanfare(r.rar); ssrBurst(r.rar); }
+  enableTilt(card);
+
+  // detail
+  const d=document.getElementById('detail');
+  d.innerHTML=`
+    <div class="dpanel">
+      <h4>RARITY &middot; ${RARITY[r.rar].full}</h4>
+      <p style="font-family:var(--font-min);color:${RAR_COLOR[r.rar]};font-weight:700">${RARITY[r.rar].tag}</p>
+    </div>
+    <div class="dpanel">
+      <h4>Status / 能力値</h4>
+      <div class="stat-list">${ABIL.map(a=>`
+        <div class="stat">
+          <span class="sname">${a.ja}</span>
+          <span class="sbar"><i data-w="${r.stats[a.key]}"></i></span>
+          <span class="sval">${r.stats[a.key]}</span>
+        </div>`).join('')}</div>
+    </div>
+    <div class="dpanel">
+      <h4>Essence / あなたの本質</h4>
+      <p>${r.type.essence}</p>
+    </div>`;
+  d.querySelector('.dpanel:nth-child(2)').style.setProperty('--key-bright',r.keyBright);
+  d.querySelectorAll('.stat .sbar i').forEach(i=>{ i.style.setProperty('--key-bright',r.keyBright); });
+  setTimeout(()=>{ d.querySelectorAll('.stat .sbar i').forEach(i=>{ i.style.width=i.dataset.w+'%'; }); },animate?900:200);
+
+  document.getElementById('resultHint').textContent='💡 スマホは傾けて・PCはカードにマウスを乗せて、ホログラムの輝きを楽しめます';
+}
+
+function ssrBurst(rar){
+  if(rar!=='SSR'&&rar!=='SR')return;
+  const scene=document.querySelector('.card-scene');
+  const n=rar==='SSR'?40:20;
+  for(let i=0;i<n;i++){
+    const p=document.createElement('div');
+    const hue = rar==='SSR'? (i/n*360) : 200+Math.random()*80;
+    p.style.cssText=`position:absolute;left:50%;top:45%;width:7px;height:7px;border-radius:50%;pointer-events:none;z-index:5;
+      background:hsl(${hue},90%,65%);box-shadow:0 0 10px hsl(${hue},90%,65%)`;
+    scene.appendChild(p);
+    const ang=Math.random()*Math.PI*2, dist=120+Math.random()*160;
+    p.animate([
+      {transform:'translate(-50%,-50%) scale(.3)',opacity:1},
+      {transform:`translate(${Math.cos(ang)*dist-50}%,${Math.sin(ang)*dist-50}%) scale(1)`,opacity:0}
+    ],{duration:900+Math.random()*700,easing:'cubic-bezier(.1,.7,.3,1)'}).onfinish=()=>p.remove();
+  }
+}
+
+/* ============================================================
+   TILT 3D + HOLOGRAM
+   ============================================================ */
+let tiltRAF=null;
+function enableTilt(card){
+  const scene=card.parentElement;
+  let tx=0,ty=0,cur={x:0,y:0};
+  function setHolo(px,py){
+    card.style.setProperty('--gx',(px*100)+'%');
+    card.style.setProperty('--gy',(py*100)+'%');
+    card.style.setProperty('--shx',(px*100)+'%');
+    card.style.setProperty('--shy',(py*100)+'%');
+    card.style.setProperty('--ang',(px*120)+'deg');
+    card.style.setProperty('--holo-op', (0.35+Math.abs(px-.5)*0.6).toFixed(2));
+  }
+  function move(e){
+    const rect=scene.getBoundingClientRect();
+    const cx=e.clientX!==undefined?e.clientX:(e.touches&&e.touches[0].clientX);
+    const cy=e.clientY!==undefined?e.clientY:(e.touches&&e.touches[0].clientY);
+    if(cx===undefined)return;
+    const px=(cx-rect.left)/rect.width, py=(cy-rect.top)/rect.height;
+    tx=(py-.5)*-20; ty=(px-.5)*22;
+    setHolo(px,py);
+    if(!tiltRAF) loop();
+  }
+  function loop(){
+    cur.x+=(tx-cur.x)*.15; cur.y+=(ty-cur.y)*.15;
+    card.style.transform=`rotateX(${cur.x.toFixed(2)}deg) rotateY(${cur.y.toFixed(2)}deg)`;
+    if(Math.abs(tx-cur.x)>.05||Math.abs(ty-cur.y)>.05){ tiltRAF=requestAnimationFrame(loop); }
+    else { card.style.transform=`rotateX(${tx.toFixed(2)}deg) rotateY(${ty.toFixed(2)}deg)`; tiltRAF=null; }
+  }
+  function reset(){ tx=0;ty=0; setHolo(.5,.4); if(!tiltRAF)loop(); }
+  scene.onmousemove=move;
+  scene.onmouseleave=reset;
+  scene.ontouchmove=e=>{ move(e); };
+  // gyro
+  if(window.DeviceOrientationEvent){
+    window.addEventListener('deviceorientation',ge=>{
+      if(!document.getElementById('s-result').classList.contains('on'))return;
+      if(ge.beta==null)return;
+      tx=Math.max(-18,Math.min(18, ge.beta-30 ))*-0.6;
+      ty=Math.max(-22,Math.min(22, ge.gamma))*0.9;
+      setHolo(0.5+ (ge.gamma||0)/90, 0.4+ (ge.beta-30||0)/120);
+      if(!tiltRAF)loop();
+    },true);
+  }
+  setHolo(.5,.4);
+}
+
+/* ============================================================
+   COLLECTION (localStorage)
+   ============================================================ */
+const LS_KEY='persona_collection_v1';
+function loadColl(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||[];}catch(e){return[];} }
+function saveColl(arr){ try{localStorage.setItem(LS_KEY,JSON.stringify(arr));}catch(e){} }
+function addToColl(r){
+  let arr=loadColl();
+  // dedupe by serial
+  if(arr.some(x=>x.serial===r.serial)) return false;
+  arr.unshift(r);
+  if(arr.length>20) arr=arr.slice(0,20);
+  saveColl(arr);
+  return true;
+}
+
+function miniHTML(r){
+  return `<div class="mini rar-${r.rar}" data-serial="${r.serial}" style="--rar:${RAR_COLOR[r.rar]};--rar-glow:${RARITY[r.rar].glow};--key-soft:${r.keySoft}">
+    <div class="mbg"></div>
+    <span class="mr" style="background:${RAR_COLOR[r.rar]}">${RARITY[r.rar].label}</span>
+    <span class="mno">No.${String(r.serial).padStart(6,'0')}</span>
+    <span class="mt">${r.type.name}</span>
+  </div>`;
+}
+
+function renderColl(){
+  const arr=loadColl();
+  const body=document.getElementById('collBody');
+  const tools=document.getElementById('collTools');
+  if(arr.length===0){
+    body.innerHTML=`<div class="coll-empty">まだカードがありません。<br>診断して、最初の一枚を手に入れましょう。</div>`;
+    tools.style.display='none';
+  }else{
+    body.innerHTML=`<div class="coll-grid">${arr.map(miniHTML).join('')}</div>`;
+    tools.style.display='flex';
+    body.querySelectorAll('.mini').forEach(m=>{
+      m.addEventListener('click',()=>{
+        const r=arr.find(x=>x.serial==m.dataset.serial);
+        if(r){ lastResult=r; showResult(r,false); }
+      });
+    });
+  }
+  show('s-coll');
+}
+
+/* ============================================================
+   COMPAT
+   ============================================================ */
+let compatPick=[null,null], compatTarget=0;
+function openCompat(){
+  compatPick=[null,null];
+  renderCompat();
+  show('s-compat');
+}
+function renderCompat(){
+  const arr=loadColl();
+  const picker=document.getElementById('compatPicker');
+  picker.innerHTML=arr.map(miniHTML).join('');
+  picker.querySelectorAll('.mini').forEach(m=>{
+    m.addEventListener('click',()=>{
+      const r=arr.find(x=>x.serial==m.dataset.serial);
+      // assign to first empty slot, or replace target
+      if(!compatPick[0]) compatPick[0]=r;
+      else if(!compatPick[1]) compatPick[1]=r;
+      else compatPick[1]=r;
+      updateCompatSlots();
+    });
+  });
+  updateCompatSlots();
+}
+function updateCompatSlots(){
+  ['slotA','slotB'].forEach((id,i)=>{
+    const slot=document.getElementById(id);
+    const r=compatPick[i];
+    if(r){
+      slot.className='cslot filled rar-'+r.rar;
+      slot.style.setProperty('--rar',RAR_COLOR[r.rar]);
+      slot.innerHTML=`<div class="mbg" style="position:absolute;inset:0;background:radial-gradient(110% 70% at 50% 0%,${r.keySoft},transparent 65%)"></div><span class="mt">${r.type.name}</span>`;
+    }else{
+      slot.className='cslot';
+      slot.innerHTML=(i===0?'1枚目を<br>選ぶ':'2枚目を<br>選ぶ');
+    }
+  });
+  if(compatPick[0]&&compatPick[1]) showCompatScore(compatPick[0],compatPick[1]);
+  else document.getElementById('compatScore').innerHTML='';
+}
+function showCompatScore(a,b){
+  // deterministic compatibility
+  let sim=0;
+  ABIL.forEach(ab=>{ sim += Math.abs(a.stats[ab.key]-b.stats[ab.key]); });
+  const diffScore = 100 - sim/5; // similarity 0..100
+  // bonus if explicitly compatible types
+  let bonus=0;
+  if(a.type.compat===b.typeKey || b.type.compat===a.typeKey) bonus+=18;
+  if(a.primary===b.secondary && a.secondary===b.primary) bonus+=10; // mirror
+  // complement bonus: opposite strengths fill gaps
+  let comp=0;
+  ABIL.forEach(ab=>{ const hi=Math.max(a.stats[ab.key],b.stats[ab.key]); if(hi>=80) comp+=3; });
+  let score=Math.round(Math.min(99, Math.max(35, diffScore*0.55 + bonus + comp + 24)));
+  // make same-card very high
+  if(a.serial===b.serial) score=88;
+
+  let verdict,desc;
+  if(score>=85){verdict='運命の二枚';desc='驚くほど深く響き合う関係。一緒にいるだけで、お互いの世界が広がっていく。';}
+  else if(score>=70){verdict='最高の相棒';desc='強みと弱みが自然に補い合う。困ったときに、いちばん頼りになる相手。';}
+  else if(score>=55){verdict='良き理解者';desc='違いを認め合えるバランス型。刺激と安心が、ほどよく同居する関係。';}
+  else {verdict='学び合う関係';desc='見ている景色は違うけれど、だからこそ相手から学べることが多い。';}
+
+  const C=Math.PI*2*52;
+  const off=C*(1-score/100);
+  document.getElementById('compatScore').innerHTML=`
+    <svg class="ring-svg" viewBox="0 0 130 130">
+      <circle cx="65" cy="65" r="52" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9"/>
+      <circle cx="65" cy="65" r="52" fill="none" stroke="url(#cg)" stroke-width="9" stroke-linecap="round"
+        stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 65 65)" style="transition:stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1)">
+        <animate attributeName="stroke-dashoffset" from="${C}" to="${off}" dur="1.2s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1" keyTimes="0;1"/>
+      </circle>
+      <text x="65" y="72" text-anchor="middle" class="pct">${score}</text>
+      <defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd56b"/><stop offset="1" stop-color="#ff8bd0"/></linearGradient></defs>
+    </svg>
+    <div class="verdict">${verdict}</div>
+    <div class="cdesc">${desc}</div>`;
+  tone(660,.5,'triangle',.14); tone(880,.5,'sine',.08,.06);
+}
+
+/* ============================================================
+   SHARE / SAVE
+   ============================================================ */
+function doShare(){
+  if(!lastResult)return;
+  const r=lastResult;
+  const text=`私のペルソナは【${r.type.name}】(${RARITY[r.rar].label}) でした✨\n#ペルソナ あなたという一枚`;
+  const url=location.href.split('#')[0];
+  const tw=`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+  window.open(tw,'_blank','noopener');
+}
+function doSave(){
+  if(!lastResult)return;
+  const added=addToColl(lastResult);
+  toast(added?'✓ コレクションに保存しました':'すでに保存済みです。スクショで画像保存も◎');
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastT=null;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ============================================================
+   STARFIELD
+   ============================================================ */
+function initStars(){
+  const c=document.getElementById('stars'),x=c.getContext('2d');
+  let stars=[];
+  function rs(){ c.width=innerWidth; c.height=innerHeight;
+    stars=Array.from({length:Math.min(120,Math.floor(innerWidth*innerHeight/12000))},()=>({
+      x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.3+.2,
+      a:Math.random(),s:Math.random()*.02+.004
+    }));
+  }
+  rs(); addEventListener('resize',rs);
+  (function draw(){
+    x.clearRect(0,0,c.width,c.height);
+    stars.forEach(st=>{ st.a+=st.s; const al=.3+Math.abs(Math.sin(st.a))*.6;
+      x.beginPath();x.arc(st.x,st.y,st.r,0,7);x.fillStyle=`rgba(200,215,255,${al})`;x.fill();
+    });
+    requestAnimationFrame(draw);
+  })();
+}
+
+/* ============================================================
+   SOUND ICON
+   ============================================================ */
+function sndIcon(){
+  document.getElementById('sndBtn').innerHTML = soundOn
+   ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>`
+   : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
+}
+
+/* ============================================================
+   WIRE UP
+   ============================================================ */
+document.getElementById('startBtn').addEventListener('click',()=>{ac()&&ac().resume&&ac().resume();startQuiz();});
+document.getElementById('collBtn').addEventListener('click',renderColl);
+document.getElementById('collBack').addEventListener('click',()=>show('s-home'));
+document.getElementById('newFromColl').addEventListener('click',startQuiz);
+document.getElementById('compatBtn').addEventListener('click',openCompat);
+document.getElementById('compatBack').addEventListener('click',renderColl);
+document.getElementById('saveBtn').addEventListener('click',doSave);
+document.getElementById('shareBtn').addEventListener('click',doShare);
+document.getElementById('againBtn').addEventListener('click',startQuiz);
+document.getElementById('sndBtn').addEventListener('click',()=>{ soundOn=!soundOn; sndIcon(); if(soundOn){ac()&&ac().resume&&ac().resume(); tone(660,.1,'sine',.12);} });
+
+sndIcon();
+initStars();
+</script>
+</body>
+</html>
