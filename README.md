@@ -22,6 +22,7 @@
 | 014 | ポロと、はじめての世界 | [day014-poro](./day014-poro/) |
 | 015 | ペルソナ - あなたという一枚 | [day015-persona](./day015-persona/) |
 | 016 | リズム - 音を、重ねる | [day016-rhythm](./day016-rhythm/) |
+| 017 | マンダラ - 描くほど、美しい | [day017-mandala](./day017-mandala/) |
 
 ## ルール
 
