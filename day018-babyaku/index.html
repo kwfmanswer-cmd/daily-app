@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ばぶやく - あかちゃん語ほんやく機</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pink:#ffd6e0;
+    --blue:#cce5ff;
+    --cream:#fff5e1;
+    --mint:#d4f5e9;
+    --lav:#e8def8;
+    --ink:#6b5b73;
+    --ink-soft:#9a8aa0;
+    --accent:#ff9bb3;
+    --accent-deep:#ff6f91;
+    --shadow:rgba(255,140,170,.28);
+    --card:#fffafc;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Zen Maru Gothic","M PLUS Rounded 1c",sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 12% 18%, #fff 0 22%, transparent 22%) 0 0/120px 120px,
+      linear-gradient(160deg,var(--pink) 0%,var(--blue) 38%,var(--mint) 72%,var(--cream) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-text-size-adjust:100%;
+  }
+  /* floating background bubbles */
+  .bg-deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .bg-deco span{
+    position:absolute;bottom:-60px;font-size:26px;opacity:.55;
+    animation:floatUp linear infinite;
+  }
+  @keyframes floatUp{
+    0%{transform:translateY(0) rotate(0);opacity:0;}
+    10%{opacity:.6;}
+    90%{opacity:.5;}
+    100%{transform:translateY(-115vh) rotate(40deg);opacity:0;}
+  }
+
+  .wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:18px 16px 60px;}
+
+  header{text-align:center;padding:10px 0 4px;}
+  .logo{
+    font-family:"M PLUS Rounded 1c",sans-serif;font-weight:900;
+    font-size:clamp(32px,9vw,46px);line-height:1.05;letter-spacing:1px;
+    color:#fff;
+    text-shadow:0 3px 0 var(--accent),0 6px 12px var(--shadow);
+    margin:0;
+  }
+  .logo .dot{color:#fff3a8;text-shadow:0 3px 0 #ffb43d,0 6px 12px var(--shadow);}
+  .tagline{
+    margin:8px auto 0;display:inline-block;
+    background:#fff;color:var(--accent-deep);font-weight:800;
+    padding:5px 16px;border-radius:999px;font-size:13px;
+    box-shadow:0 4px 0 var(--shadow);
+  }
+
+  /* baby stage */
+  .stage{
+    position:relative;margin:18px auto 6px;width:230px;height:215px;
+    display:flex;align-items:flex-end;justify-content:center;
+  }
+  .baby-shadow{
+    position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+    width:130px;height:24px;border-radius:50%;
+    background:rgba(150,110,130,.18);filter:blur(4px);
+    animation:shadowPulse 3.4s ease-in-out infinite;
+  }
+  @keyframes shadowPulse{0%,100%{width:130px;opacity:.18;}50%{width:108px;opacity:.12;}}
+
+  .baby{
+    position:relative;width:200px;height:200px;
+    transform-origin:50% 90%;
+    animation:sway 3.4s ease-in-out infinite;
+  }
+  @keyframes sway{
+    0%,100%{transform:rotate(-4deg) translateY(0);}
+    50%{transform:rotate(4deg) translateY(-6px);}
+  }
+  .baby.thinking{animation:think 0.9s ease-in-out infinite;}
+  @keyframes think{0%,100%{transform:rotate(0) translateY(0);}50%{transform:rotate(-2deg) translateY(-3px);}}
+  .baby.bounce{animation:bounceJoy 0.7s ease;}
+  @keyframes bounceJoy{0%{transform:scale(1);}30%{transform:scale(1.12,.9);}60%{transform:scale(.95,1.08);}100%{transform:scale(1);}}
+  .baby.shake{animation:shakeAng 0.5s ease;}
+  @keyframes shakeAng{0%,100%{transform:rotate(0);}20%{transform:rotate(-7deg);}40%{transform:rotate(7deg);}60%{transform:rotate(-5deg);}80%{transform:rotate(5deg);}}
+
+  .baby svg{width:100%;height:100%;display:block;overflow:visible;}
+
+  /* eyes blink */
+  .eye-group{transform-origin:center;}
+  .blink{animation:blink 4.2s infinite;transform-box:fill-box;transform-origin:center;}
+  @keyframes blink{0%,93%,100%{transform:scaleY(1);}96%{transform:scaleY(.08);}}
+  .cheek{animation:cheekGlow 3s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}
+  @keyframes cheekGlow{0%,100%{opacity:.75;}50%{opacity:1;}}
+
+  /* drool */
+  .drool{transform-box:fill-box;transform-origin:top center;animation:droolDrip 5s ease-in-out infinite;}
+  @keyframes droolDrip{
+    0%,55%{transform:scaleY(.2);opacity:0;}
+    65%{opacity:.85;}
+    85%{transform:scaleY(1.1);opacity:.85;}
+    100%{transform:scaleY(1.1) translateY(8px);opacity:0;}
+  }
+
+  /* mouth talking */
+  #mouth{transition:all .18s;}
+  .baby.talking #mouth{animation:talk .26s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}
+  @keyframes talk{0%,100%{transform:scaleY(1);}50%{transform:scaleY(.4);}}
+
+  .mood-fx{position:absolute;inset:0;pointer-events:none;}
+  .fx-emoji{position:absolute;font-size:24px;opacity:0;}
+  .fx-emoji.go{animation:fxFloat 1.4s ease-out forwards;}
+  @keyframes fxFloat{
+    0%{opacity:0;transform:translateY(0) scale(.4);}
+    25%{opacity:1;transform:translateY(-16px) scale(1.15);}
+    100%{opacity:0;transform:translateY(-70px) scale(.9) rotate(20deg);}
+  }
+
+  /* speech bubble */
+  .bubble-area{min-height:30px;margin:4px auto 14px;}
+  .bubble{
+    position:relative;background:var(--card);
+    border:3px solid #fff;border-radius:26px;
+    padding:18px 18px 16px;margin:0 4px;
+    box-shadow:0 10px 26px var(--shadow);
+    text-align:center;
+    opacity:0;transform:scale(.6) translateY(10px);
+  }
+  .bubble.show{animation:pop .5s cubic-bezier(.2,1.6,.4,1) forwards;}
+  @keyframes pop{to{opacity:1;transform:scale(1) translateY(0);}}
+  .bubble::before{
+    content:"";position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+    border-left:14px solid transparent;border-right:14px solid transparent;
+    border-bottom:16px solid #fff;
+  }
+  .bubble .babble{
+    font-size:13px;color:var(--accent-deep);font-weight:800;margin-bottom:8px;
+    letter-spacing:1px;
+  }
+  .bubble .babble small{color:var(--ink-soft);font-weight:700;}
+  .bubble .trans{
+    font-size:clamp(17px,5vw,21px);font-weight:900;line-height:1.55;color:var(--ink);
+    font-family:"M PLUS Rounded 1c",sans-serif;
+  }
+  .bubble .meta{
+    display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
+    margin-top:14px;font-size:12px;font-weight:800;
+  }
+  .chip{
+    background:var(--mint);color:#3aa687;padding:5px 12px;border-radius:999px;
+    box-shadow:0 3px 0 rgba(80,180,150,.25);
+  }
+  .chip.mood{background:var(--lav);color:#8763c6;box-shadow:0 3px 0 rgba(150,110,210,.22);}
+  .chip.cat{background:var(--blue);color:#4f86c6;box-shadow:0 3px 0 rgba(90,150,210,.22);}
+  .bubble .fav{
+    position:absolute;top:10px;right:14px;font-size:22px;cursor:pointer;
+    border:none;background:none;line-height:1;filter:grayscale(1) opacity(.45);
+    transition:transform .15s,filter .2s;
+  }
+  .bubble .fav.on{filter:none;}
+  .bubble .fav:active{transform:scale(1.4);}
+
+  .hint{text-align:center;color:var(--ink-soft);font-weight:700;font-size:14px;
+    background:rgba(255,255,255,.55);border-radius:18px;padding:14px;margin:0 4px;}
+
+  /* input */
+  .panel{
+    background:rgba(255,255,255,.62);backdrop-filter:blur(3px);
+    border-radius:26px;padding:16px 14px;margin-top:8px;
+    box-shadow:0 6px 18px rgba(180,150,170,.18);
+  }
+  .panel h2{
+    font-size:14px;font-weight:900;margin:2px 0 10px;color:var(--ink);
+    display:flex;align-items:center;gap:6px;
+  }
+  .panel h2 .pin{font-size:16px;}
+
+  .baba-input{
+    width:100%;border:3px solid #fff;border-radius:18px;
+    padding:14px 16px;font-size:17px;font-weight:700;
+    font-family:inherit;color:var(--ink);background:#fff;
+    box-shadow:inset 0 2px 6px rgba(180,150,170,.12);
+    outline:none;text-align:center;
+  }
+  .baba-input::placeholder{color:#cdbcc8;font-weight:700;}
+  .baba-input:focus{border-color:var(--accent);}
+
+  .nango-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+  .nango{
+    border:none;cursor:pointer;font-family:inherit;font-weight:800;
+    font-size:15px;color:var(--ink);
+    background:#fff;border-radius:16px;padding:10px 14px;
+    box-shadow:0 4px 0 rgba(180,150,170,.25);
+    transition:transform .1s,box-shadow .1s,background .15s;
+  }
+  .nango:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(180,150,170,.25);}
+  .nango.sel{background:var(--pink);box-shadow:0 4px 0 var(--shadow);color:var(--accent-deep);}
+
+  .btn-row{display:flex;gap:10px;margin-top:14px;}
+  .btn{
+    flex:1;border:none;cursor:pointer;font-family:"M PLUS Rounded 1c",sans-serif;
+    font-weight:900;border-radius:20px;padding:16px 10px;font-size:17px;
+    transition:transform .1s,box-shadow .1s,filter .15s;
+    line-height:1.2;
+  }
+  .btn:active{transform:translateY(4px);}
+  .btn-main{
+    background:linear-gradient(180deg,#ffb0c6,var(--accent-deep));color:#fff;
+    box-shadow:0 6px 0 #e8557b,0 8px 18px var(--shadow);
+    flex:2;
+  }
+  .btn-main:active{box-shadow:0 2px 0 #e8557b,0 4px 10px var(--shadow);}
+  .btn-sub{
+    background:#fff;color:var(--accent-deep);
+    box-shadow:0 6px 0 rgba(180,150,170,.3);font-size:15px;
+  }
+  .btn-sub:active{box-shadow:0 2px 0 rgba(180,150,170,.3);}
+  .btn:disabled{filter:grayscale(.5) opacity(.6);cursor:default;transform:none;}
+
+  .mini-row{display:flex;gap:10px;margin-top:10px;}
+  .mini-btn{
+    flex:1;border:none;cursor:pointer;font-family:inherit;font-weight:800;
+    font-size:14px;color:var(--ink);background:rgba(255,255,255,.85);
+    border-radius:16px;padding:12px 8px;
+    box-shadow:0 4px 0 rgba(180,150,170,.2);transition:transform .1s,box-shadow .1s;
+  }
+  .mini-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(180,150,170,.2);}
+
+  /* favorites */
+  .fav-list{margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+  .fav-item{
+    background:#fff;border-radius:16px;padding:12px 14px;font-size:14px;
+    font-weight:700;color:var(--ink);box-shadow:0 3px 8px rgba(180,150,170,.15);
+    position:relative;text-align:left;line-height:1.5;
+  }
+  .fav-item .fb{font-size:12px;color:var(--accent-deep);font-weight:800;display:block;margin-bottom:3px;}
+  .fav-item .del{
+    position:absolute;top:8px;right:10px;border:none;background:none;cursor:pointer;
+    font-size:16px;color:var(--ink-soft);
+  }
+  .fav-empty{text-align:center;color:var(--ink-soft);font-weight:700;font-size:13px;padding:8px;}
+
+  /* share modal */
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(120,90,110,.45);backdrop-filter:blur(4px);
+    z-index:50;display:none;align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-bg.show{display:flex;animation:fadeIn .25s;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .share-card{
+    background:var(--card);border-radius:28px;padding:8px;max-width:360px;width:100%;
+    box-shadow:0 20px 50px rgba(120,90,110,.5);
+    animation:pop .4s cubic-bezier(.2,1.6,.4,1);
+  }
+  #shareCanvasWrap{border-radius:22px;overflow:hidden;}
+  #shareCanvas{width:100%;display:block;border-radius:22px;}
+  .share-btns{display:flex;gap:8px;padding:12px 6px 6px;}
+  .share-btns .btn{padding:13px 8px;font-size:15px;}
+  .btn-x{background:#222;color:#fff;box-shadow:0 5px 0 #000;}
+  .btn-save{background:var(--mint);color:#33997d;box-shadow:0 5px 0 rgba(80,180,150,.4);}
+  .btn-close{background:#fff;color:var(--ink-soft);box-shadow:0 5px 0 rgba(180,150,170,.3);flex:.6;}
+
+  /* sound toggle */
+  .sound-toggle{
+    position:fixed;top:12px;right:12px;z-index:30;
+    width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;
+    background:#fff;font-size:20px;box-shadow:0 4px 12px var(--shadow);
+  }
+  .sound-toggle:active{transform:scale(.92);}
+
+  footer{text-align:center;color:var(--ink-soft);font-size:11px;font-weight:700;margin-top:22px;opacity:.8;}
+
+  @media(max-width:380px){
+    .nango{font-size:14px;padding:9px 11px;}
+    .stage{width:200px;height:195px;}
+    .baby{width:175px;height:175px;}
+  }
+</style>
+</head>
+<body>
+<div class="bg-deco" id="bgDeco"></div>
+<button class="sound-toggle" id="soundBtn" title="サウンド切替">🔊</button>
+
+<div class="wrap">
+  <header>
+    <h1 class="logo">ばぶやく<span class="dot">.</span></h1>
+    <div class="tagline">👶 あかちゃん語ほんやく機</div>
+  </header>
+
+  <!-- baby -->
+  <div class="stage">
+    <div class="baby-shadow"></div>
+    <div class="baby" id="baby">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <!-- ear -->
+        <ellipse cx="38" cy="108" rx="15" ry="17" fill="#ffe0c2"/>
+        <ellipse cx="162" cy="108" rx="15" ry="17" fill="#ffe0c2"/>
+        <!-- head -->
+        <ellipse cx="100" cy="105" rx="72" ry="68" fill="#ffe6d2"/>
+        <!-- hair curl -->
+        <path d="M100 40 q-4 -18 14 -16 q-10 8 0 16 z" fill="#9c7b5a"/>
+        <path d="M86 42 q-2 -10 8 -10 q-6 5 0 10 z" fill="#9c7b5a"/>
+        <!-- cheeks -->
+        <circle class="cheek" cx="58" cy="118" r="15" fill="#ffb6c8"/>
+        <circle class="cheek" cx="142" cy="118" r="15" fill="#ffb6c8"/>
+        <!-- eyes -->
+        <g class="eye-group">
+          <g class="blink">
+            <ellipse cx="74" cy="98" rx="9" ry="11" fill="#5b4a52"/>
+            <circle cx="71" cy="94" r="3" fill="#fff"/>
+          </g>
+          <g class="blink">
+            <ellipse cx="126" cy="98" rx="9" ry="11" fill="#5b4a52"/>
+            <circle cx="123" cy="94" r="3" fill="#fff"/>
+          </g>
+        </g>
+        <!-- eyebrows (hidden by default, shown when grumpy) -->
+        <g id="brows" style="opacity:0">
+          <path d="M64 80 q10 -6 20 0" stroke="#9c7b5a" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M116 80 q10 -6 20 0" stroke="#9c7b5a" stroke-width="4" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- nose -->
+        <ellipse cx="100" cy="118" rx="4" ry="3" fill="#f0a98a"/>
+        <!-- mouth -->
+        <path id="mouth" d="M86 134 q14 14 28 0" stroke="#d97a86" stroke-width="5" fill="#ff9aa9" stroke-linecap="round"/>
+        <!-- drool -->
+        <g class="drool">
+          <path d="M118 140 q3 10 0 18 q-3 -8 0 -18z" fill="#bfe8ff" opacity=".85"/>
+        </g>
+      </svg>
+      <div class="mood-fx" id="moodFx"></div>
+    </div>
+  </div>
+
+  <!-- bubble -->
+  <div class="bubble-area" id="bubbleArea">
+    <div class="hint">👇 あかちゃん語をえらんで、<br>「ほんやくする」をおしてみてね！</div>
+  </div>
+
+  <!-- input panel -->
+  <div class="panel">
+    <h2><span class="pin">✏️</span>あかちゃん語をえらぶ</h2>
+    <div class="nango-grid" id="nangoGrid"></div>
+    <input class="baba-input" id="babaInput" type="text" maxlength="20" placeholder="じゆうに うってもOK！ (例: ばぶー)" autocomplete="off">
+    <div class="btn-row">
+      <button class="btn btn-main" id="transBtn">ほんやくする 💫</button>
+      <button class="btn btn-sub" id="againBtn">もう一度<br>ほんやく 🔁</button>
+    </div>
+    <div class="mini-row">
+      <button class="mini-btn" id="randomBtn">🎲 おまかせ翻訳</button>
+      <button class="mini-btn" id="shareBtn">📸 シェア</button>
+    </div>
+  </div>
+
+  <!-- favorites -->
+  <div class="panel" style="margin-top:14px;">
+    <h2><span class="pin">⭐</span>お気に入り翻訳</h2>
+    <div class="fav-list" id="favList"></div>
+  </div>
+
+  <footer>ばぶやく.｜Day018 — 100日チャレンジ<br>※翻訳結果はぜんぶフィクションです（当社調べ）</footer>
+</div>
+
+<!-- share modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="share-card">
+    <div id="shareCanvasWrap"><canvas id="shareCanvas" width="700" height="560"></canvas></div>
+    <div class="share-btns">
+      <button class="btn btn-x" id="xBtn">𝕏でシェア</button>
+      <button class="btn btn-save" id="saveBtn">保存</button>
+      <button class="btn btn-close" id="closeBtn">とじる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== 翻訳データ ===================== */
+/* カテゴリ: food(食事) sleepy(眠い) angry(不機嫌) happy(ごきげん) demand(要求) mystery(謎) */
+
+const CATS = {
+  food:   {label:"食事系", mood:"😋", moodWord:"おなかすいた", baby:"happy",  fxs:["🍼","🤤","🍙"]},
+  sleepy: {label:"眠い系", mood:"😴", moodWord:"ねむねむ",     baby:"idle",   fxs:["💤","🌙","✨"]},
+  angry:  {label:"不機嫌系", mood:"😤", moodWord:"おこ",        baby:"angry",  fxs:["💢","😡","⚡"]},
+  happy:  {label:"ごきげん系", mood:"🥰", moodWord:"ごきげん",   baby:"happy",  fxs:["💖","⭐","🌈"]},
+  demand: {label:"要求系", mood:"🙌", moodWord:"よこせ",        baby:"happy",  fxs:["👑","✋","❗"]},
+  mystery:{label:"謎系", mood:"🤔", moodWord:"???",            baby:"idle",   fxs:["❓","💭","🌀"]},
+};
+
+const TRANS = {
+  food:[
+    "我、空腹なり。直ちに授乳を所望する。これは要望ではなく命令である。",
+    "ミルクはまだか。我が胃袋は無限の宇宙のごとく空虚である。",
+    "聞け、下々の者よ。今こそ授乳の刻（とき）である。",
+    "おっぱい。それは我が人生における唯一にして絶対の真理。",
+    "腹が、減った。ただそれだけのことで世界は終わる寸前である。",
+    "ミルクを持て。さもなくば泣くぞ。よいか、本気で泣くぞ。",
+    "我が空腹を満たせる者よ、今すぐ名乗り出よ。猶予は0秒だ。",
+    "母よ、父よ。授乳の時間を1秒でも過ぎることは許されぬと知れ。",
+    "この空腹、まさに天地を揺るがすほどの大事件である。",
+    "もぐもぐしたい。世界の全てをもぐもぐしたい。それが我が望みだ。",
+    "離乳食？けっこうである。だが我が舌が認めねば全て却下とする。",
+    "あむあむ…これは美味なり…だがもっとよこせ、もっとだ。",
+    "我の食事に妥協は一切ない。温度、量、タイミング、全て完璧を要求する。",
+    "腹ペコにつき、本日の機嫌は保証いたしかねます。あしからず。",
+    "ミルクという名の聖なる液体を、今すぐここに召喚せよ。",
+    "栄養補給の時間だ。我の成長は人類の希望、急ぎたまえ。",
+    "おやつ。その響きだけで我が魂は震える。さあ、出すのだ。",
+    "むちゃくちゃおなかすいた。もう限界。あと3秒で泣く。3、2…",
+    "我が食欲は底なしの沼。満たそうとする者の努力に敬意を表す。が、足りぬ。",
+    "授乳とは愛である。ゆえに今すぐ我に愛を注ぎたまえ、たっぷりとな。",
+    "スプーンを構えよ。我が口は最高級レストランの審査員である。",
+    "腹の虫が国歌を斉唱しはじめた。これ以上は待てぬ。",
+  ],
+  sleepy:[
+    "ねむい…でも…まけない…（5秒後に就寝）",
+    "断じて昼寝はしない。これは我が魂の尊厳をかけた戦いである。…ｽﾔｧ",
+    "まだ…遊ぶ…ねむくなんか…zzz",
+    "我は眠らぬ。眠ったら負けだからだ。…おやすみなさい。",
+    "まぶたが、重い。だが我が好奇心はそれを上回る。…上回れなかった。",
+    "ねむい。けれど世界はこんなにも楽しい。ゆえに我は葛藤している。",
+    "あくび一つで世界を平和にする。それが我が特技である。ふぁ…",
+    "眠気という名の強敵が来た。我、全力で抵抗する。（即・撃沈）",
+    "もうちょっと…あと、ちょっとだけ…起きて…（撃沈）",
+    "我を寝かしつけたくば、心地よき揺れを提供せよ。審査は厳しいぞ。",
+    "ねんねの時間だと？我にそんなものは不要だ。……（10秒沈黙）",
+    "眠りに落ちる瞬間こそ、我が最も無防備で愛らしい瞬間である。とくと見よ。",
+    "うとうと…我は今、夢と現実の狭間を漂う高貴な旅人である。",
+    "抱っこして揺らせ。それが我を眠りの国へ導く唯一の儀式だ。",
+    "ねむいのに寝たくない。この矛盾こそ赤ちゃんという生き物の真髄である。",
+    "おやすみ前の最後の力を振り絞って…ばぶ…（力尽きた）",
+    "眠気と戦う我の姿、まさに小さな戦士。されど勝率は0%である。",
+    "夢の中で我は世界を統べる王であった。起きたらただの赤子だったが。",
+    "とろん…まぶたが…降りてくる…さらば、現世よ…",
+    "寝かしつけご苦労。だが置いた瞬間に泣くのが我の流儀である。覚悟せよ。",
+    "ふぁ……眠い。眠いがゆえに我は今、世界一かわいい顔をしている。",
+    "電池が、切れる。我の本日の稼働はここまでとする。おやすみ。",
+  ],
+  angry:[
+    "我は今、激おこである。理由は特にない。それが赤ちゃんである。",
+    "断固として抗議する。何にかは知らぬが、とにかく不服である。",
+    "ぎゃー！この世の全てが気に入らぬ！以上、声明であった。",
+    "我が機嫌を損ねた者よ、覚悟せよ。…ところで誰が損ねたのだったか。",
+    "むぎゅう。我は今、全身全霊でむくれている。慰めを要求する。",
+    "泣くぞ。泣くからな。理由は後付けする。とにかく今は泣く。",
+    "我の不機嫌は天気のごとし。さっきまで晴れていたが、今は嵐である。",
+    "だっこが、足りぬ。この世の不満の99%は抱っこ不足が原因である。",
+    "ぷんぷんである。誰か我をあやす栄誉を与えてやろう。早くしろ。",
+    "気に入らぬ。寝かされたのも、起こされたのも、全てが気に入らぬ。",
+    "我を笑顔にできる者はおらぬのか。挑戦者求む。難易度は最高である。",
+    "ふぎゃー！！と叫べば大抵のことは解決する。これが赤子の処世術だ。",
+    "今のは怒りの泣きである。お腹の泣きとは音程が違うのだ。聞き分けよ。",
+    "我が不満、言葉にできぬがゆえに全力で泣いて伝える。察するのだ、汝らよ。",
+    "むくれ顔こそ我が最強の武器。これで世界は我にひれ伏す。…はず。",
+    "怒りに任せて手足をバタバタさせる。これが我の精一杯の抗議活動である。",
+    "なぜ我を一人にした。世界の終わりかと思ったではないか。けしからん。",
+    "おむつが不快である。即刻交換せよ。我の尊厳に関わる重大事である。",
+    "ぐずぐず…これは前ぶれである。本気の嵐は、この後にやってくる。覚悟せよ。",
+    "我の機嫌は超精密機械。たった一つのズレで全システムが崩壊するのだ。",
+    "全力で泣いた後にケロッとするのが我の様式美。汝の心労など知らぬ。",
+    "プイッ。今は誰とも口をきかぬ。…と思ったが、構ってほしい。早く来い。",
+  ],
+  happy:[
+    "きゃっきゃ！この世は実に素晴らしい。我、今この瞬間を全力で愛でておる。",
+    "あなたの笑顔、最高である。もっと見せよ。我も全力で笑い返そうぞ。",
+    "うふふ。我が機嫌、本日快晴。世界の全てが愛おしくてたまらぬ。",
+    "だー！と叫ぶのは喜びの表現である。我は今、幸福の絶頂におる。",
+    "きみがいるだけで、我の世界は虹色に輝く。ありがとう、と言いたいが言えぬ。",
+    "高い高いを所望する。空に近づくたび、我の魂は歓喜に震えるのだ。",
+    "あはは！くすぐられるの、実は大好きである。だがもう一回はずるいぞ。",
+    "我の笑顔は世界遺産級。今だけ無料で公開してやろう。とくと見るがよい。",
+    "ぱちぱち（拍手）。我は今、全身で『たのしい』を表現しておるのだ。",
+    "ごきげんである。ゆえに本日は特別に、誰にでも笑顔を振りまいてやろう。",
+    "いないいないばあ、何度やられても新鮮に驚く。我の純粋さに惚れ直すがよい。",
+    "きゃー！と歓声をあげる。これは我が人生最大級の喜びの表現である。",
+    "ぷくぷくのほっぺを差し出そう。さあ、好きなだけ愛でるがよい。光栄に思え。",
+    "我、ごきげんすぎて足をバタバタさせる。これは喜びのダンスである。",
+    "あうあう♪ 今日のミルクは格別だった。ゆえに我は上機嫌なのである。",
+    "笑う門には福来る。我の門は常に開いておる。さあ福よ、来たれ。",
+    "きみと目が合っただけで、我の心は花畑になる。なんと安上がりな幸せか。",
+    "にぱー。我の満面の笑みに、世界中が癒されるがよい。これぞ赤子の使命。",
+    "うきゃー！楽しすぎて言葉にならぬ。ゆえに奇声で表現する。理解せよ。",
+    "今日も生きてるだけで100点満点。我は存在するだけで世界に貢献しておる。",
+    "ぎゅっと抱きしめられた。これぞ至福。我、しばしこのまま動かぬ。",
+    "るんるん♪ 我の上機嫌は伝染する。さあ皆も笑顔になるがよい。",
+  ],
+  demand:[
+    "抱っこを要求する。今すぐ、無条件で、無期限にだ。拒否権はない。",
+    "そのスマホをよこせ。我のほうが断然うまく使いこなしてみせよう。",
+    "あれを取れ。そう、その手の届かぬところにあるやつだ。早くせよ。",
+    "我を見よ。今すぐ、全力で、最優先で見るのだ。よそ見は許さぬ。",
+    "ティッシュを一箱まるごと要求する。全部出すのが我の生きがいである。",
+    "リモコンをよこせ。あの黒くてボタンだらけの神器が我は欲しいのだ。",
+    "立て。座るな。我を抱いたまま延々と立ち続けるのが汝の使命である。",
+    "歌え、踊れ、あやせ。汝は本日より我専属のエンターテイナーである。",
+    "そのコップの中身が気になる。検証のため、今すぐ我に差し出すのだ。",
+    "ベビーカーではなく抱っこを所望する。徒歩での移動は却下とする。",
+    "我のおもちゃは床に投げるためにある。拾え。そしてまた投げる。拾え。",
+    "メガネをよこせ。汝の顔についている、あのキラキラした物体をだ。",
+    "もっと高く抱け。世界を高みから見下ろすのが我の権利である。",
+    "今すぐここから別の部屋へ移動せよ。理由はない。気分である。従え。",
+    "その食べ物、我にもよこせ。大人だけずるい。断固抗議する。",
+    "我の前で食事をするな。せめて我にも一口、いや全部よこすのだ。",
+    "おんぶではなく抱っこ。いや、やっぱりおんぶ。…考え中につき待て。",
+    "そのペンをよこせ。我は壁に偉大なる芸術を残す使命があるのだ。",
+    "電気のスイッチを押させよ。つけて消してつけて消す。これぞ至高の遊び。",
+    "我を床に下ろすな。下ろした瞬間、世界は涙で満ちることになるぞ。",
+    "歩かせよ、いや抱け、やっぱり歩く、でも抱け。汝の腕力を信じておる。",
+    "犬を触らせよ。あのもふもふした生き物と我は親友になる運命なのだ。",
+  ],
+  mystery:[
+    "この世界は実に興味深い。だがまずはこのおもちゃを口に入れて検証せねば。",
+    "我は今、壁の一点をじっと見ておる。そこに何があるかは、汝には見えぬ。",
+    "あー…うー…（深淵なる哲学を語っているが、誰にも理解されぬ）",
+    "我は今、自分の手の存在に気づいた。これは人類史に残る大発見である。",
+    "ばぶ。この一言に宇宙の真理が詰まっておる。理解できる者はおるか。",
+    "なぜ我はここにいるのか。なぜ汝は我を見ているのか。…まあよい、ばぶ。",
+    "突然笑った理由は我にもわからぬ。だが笑った。それでよいではないか。",
+    "我は今、何もない空間に向かって手を伸ばしておる。深く問うてはならぬ。",
+    "うっきー。これは喜びか、怒りか、それとも悟りか。我にもわからぬ。",
+    "足の指を発見した。これは食べてよいものなのか。検証を開始する。",
+    "我は時々、何もないところを見て微笑む。汝らには見えぬ友がおるのだ。",
+    "ぷー。…今のは挨拶であり、芸術であり、そして自然現象でもある。",
+    "我が思考は深淵である。たった今考えていたことを、たった今忘れた。",
+    "この絨毯の模様、宇宙の真理に通ずるものがある。我、しばし瞑想する。",
+    "だだだだ。これは我なりの言語である。いつか汝らも理解する日が来よう。",
+    "我は無の境地にいる。…と思ったら、よだれが垂れていた。これも禅である。",
+    "回るものは全て美しい。洗濯機よ、汝は我の永遠の友である。ずっと見ていたい。",
+    "鏡の中のこやつ、なかなかの男前（女前）である。我の友になりたいらしい。",
+    "ぎゃーと泣いた次の瞬間に笑う。我の感情は量子力学的に揺らいでおるのだ。",
+    "我は今、世界の全てを口で確かめておる。これが我なりの科学である。",
+    "うにゃうにゃ…我は今、誰も到達できぬ思索の宇宙を旅しておる。",
+    "ふがふが。汝には雑音に聞こえようが、これは我からの重大なメッセージである。",
+  ],
+};
+
+/* 喃語ボタン（カテゴリ判定のキーも兼ねる） */
+const NANGO = [
+  {w:"ばぶばぶ", c:"food"},
+  {w:"まんま",   c:"food"},
+  {w:"あむあむ", c:"food"},
+  {w:"ふにゃ…",  c:"sleepy"},
+  {w:"ねむねむ", c:"sleepy"},
+  {w:"うとうと", c:"sleepy"},
+  {w:"ぎゃー！", c:"angry"},
+  {w:"ふぎゃー", c:"angry"},
+  {w:"ぷんぷん", c:"angry"},
+  {w:"きゃっきゃ",c:"happy"},
+  {w:"あはは",   c:"happy"},
+  {w:"だー！",   c:"happy"},
+  {w:"あー（要求）",c:"demand"},
+  {w:"うー！",   c:"demand"},
+  {w:"ちょうだい",c:"demand"},
+  {w:"うっきー", c:"mystery"},
+  {w:"だだだ",   c:"mystery"},
+  {w:"ぶー",     c:"mystery"},
+];
+
+/* 自由入力のカテゴリ判定キーワード */
+const KEYWORDS = {
+  food:   ["ばぶ","まんま","まま","おっぱい","みるく","ミルク","あむ","もぐ","ぱい","めし","ごはん","ぱくぱく","ちゅーちゅー"],
+  sleepy: ["ねむ","ねん","ねね","ふにゃ","うとうと","すや","ねむい","とろ","ふぁ","ねむねむ","ぐっすり"],
+  angry:  ["ぎゃ","ふぎゃ","ぷん","うえーん","えーん","おこ","むー","むぎゅ","ぐず","いや","だめ","うわーん","ぐずぐず"],
+  happy:  ["きゃ","あは","うふ","にこ","だー","るん","わーい","えへ","うきゃ","ぴゃ","にぱ"],
+  demand: ["ちょうだい","ちょーだい","だっこ","あー","うー","とって","よこせ","ほしい","だっこー","ねえ"],
+  mystery:["うっき","だだ","ぶー","ぷー","あうあう","ふがふが","なんか","ばぶー","うにゃ","だだだ"],
+};
+
+/* ===================== state ===================== */
+let currentInput = "";
+let lastResult = null;       // {babble, cat, text, conf}
+const used = {};             // カテゴリごとに直近使った index を覚える
+let soundOn = true;
+let audioCtx = null;
+let favorites = [];
+
+/* ===================== helpers ===================== */
+function rand(n){return Math.floor(Math.random()*n);}
+function pick(arr){return arr[rand(arr.length)];}
+
+function detectCat(text){
+  const t = (text||"").toLowerCase();
+  // ボタンの完全一致を優先
+  const exact = NANGO.find(n=>n.w===text);
+  if(exact) return exact.c;
+  let best=null, bestScore=0;
+  for(const cat in KEYWORDS){
+    let score=0;
+    for(const kw of KEYWORDS[cat]){ if(t.includes(kw.toLowerCase())) score+=kw.length; }
+    if(score>bestScore){bestScore=score;best=cat;}
+  }
+  return best || "mystery";
+}
+
+function pickTrans(cat){
+  const pool = TRANS[cat];
+  let i;
+  // 同じものが連続しないように
+  do { i = rand(pool.length); } while(pool.length>1 && i===used[cat]);
+  used[cat]=i;
+  return pool[i];
+}
+
+function confidence(){
+  // ふざけた信頼度
+  const base = 60 + rand(40); // 60-99
+  return base;
+}
+
+/* ===================== baby control ===================== */
+const baby = document.getElementById('baby');
+const brows = document.getElementById('brows');
+const mouth = document.getElementById('mouth');
+const moodFx = document.getElementById('moodFx');
+
+function setBabyState(state){
+  baby.classList.remove('thinking','bounce','shake','talking');
+  brows.style.opacity = 0;
+  mouth.setAttribute('d','M86 134 q14 14 28 0'); // smile default
+  if(state==='thinking'){
+    baby.classList.add('thinking');
+    mouth.setAttribute('d','M90 138 q10 4 20 0'); // small
+  }else if(state==='angry'){
+    baby.classList.add('shake','talking');
+    brows.style.opacity = 1;
+    mouth.setAttribute('d','M86 142 q14 -12 28 0'); // frown
+  }else if(state==='happy'){
+    baby.classList.add('bounce','talking');
+    mouth.setAttribute('d','M82 132 q18 20 36 0'); // big smile
+  }else if(state==='idle'){
+    baby.classList.add('talking');
+    mouth.setAttribute('d','M88 136 q12 8 24 0');
+  }
+}
+
+function spawnFx(emojis, count){
+  for(let k=0;k<count;k++){
+    const e=document.createElement('div');
+    e.className='fx-emoji';
+    e.textContent=pick(emojis);
+    e.style.left=(15+rand(70))+'%';
+    e.style.top=(20+rand(50))+'%';
+    e.style.animationDelay=(k*0.12)+'s';
+    moodFx.appendChild(e);
+    requestAnimationFrame(()=>e.classList.add('go'));
+    setTimeout(()=>e.remove(),1600+k*120);
+  }
+}
+
+/* ===================== sound (Web Audio) ===================== */
+function ensureAudio(){
+  if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+}
+function blip(freq, dur, type, vol, when){
+  if(!soundOn||!audioCtx) return;
+  const t = audioCtx.currentTime + (when||0);
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type||'sine';
+  o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol||0.18, t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t+dur+0.02);
+}
+function sndTap(){ ensureAudio(); blip(660,0.12,'triangle',0.14); }
+function sndPress(){ ensureAudio(); blip(523,0.1,'sine',0.16); blip(784,0.14,'sine',0.14,0.08); }
+function sndThink(){ ensureAudio(); blip(330,0.18,'sine',0.1); blip(294,0.2,'sine',0.09,0.18); }
+function sndDone(){ // ぴこーん
+  ensureAudio();
+  blip(880,0.12,'sine',0.18);
+  blip(1175,0.12,'sine',0.18,0.1);
+  blip(1568,0.3,'sine',0.16,0.2);
+}
+function sndBaby(){ ensureAudio(); blip(700,0.1,'square',0.06); blip(900,0.1,'square',0.05,0.09); }
+
+/* ===================== main translate ===================== */
+const bubbleArea = document.getElementById('bubbleArea');
+const transBtn = document.getElementById('transBtn');
+const againBtn = document.getElementById('againBtn');
+
+function getInput(){
+  const v = document.getElementById('babaInput').value.trim();
+  return v || currentInput;
+}
+
+function translate(forceCat){
+  const inputRaw = getInput();
+  if(!inputRaw){
+    flashHint("👶 まずは あかちゃん語を えらんでね！");
+    return;
+  }
+  currentInput = inputRaw;
+  sndPress();
+  transBtn.disabled = true; againBtn.disabled = true;
+
+  // thinking phase
+  setBabyState('thinking');
+  bubbleArea.innerHTML = `<div class="bubble show"><div class="trans">んむー…ばぶ…？🤔💭</div></div>`;
+  sndThink();
+  spawnFx(["💭","❓","✨"],3);
+
+  const cat = forceCat || detectCat(inputRaw);
+
+  setTimeout(()=>{
+    const text = pickTrans(cat);
+    const conf = confidence();
+    const info = CATS[cat];
+    lastResult = {babble:inputRaw, cat, text, conf};
+
+    setBabyState(info.baby);
+    sndDone();
+    setTimeout(sndBaby,150);
+    spawnFx(info.fxs, 6);
+
+    renderBubble(lastResult);
+    transBtn.disabled=false; againBtn.disabled=false;
+  }, 1050);
+}
+
+function renderBubble(res){
+  const info = CATS[res.cat];
+  const isFav = favorites.some(f=>f.text===res.text && f.babble===res.babble);
+  bubbleArea.innerHTML = `
+    <div class="bubble show">
+      <button class="fav ${isFav?'on':''}" id="favBtn" title="お気に入り">${isFav?'⭐':'☆'}</button>
+      <div class="babble">「${escapeHtml(res.babble)}」 <small>＝つまり…</small></div>
+      <div class="trans">${escapeHtml(res.text)}</div>
+      <div class="meta">
+        <span class="chip cat">📚 ${info.label}</span>
+        <span class="chip mood">${info.mood} 気分: ${info.moodWord}</span>
+        <span class="chip">📊 信頼度 ${res.conf}%</span>
+      </div>
+    </div>`;
+  document.getElementById('favBtn').addEventListener('click',toggleFav);
+}
+
+function flashHint(msg){
+  bubbleArea.innerHTML = `<div class="hint">${msg}</div>`;
+}
+
+function escapeHtml(s){
+  return (s+"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ===================== favorites (localStorage) ===================== */
+const FAV_KEY = "babayaku_favs_v1";
+function loadFavs(){
+  try{ favorites = JSON.parse(localStorage.getItem(FAV_KEY)||"[]"); }catch(e){ favorites=[]; }
+  renderFavs();
+}
+function saveFavs(){ try{ localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); }catch(e){} }
+function toggleFav(){
+  if(!lastResult) return;
+  const idx = favorites.findIndex(f=>f.text===lastResult.text && f.babble===lastResult.babble);
+  if(idx>=0){ favorites.splice(idx,1); }
+  else{ favorites.unshift({babble:lastResult.babble, text:lastResult.text, cat:lastResult.cat}); if(favorites.length>30) favorites.pop(); sndTap(); }
+  saveFavs(); renderFavs();
+  // update star
+  const fb=document.getElementById('favBtn');
+  if(fb){ const on=favorites.some(f=>f.text===lastResult.text&&f.babble===lastResult.babble); fb.classList.toggle('on',on); fb.textContent=on?'⭐':'☆'; }
+}
+function renderFavs(){
+  const el=document.getElementById('favList');
+  if(!favorites.length){ el.innerHTML=`<div class="fav-empty">まだお気に入りはないよ。<br>気に入った翻訳の ☆ をタップ！</div>`; return; }
+  el.innerHTML = favorites.map((f,i)=>`
+    <div class="fav-item">
+      <button class="del" data-i="${i}" title="削除">✕</button>
+      <span class="fb">「${escapeHtml(f.babble)}」${CATS[f.cat]?(' '+CATS[f.cat].mood):''}</span>
+      ${escapeHtml(f.text)}
+    </div>`).join('');
+  el.querySelectorAll('.del').forEach(b=>b.addEventListener('click',e=>{
+    favorites.splice(+e.target.dataset.i,1); saveFavs(); renderFavs(); sndTap();
+  }));
+}
+
+/* ===================== nango buttons ===================== */
+const grid = document.getElementById('nangoGrid');
+NANGO.forEach(n=>{
+  const b=document.createElement('button');
+  b.className='nango'; b.textContent=n.w;
+  b.addEventListener('click',()=>{
+    grid.querySelectorAll('.nango').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+    document.getElementById('babaInput').value=n.w;
+    currentInput=n.w;
+    sndTap();
+  });
+  grid.appendChild(b);
+});
+
+/* ===================== random ===================== */
+function randomTranslate(){
+  const n = pick(NANGO);
+  grid.querySelectorAll('.nango').forEach(x=>x.classList.toggle('sel', x.textContent===n.w));
+  document.getElementById('babaInput').value=n.w;
+  currentInput=n.w;
+  translate(n.c);
+}
+
+/* ===================== share ===================== */
+const modalBg=document.getElementById('modalBg');
+const canvas=document.getElementById('shareCanvas');
+
+function drawShare(){
+  const res = lastResult;
+  if(!res){ flashHint("👶 さきに ほんやく してね！"); return false; }
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  // bg gradient
+  const g=ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,'#ffd6e0'); g.addColorStop(.5,'#cce5ff'); g.addColorStop(1,'#d4f5e9');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // dots
+  ctx.fillStyle='rgba(255,255,255,.5)';
+  for(let i=0;i<40;i++){ ctx.beginPath(); ctx.arc(rand(W),rand(H),rand(7)+2,0,7); ctx.fill(); }
+  // card
+  roundRect(ctx,40,40,W-80,H-80,40); ctx.fillStyle='#fffafc'; ctx.fill();
+  // title
+  ctx.textAlign='center'; ctx.fillStyle='#ff6f91';
+  ctx.font='900 40px "M PLUS Rounded 1c",sans-serif';
+  ctx.fillText('👶 うちの子が言いました 👶', W/2, 120);
+  // babble
+  ctx.fillStyle='#9a8aa0'; ctx.font='700 30px "Zen Maru Gothic",sans-serif';
+  ctx.fillText('「'+res.babble+'」 …つまり', W/2, 185);
+  // translation (wrap)
+  ctx.fillStyle='#6b5b73'; ctx.font='900 34px "M PLUS Rounded 1c",sans-serif';
+  wrapText(ctx,res.text,W/2,250,W-160,46);
+  // footer chips
+  const info=CATS[res.cat];
+  ctx.font='800 26px "Zen Maru Gothic",sans-serif';
+  ctx.fillStyle='#8763c6';
+  ctx.fillText(`${info.mood} ${info.label}  /  📊 信頼度 ${res.conf}%（当社調べ）`, W/2, H-95);
+  ctx.fillStyle='#ff9bb3'; ctx.font='800 24px "M PLUS Rounded 1c",sans-serif';
+  ctx.fillText('ばぶやく. — あかちゃん語ほんやく機', W/2, H-58);
+  return true;
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function wrapText(ctx,text,cx,y,maxW,lh){
+  const chars=text.split('');
+  let line='', lines=[];
+  for(const ch of chars){
+    if(ctx.measureText(line+ch).width>maxW && line){ lines.push(line); line=ch; }
+    else line+=ch;
+  }
+  if(line) lines.push(line);
+  const total=lines.length;
+  let sy = y + Math.max(0,(4-total))*10;
+  lines.forEach((l,i)=>ctx.fillText(l,cx,sy+i*lh));
+}
+
+function openShare(){
+  // make sure fonts ready then draw
+  if(!lastResult){ flashHint("👶 さきに ほんやく してね！"); return; }
+  sndTap();
+  const ok = drawShare();
+  if(ok){ modalBg.classList.add('show'); }
+}
+
+document.getElementById('saveBtn').addEventListener('click',()=>{
+  const a=document.createElement('a');
+  a.download='babayaku.png';
+  a.href=canvas.toDataURL('image/png');
+  a.click(); sndDone();
+});
+document.getElementById('xBtn').addEventListener('click',()=>{
+  const res=lastResult;
+  const txt = `うちの子が言いました👶\n「${res.babble}」\n＝「${res.text}」\n\n#ばぶやく で翻訳したよ✨`;
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt),'_blank');
+});
+document.getElementById('closeBtn').addEventListener('click',()=>{ modalBg.classList.remove('show'); });
+modalBg.addEventListener('click',e=>{ if(e.target===modalBg) modalBg.classList.remove('show'); });
+
+/* ===================== sound toggle ===================== */
+const soundBtn=document.getElementById('soundBtn');
+soundBtn.addEventListener('click',()=>{
+  soundOn=!soundOn;
+  soundBtn.textContent= soundOn?'🔊':'🔇';
+  if(soundOn){ ensureAudio(); sndTap(); }
+});
+
+/* ===================== bg deco ===================== */
+(function(){
+  const deco=document.getElementById('bgDeco');
+  const items=["🍼","⭐","💕","☁️","🌙","🧸","🎈","💫","🤍"];
+  for(let i=0;i<14;i++){
+    const s=document.createElement('span');
+    s.textContent=items[i%items.length];
+    s.style.left=rand(100)+'%';
+    s.style.fontSize=(18+rand(20))+'px';
+    s.style.animationDuration=(10+rand(12))+'s';
+    s.style.animationDelay=(rand(12))+'s';
+    deco.appendChild(s);
+  }
+})();
+
+/* ===================== events ===================== */
+transBtn.addEventListener('click',()=>translate());
+againBtn.addEventListener('click',()=>{ if(lastResult) translate(lastResult.cat); else translate(); });
+document.getElementById('randomBtn').addEventListener('click',()=>{ sndTap(); randomTranslate(); });
+document.getElementById('shareBtn').addEventListener('click',openShare);
+document.getElementById('babaInput').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); translate(); } });
+document.getElementById('babaInput').addEventListener('input',()=>{ grid.querySelectorAll('.nango').forEach(x=>x.classList.remove('sel')); });
+
+loadFavs();
+</script>
+</body>
+</html>
