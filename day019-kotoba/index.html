@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>コトバの旅 — 意味の海をわたる</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Cormorant:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0e27; --ink2:#1a1040; --abyss:#05060f;
+    --glow:#c9d4ff; --gold:#f4e2b8; --violet:#8a7fff; --rose:#f6b8d6;
+    --dim:rgba(201,212,255,.55);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:"Shippori Mincho",serif;
+    background:radial-gradient(140% 120% at 50% -10%, #1a1040 0%, #0a0e27 45%, #05060f 100%);
+    color:var(--glow); overflow:hidden; position:fixed; inset:0;
+    -webkit-font-smoothing:antialiased; user-select:none;
+  }
+  canvas#sky{position:fixed;inset:0;z-index:0;display:block}
+  .wrap{position:relative;z-index:2;height:100%;display:flex;flex-direction:column}
+
+  /* ---- header ---- */
+  header{padding:14px 18px 6px;text-align:center;flex:none}
+  .title{font-size:clamp(15px,4.6vw,22px);letter-spacing:.32em;font-weight:600;
+    background:linear-gradient(90deg,#c9d4ff,#f4e2b8,#f6b8d6);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-family:"Cormorant",serif;font-style:italic;font-size:clamp(11px,3vw,14px);color:var(--dim);letter-spacing:.18em;margin-top:2px}
+
+  /* ---- quest bar ---- */
+  .quest{flex:none;display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 10px 2px;flex-wrap:wrap}
+  .qchip{font-size:clamp(13px,3.6vw,16px);letter-spacing:.12em;padding:5px 14px;border-radius:30px;
+    border:1px solid rgba(201,212,255,.22);background:rgba(138,127,255,.08)}
+  .qchip b{font-weight:600}
+  .qchip.start b{color:var(--glow)} .qchip.goal b{color:var(--gold)}
+  .qarrow{font-family:"Cormorant",serif;color:var(--dim);font-size:18px}
+  .qchip.goal{box-shadow:0 0 18px rgba(244,226,184,.18)}
+  #distHint{flex:none;text-align:center;font-family:"Cormorant",serif;font-style:italic;
+    font-size:clamp(11px,3vw,13px);color:var(--dim);letter-spacing:.12em;min-height:16px;margin-top:2px}
+
+  /* ---- stage ---- */
+  .stage{flex:1 1 auto;position:relative;min-height:0;overflow:hidden}
+  .stage svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+  .node{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;text-align:center;pointer-events:none}
+  .node .word{font-size:clamp(30px,9.5vw,56px);font-weight:600;letter-spacing:.06em;
+    color:#fff;text-shadow:0 0 24px rgba(180,196,255,.85),0 0 60px rgba(138,127,255,.5);
+    animation:breathe 5.5s ease-in-out infinite}
+  @keyframes breathe{0%,100%{text-shadow:0 0 22px rgba(180,196,255,.7),0 0 50px rgba(138,127,255,.4)}
+    50%{text-shadow:0 0 34px rgba(200,212,255,1),0 0 86px rgba(138,127,255,.7)}}
+  .node .ring{position:absolute;left:50%;top:50%;width:118px;height:118px;transform:translate(-50%,-50%);
+    border:1px solid rgba(201,212,255,.16);border-radius:50%;animation:spin 26s linear infinite}
+  @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+  .star{position:absolute;z-index:4;transform:translate(-50%,-50%);
+    font-size:clamp(15px,4.2vw,20px);color:var(--glow);letter-spacing:.06em;cursor:pointer;
+    padding:7px 10px;border-radius:14px;white-space:nowrap;transition:all .5s cubic-bezier(.2,.7,.2,1);
+    background:rgba(10,14,39,.35);border:1px solid rgba(201,212,255,.14);
+    text-shadow:0 0 12px rgba(160,180,255,.6);backdrop-filter:blur(2px)}
+  .star::before{content:"✦";position:absolute;left:-3px;top:-9px;font-size:9px;color:var(--violet);opacity:.7}
+  .star:hover,.star:active{color:#fff;border-color:rgba(244,226,184,.5);
+    box-shadow:0 0 20px rgba(201,212,255,.35);transform:translate(-50%,-50%) scale(1.08)}
+  .star.warm{color:var(--gold);text-shadow:0 0 16px rgba(244,226,184,.85);border-color:rgba(244,226,184,.3)}
+  .star.goal{color:var(--gold);border-color:rgba(244,226,184,.7);
+    box-shadow:0 0 26px rgba(244,226,184,.5);animation:goalpulse 1.6s ease-in-out infinite}
+  @keyframes goalpulse{0%,100%{box-shadow:0 0 18px rgba(244,226,184,.4)}50%{box-shadow:0 0 34px rgba(244,226,184,.85)}}
+  .star.fly{opacity:0;left:50% !important;top:50% !important;transform:translate(-50%,-50%) scale(1.4)}
+  .star.fade{opacity:0;transform:translate(-50%,-50%) scale(.6)}
+
+  /* ---- poem ---- */
+  .poem{flex:none;min-height:58px;display:flex;align-items:center;justify-content:center;
+    padding:8px 26px 4px;text-align:center}
+  .poem p{font-size:clamp(14px,4vw,19px);line-height:1.7;letter-spacing:.06em;color:#e6ebff;
+    text-shadow:0 0 18px rgba(138,127,255,.3);max-width:640px}
+  .poem .cur{color:var(--violet);opacity:.6}
+
+  /* ---- trail ---- */
+  .trail{flex:none;padding:6px 12px 4px;overflow-x:auto;white-space:nowrap;text-align:center;
+    scrollbar-width:none}
+  .trail::-webkit-scrollbar{display:none}
+  .trail span{font-size:clamp(12px,3.4vw,15px);color:var(--dim);letter-spacing:.08em}
+  .trail span.cur{color:var(--gold);text-shadow:0 0 12px rgba(244,226,184,.6)}
+  .trail .sep{color:rgba(138,127,255,.5);margin:0 5px;font-family:"Cormorant",serif}
+
+  /* ---- controls ---- */
+  .controls{flex:none;display:flex;gap:8px;justify-content:center;align-items:center;
+    padding:8px 12px calc(10px + env(safe-area-inset-bottom));flex-wrap:wrap}
+  button.ctl{font-family:"Shippori Mincho",serif;font-size:12px;letter-spacing:.14em;color:var(--glow);
+    background:rgba(138,127,255,.1);border:1px solid rgba(201,212,255,.2);border-radius:24px;
+    padding:8px 14px;cursor:pointer;transition:.25s}
+  button.ctl:hover{background:rgba(138,127,255,.22);border-color:rgba(244,226,184,.4)}
+  button.ctl.on{color:var(--gold);border-color:rgba(244,226,184,.45)}
+
+  /* ---- overlay (modes / win / codex) ---- */
+  .ov{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;
+    background:radial-gradient(120% 100% at 50% 30%,rgba(26,16,64,.86),rgba(5,6,15,.95));
+    backdrop-filter:blur(6px);padding:24px}
+  .ov.show{display:flex;animation:fade .5s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .panel{max-width:520px;width:100%;text-align:center;max-height:88vh;overflow-y:auto;scrollbar-width:none}
+  .panel::-webkit-scrollbar{display:none}
+  .panel h2{font-size:clamp(19px,5.5vw,26px);font-weight:600;letter-spacing:.16em;margin-bottom:6px;
+    background:linear-gradient(90deg,#c9d4ff,#f4e2b8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .panel .lead{font-family:"Cormorant",serif;font-style:italic;color:var(--dim);letter-spacing:.14em;margin-bottom:22px;font-size:14px}
+  .modebtn{display:block;width:100%;text-align:left;margin:10px 0;padding:16px 20px;border-radius:16px;cursor:pointer;
+    background:rgba(138,127,255,.08);border:1px solid rgba(201,212,255,.18);transition:.25s;color:var(--glow)}
+  .modebtn:hover{background:rgba(138,127,255,.18);border-color:rgba(244,226,184,.4);transform:translateY(-2px)}
+  .modebtn .mt{font-size:17px;font-weight:600;letter-spacing:.1em}
+  .modebtn .md{font-size:12px;color:var(--dim);margin-top:4px;letter-spacing:.04em;font-family:"Cormorant",serif;font-style:italic}
+  .panel .x{margin-top:18px;display:inline-block;color:var(--dim);font-size:12px;letter-spacing:.16em;cursor:pointer;border-bottom:1px solid rgba(201,212,255,.2);padding-bottom:2px}
+
+  /* puzzle list */
+  .plist{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .pcard{padding:12px;border-radius:13px;background:rgba(138,127,255,.07);border:1px solid rgba(201,212,255,.15);cursor:pointer;transition:.2s}
+  .pcard:hover{background:rgba(138,127,255,.16);border-color:rgba(244,226,184,.35)}
+  .pcard .pw{font-size:14px;letter-spacing:.06em}
+  .pcard .pa{color:var(--violet);font-family:"Cormorant",serif}
+  .pcard .pmeta{font-size:10px;color:var(--dim);margin-top:5px;letter-spacing:.1em}
+  .pcard .star-y{color:var(--gold)}
+  .seg{display:flex;gap:6px;justify-content:center;margin:14px 0 4px}
+  .seg button{font-family:"Shippori Mincho",serif;font-size:12px;letter-spacing:.12em;color:var(--dim);
+    background:transparent;border:1px solid rgba(201,212,255,.18);border-radius:20px;padding:6px 14px;cursor:pointer}
+  .seg button.on{color:var(--gold);border-color:rgba(244,226,184,.5);background:rgba(244,226,184,.08)}
+
+  /* win */
+  .wt{font-size:clamp(22px,7vw,34px);font-weight:700;letter-spacing:.1em;margin:4px 0 8px;color:var(--gold);
+    text-shadow:0 0 30px rgba(244,226,184,.5)}
+  .wsteps{font-family:"Cormorant",serif;font-size:16px;color:var(--glow);letter-spacing:.1em;margin-bottom:6px}
+  .wsteps b{font-size:30px;color:var(--gold);margin:0 4px}
+  .wpath{font-size:13px;color:var(--dim);line-height:1.9;margin:14px 0;letter-spacing:.06em}
+  .wbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+
+  /* codex */
+  .codexgrid{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}
+  .cw{padding:6px 11px;border-radius:12px;font-size:13px;background:rgba(138,127,255,.1);
+    border:1px solid rgba(201,212,255,.16);cursor:pointer;transition:.2s;letter-spacing:.04em}
+  .cw:hover{background:rgba(244,226,184,.12);color:var(--gold)}
+  .codexpoem{min-height:40px;margin:14px 0 4px;font-size:15px;color:#e6ebff;line-height:1.7;letter-spacing:.05em}
+  .prog{font-family:"Cormorant",serif;color:var(--dim);letter-spacing:.14em;font-size:13px;margin-bottom:10px}
+
+  @media(max-width:430px){
+    .node .ring{width:96px;height:96px}
+    .plist{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+
+<div class="wrap">
+  <header>
+    <div class="title">コトバの旅</div>
+    <div class="sub">— a voyage across the sea of meaning —</div>
+  </header>
+
+  <div class="quest" id="questBar">
+    <div class="qchip start">出発 <b id="qStart">—</b></div>
+    <div class="qarrow">⟶</div>
+    <div class="qchip goal">目的 <b id="qGoal">—</b></div>
+  </div>
+  <div id="distHint"></div>
+
+  <div class="stage" id="stage">
+    <svg id="lines"></svg>
+    <div class="node"><div class="ring"></div><div class="word" id="centerWord">—</div></div>
+  </div>
+
+  <div class="poem"><p id="poemText"></p></div>
+
+  <div class="trail" id="trail"></div>
+
+  <div class="controls">
+    <button class="ctl" id="btnModes">◇ 旅を選ぶ</button>
+    <button class="ctl" id="btnBack">↶ 戻る</button>
+    <button class="ctl" id="btnCodex">✦ 言葉図鑑</button>
+    <button class="ctl" id="btnSound">♪ 音</button>
+    <button class="ctl" id="btnAmb">≋ 環境音</button>
+  </div>
+</div>
+
+<!-- mode select -->
+<div class="ov" id="ovMode">
+  <div class="panel">
+    <h2>旅をはじめる</h2>
+    <div class="lead">choose how you cross the sea</div>
+    <div class="modebtn" data-mode="journey">
+      <div class="mt">旅モード</div>
+      <div class="md">毎回ちがう海。ランダムな出発と目的を、最短で繋げ。</div>
+    </div>
+    <div class="modebtn" data-mode="puzzle">
+      <div class="mt">お題モード</div>
+      <div class="md">名作の航路。難易度別に選び抜かれた問い。</div>
+    </div>
+    <div class="modebtn" data-mode="free">
+      <div class="mt">自由探索モード</div>
+      <div class="md">目的のない漂流。言葉と詩だけを味わう。</div>
+    </div>
+    <span class="x" data-close>とじる</span>
+  </div>
+</div>
+
+<!-- puzzle select -->
+<div class="ov" id="ovPuzzle">
+  <div class="panel">
+    <h2>お題を選ぶ</h2>
+    <div class="seg" id="diffSeg">
+      <button data-d="0" class="on">易</button>
+      <button data-d="1">中</button>
+      <button data-d="2">難</button>
+    </div>
+    <div class="plist" id="puzzleList"></div>
+    <span class="x" data-back>← 戻る</span>
+  </div>
+</div>
+
+<!-- win -->
+<div class="ov" id="ovWin">
+  <div class="panel">
+    <div class="lead" style="margin-bottom:4px">you have crossed the sea</div>
+    <div class="wt" id="winTitle">言葉の旅人</div>
+    <div class="wsteps">あなたの旅 <b id="winSteps">0</b> 歩</div>
+    <div class="wsteps" style="font-size:13px;color:var(--dim)">最短は <span id="winBest" style="color:var(--gold)">0</span> 歩でした</div>
+    <div class="wpath" id="winPath"></div>
+    <div class="wbtns">
+      <button class="ctl" id="winAgain">もう一度の旅</button>
+      <button class="ctl" id="winNew">新しい旅へ</button>
+    </div>
+  </div>
+</div>
+
+<!-- codex -->
+<div class="ov" id="ovCodex">
+  <div class="panel">
+    <h2>言葉図鑑</h2>
+    <div class="prog" id="codexProg">0 / 0 の言葉に出会った</div>
+    <div class="codexpoem" id="codexPoem">通った言葉を選ぶと、その一文が浮かびます。</div>
+    <div class="codexgrid" id="codexGrid"></div>
+    <span class="x" data-close>とじる</span>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   連想ネットワーク — このアプリの心臓部
+   形式 :  "言葉": ["詩的な一文", [連想で繋がる言葉, ...]]
+   ※リンクはコード側で双方向化し、辞書に無い語は自動的に除外する
+   ========================================================================= */
+const NET = {
+"水":["かたちを持たないことが、あらゆるかたちになれる理由。",["海","川","雨","氷","泉","雫","湖","透明","命"]],
+"海":["すべての川が最後にたどり着く、始まりの場所。",["水","波","青","深淵","魚","船","塩","母","自由","涙"]],
+"波":["寄せては返す、ためらいの記憶。",["海","水","砂","風","音楽","儚い"]],
+"川":["同じ流れに、二度と足は浸せない。",["水","海","道","時間","谷","橋","旅"]],
+"雨":["空が地上にあてた、長い手紙。",["水","雲","涙","霧","光","森","音楽"]],
+"涙":["言葉にならなかったものの、ちいさな海。",["水","海","悲しみ","喜び","目","雨","心","塩"]],
+"湖":["空をそっくり預かって、静かにしている。",["水","空","鏡","森","静けさ","月"]],
+"雫":["世界をまるごと、逆さまに抱く小さな球。",["水","雨","泉","光","葉","朝","儚い"]],
+"泉":["地の底から湧く、絶えない記憶。",["水","雫","森","命","始まり","根"]],
+"氷":["時間を止めた、透明な眠り。",["水","雪","冬","透明","沈黙","鏡","針"]],
+"雪":["音を消しにくる、白い使者。",["氷","冬","白","雲","静けさ","空","儚い"]],
+"雲":["形をあきらめないから、いつも自由でいられる。",["空","雨","雪","風","夢","影","旅","龍"]],
+"霧":["輪郭をやさしく奪って、世界を夢にする。",["雨","雲","森","秘密","朝","迷宮"]],
+"空":["何も持たないのに、すべてを抱いている。",["雲","星","鳥","青","風","光","宇宙","自由","湖"]],
+"星":["とっくに消えた光を、今ようやく受け取る。",["空","夜","宇宙","光","銀河","希望","運命","距離"]],
+"月":["満ちては欠ける、変わることをためらわない。",["夜","空","湖","静けさ","孤独","鏡","銀","狼"]],
+"太陽":["見上げると目を焼くほど、惜しみなく与える。",["光","空","朝","火","金","命","夏"]],
+"宇宙":["問いそのものが、答えのかたちをしている。",["星","空","銀河","闇","無","永遠","深淵","沈黙"]],
+"銀河":["無数の孤独が、川のように寄り添う。",["星","宇宙","川","夜","光","螺旋"]],
+"夜":["昼が隠していたものを、そっと連れてくる。",["月","星","闇","夢","静けさ","孤独","秘密","幽霊"]],
+"朝":["世界が、もう一度生まれなおす時間。",["光","太陽","鳥","雫","希望","始まり","目"]],
+"夕暮れ":["一日が、金色にほどけていく。",["太陽","郷愁","別れ","空","赤","鐘","金","秋"]],
+"虹":["雨と光が、ほんの一瞬かわす約束。",["雨","光","空","橋","希望","約束"]],
+"風":["姿は見えないのに、確かに触れていく。",["空","雲","木","声","旅","自由","息","音楽"]],
+"光":["闇があるから、はじめて意味を持つ。",["闇","影","星","太陽","朝","目","希望","真実","透明"]],
+"闇":["すべての色を、ひとつに溶かして眠る。",["光","夜","影","宇宙","恐れ","秘密","無","深淵","黒"]],
+"影":["光に背を向けず、ずっと足元に寄り添う。",["光","闇","足跡","孤独","夕暮れ","幽霊"]],
+"山":["動かないことで、季節のすべてを見届ける。",["森","谷","石","空","大地","雪","道","神","父"]],
+"森":["無数の息づかいが、ひとつの沈黙になる。",["木","山","霧","鳥","泉","静けさ","迷宮","命","狼"]],
+"木":["空に憧れながら、地に深く根を張る。",["森","葉","根","花","鳥","風","命"]],
+"花":["散ることを知っていて、なお咲ききる。",["木","葉","香り","春","蝶","命","別れ","赤","儚い"]],
+"葉":["緑の手のひらで、光を食べて生きる。",["木","花","根","風","雫","秋"]],
+"根":["見えない場所でこそ、いちばん深く伸びる。",["木","葉","大地","泉","沈黙","命","記憶"]],
+"種":["小さな闇の中に、森ぜんぶを抱いている。",["根","命","始まり","大地","花","木","夢","希望","春","秋"]],
+"石":["急がないことを、何万年もつづけている。",["山","大地","砂","沈黙","時間","道","骨"]],
+"砂":["かつて岩だった記憶を、風にあずける。",["石","海","波","時間","砂時計","風","大地"]],
+"大地":["踏まれることで、すべてを支えている。",["山","石","根","種","道","母","命","父","重力","塩"]],
+"道":["選ばなかった道もまた、確かにそこにある。",["川","山","旅","足跡","始まり","終わり","迷宮","地図","階段"]],
+"火":["消えることを恐れず、その一瞬を燃やしきる。",["太陽","灰","煙","光","ロウソク","命","赤","血","怒り"]],
+"灰":["燃えつきたあとに残る、静かな白。",["火","煙","白","終わり","記憶","死"]],
+"煙":["形を持たないまま、空へ還っていく。",["火","灰","空","雲","香り","無"]],
+"カエル":["井戸の底からでも、空はちゃんと丸い。",["水","雨","湖","飛翔","夏","声","蛇"]],
+"魚":["ひと時も止まらないことで、自由でいる。",["海","水","川","鳥","銀","沈黙"]],
+"鳥":["重力に、毎朝そっと逆らってみせる。",["空","風","翼","飛翔","木","声","自由","朝"]],
+"蝶":["二度生まれることを、恐れなかった者。",["花","春","翼","夢","風","光","魂","儚い"]],
+"蛇":["脱ぎ捨てることでしか、大きくなれない。",["カエル","大地","螺旋","森","水","死","誕生"]],
+"猫":["なつくのではなく、選んでそばにいる。",["夜","月","影","自由","静けさ","目","孤独"]],
+"狼":["群れていても、月にだけは一人で吠える。",["月","夜","森","孤独","声","山","自由"]],
+"蛍":["短い命を、惜しみなく光に変える。",["光","夜","夏","川","命","星","儚い"]],
+"鯨":["海という孤独を、歌でいっぱいにする。",["海","深淵","音楽","孤独","母","声"]],
+"龍":["雲を従え、想像の空だけを棲み処にする。",["雲","空","水","火","神","物語","螺旋"]],
+"愛":["与えるほどに、なぜか増えていく不思議。",["心","喜び","悲しみ","母","憧れ","永遠","痛み","光","別れ","重力"]],
+"悲しみ":["深いほど、その人を愛した証になる。",["涙","愛","心","孤独","雨","夜","痛み","記憶"]],
+"喜び":["分け合うと、なぜか倍になる。",["心","愛","光","涙","音楽","朝","花"]],
+"怒り":["本当は、傷ついた心の別名。",["火","心","痛み","赤","風","恐れ"]],
+"恐れ":["知らないということの、もうひとつの名前。",["闇","心","影","死","夜","孤独","落下"]],
+"孤独":["誰かを思うとき、いちばん深くなる。",["夜","月","星","沈黙","自由","心","海","影","距離"]],
+"希望":["暗いところでしか、その光は見えない。",["光","朝","星","夢","種","虹","命","祈り","灯台"]],
+"絶望":["底まで落ちて、はじめて足がつく。",["闇","深淵","孤独","夜","死","沈黙","涙"]],
+"憧れ":["遠いからこそ、まっすぐ手を伸ばせる。",["星","空","愛","夢","光","旅","距離"]],
+"郷愁":["帰れない場所ほど、やさしく光る。",["夕暮れ","記憶","母","旅","別れ","香り","秋","写真"]],
+"静けさ":["音がないのではなく、すべてが聴こえる状態。",["沈黙","夜","雪","森","湖","心","月","余韻"]],
+"痛み":["生きていることを、忘れさせない番人。",["心","愛","悲しみ","命","涙","記憶","針"]],
+"時間":["流れているのか、私たちが流れているのか。",["川","砂時計","記憶","永遠","瞬間","時計","死","始まり","終わり","髪","老い"]],
+"永遠":["終わりがないことは、祝福か、それとも。",["時間","宇宙","愛","無","円","星","死"]],
+"瞬間":["二度と来ないから、すべてが宝になる。",["時間","光","星","花","息","儚い","針"]],
+"記憶":["事実ではなく、心が選んだ風景。",["時間","夢","写真","香り","郷愁","痛み","物語","無","足跡","骨"]],
+"夢":["眠りが描く、検閲のない真実。",["夜","星","希望","記憶","物語","空","蝶","朝","天使"]],
+"沈黙":["言葉よりも雄弁な、もうひとつの言葉。",["静けさ","夜","闇","石","森","声","余白"]],
+"言葉":["世界を切り分け、そして繋ぎ直す刃。",["詩","声","物語","沈黙","真実","手紙","名前","本"]],
+"詩":["言葉の隙間に、言葉以上のものを住まわせる。",["言葉","音楽","心","余白","星","夢","沈黙"]],
+"音楽":["時間を、聴こえるかたちにしたもの。",["詩","声","心","風","鐘","ピアノ","波","喜び","余韻"]],
+"物語":["終わると知りながら、人はページをめくる。",["言葉","本","夢","記憶","旅","始まり","終わり","龍"]],
+"真実":["光に当てると、たいてい単純な形をしている。",["光","嘘","鏡","言葉","沈黙","目"]],
+"嘘":["守りたいものがあるとき、人はそれを編む。",["真実","影","秘密","言葉","愛","鏡"]],
+"秘密":["誰かと分け合った瞬間、少しだけ軽くなる。",["闇","夜","嘘","心","鍵","扉","沈黙"]],
+"運命":["選んだ道を、あとからそう呼ぶだけ。",["星","時間","道","偶然","糸","出会い","終わり"]],
+"偶然":["意味を欲しがる心が、必然と呼びたがるもの。",["運命","出会い","瞬間","旅","星"]],
+"自由":["翼ではなく、どこへでも行ける心のこと。",["空","風","鳥","海","雲","旅","孤独","翼"]],
+"旅":["目的地よりも、途中で出会う自分のために。",["道","風","雲","自由","出会い","別れ","地図","始まり","星","羅針盤"]],
+"始まり":["終わりに、そっと隠れて待っている。",["終わり","朝","種","誕生","道","旅","円","砂時計"]],
+"終わり":["次の始まりが、まだ名前を持たないだけ。",["始まり","死","夕暮れ","別れ","円","沈黙","灰"]],
+"無":["すべてが生まれてくる、満ちた空っぽ。",["闇","宇宙","沈黙","永遠","円","死","余白","煙"]],
+"円":["終わりと始まりが、手をつないだかたち。",["永遠","始まり","終わり","月","無","螺旋","季節"]],
+"螺旋":["同じ場所に戻りながら、確かに登っている。",["円","銀河","蛇","階段","時間","龍"]],
+"境界":["分けると同時に、ふたつを出会わせる線。",["扉","道","海","空","影","光","夢","橋","肌","窓"]],
+"鏡":["あなたを映すのに、自分は何も持たない正直者。",["水","湖","光","真実","目","嘘","月"]],
+"扉":["閉じているからこそ、その向こうが輝く。",["鍵","秘密","境界","始まり","迷宮","窓","旅","階段"]],
+"鍵":["閉じることも、開くことも、同じ一本でできる。",["扉","秘密","心","迷宮","糸"]],
+"迷宮":["出口を探すうちに、入口を忘れていく。",["道","霧","扉","鍵","森","糸","夢"]],
+"地図":["描かれた瞬間から、世界は少しだけ嘘になる。",["道","旅","海","星","羅針盤","境界"]],
+"心":["誰にも見せられないのに、すべてが滲み出る。",["愛","悲しみ","喜び","痛み","夢","海","鏡","声","祈り"]],
+"手":["握ることも、放すことも、優しさになる。",["心","別れ","出会い","火","手紙","祈り","約束"]],
+"目":["言葉より先に、ぜんぶを語ってしまう。",["光","涙","心","鏡","真実","星","夢"]],
+"声":["姿が消えても、いちばん長く心に残る。",["言葉","音楽","風","沈黙","心","鳥","母","名前"]],
+"息":["生きているという、いちばん静かな証明。",["風","命","声","静けさ","生","瞬間"]],
+"骨":["肉が去ったあとも、かたちを守りつづける。",["石","死","白","大地","記憶","命"]],
+"血":["めぐることでしか、温もりを運べない。",["赤","命","心","母","火","川"]],
+"肌":["世界と私の、いちばん最初の境界線。",["境界","火","手","記憶","香り"]],
+"髪":["時間が、いちばん正直に降り積もる場所。",["時間","風","黒","白","記憶","水"]],
+"足跡":["歩いてきた証は、歩いた者には見えない。",["道","影","旅","雪","砂","記憶"]],
+"生":["死を背負うからこそ、まぶしく燃える。",["死","命","息","誕生","光","血"]],
+"死":["生がそばにいることを、教えにくる影。",["生","終わり","闇","無","夜","骨","灰","永遠","幽霊"]],
+"誕生":["泣きながら始まる、最初の勇気。",["始まり","命","母","子供","生","光","種"]],
+"子供":["世界を、まだ名前で汚していない目。",["誕生","母","父","夢","白","喜び","天使"]],
+"母":["海のように、与えても与えても枯れない。",["海","愛","命","子供","誕生","大地","涙","声"]],
+"父":["背中で、言葉にできないものを伝える。",["子供","山","大地","沈黙","命","空"]],
+"老い":["失うのではなく、静かに澄んでいくこと。",["時間","死","記憶","冬","夕暮れ","木"]],
+"命":["借りものだから、こんなにも愛おしい。",["水","火","血","息","生","死","種","光","母","心"]],
+"魂":["重さはないのに、いちばん遠くまで運ばれる。",["命","心","蝶","死","神","星","光"]],
+"神":["問えば沈黙し、沈黙すれば応える。",["宇宙","沈黙","祈り","光","山","永遠","無","天使"]],
+"祈り":["届かないと知りながら、それでも手を合わせる。",["神","心","手","希望","沈黙","光","星"]],
+"天使":["羽を持つのに、地上の人を羨む。",["神","翼","光","空","子供","死","夢"]],
+"幽霊":["未練という名の、消えられない優しさ。",["死","夜","記憶","影","別れ","秘密","闇"]],
+"春":["凍えた約束が、いっせいにほどける季節。",["花","蝶","種","朝","始まり","光","雨","季節"]],
+"夏":["命が、いちばん大きな声で笑う季節。",["太陽","海","蛍","カエル","光","夜","青","季節"]],
+"秋":["実りと別れが、同じ金色で訪れる。",["葉","夕暮れ","郷愁","月","種","別れ","赤","季節"]],
+"冬":["すべてを白く眠らせ、次の春を守る。",["雪","氷","白","静けさ","死","沈黙","老い","季節"]],
+"季節":["巡ることで、変わらないものを教える。",["春","夏","秋","冬","時間","円","風"]],
+"青":["空と海が、いちばん好きな自分の色。",["空","海","夏","水","氷","静けさ"]],
+"赤":["命と情熱が、同じ温度で燃える色。",["火","血","愛","怒り","花","夕暮れ","秋"]],
+"白":["すべての色を抱いて、なお無垢を装う。",["雪","光","骨","灰","冬","沈黙"]],
+"黒":["すべてを飲み込み、何も奪わない。",["闇","夜","髪","影","宇宙","沈黙"]],
+"金":["夕暮れと実りが、こっそり分け合う色。",["太陽","夕暮れ","秋","光","銀"]],
+"銀":["月が、夜にそっと落としていく光。",["月","星","金","光","氷","魚"]],
+"透明":["在るのに見えない、いちばん深い存在。",["氷","水","雫","光","風","窓"]],
+"香り":["目に見えない記憶の、いちばん古い扉。",["花","記憶","郷愁","風","煙","肌"]],
+"本":["閉じた背表紙の中で、世界が息をひそめる。",["物語","言葉","詩","夢","旅","窓","手紙"]],
+"手紙":["時間を超えて、誰かの声を運ぶ船。",["言葉","声","船","記憶","別れ","海","手"]],
+"写真":["失われた一瞬を、永遠に閉じ込めた檻。",["記憶","瞬間","時間","光","郷愁","影"]],
+"時計":["時間を測れても、止めることはできない。",["時間","砂時計","円","鐘","音楽","死"]],
+"船":["陸を捨てる勇気と引き換えに、水平線をもらう。",["海","波","旅","灯台","水","風","星","別れ"]],
+"灯台":["嵐の夜にこそ、その光は誰かの希望になる。",["光","海","船","夜","希望","孤独","星"]],
+"窓":["内と外を、やさしく和解させる四角。",["境界","光","空","本","雨","扉","風","透明"]],
+"橋":["離れたふたつを、自分の身体で繋ぐ。",["川","谷","道","虹","出会い","境界","別れ"]],
+"階段":["一歩ずつしか、高みには近づけない。",["螺旋","道","飛翔","円","扉"]],
+"糸":["細いほど、結ぶ力は強くなる。",["運命","針","出会い","迷宮","鍵","約束"]],
+"針":["ひとつの点で、世界を縫いとめる。",["糸","時計","痛み","瞬間","氷"]],
+"砂時計":["落ちきった砂は、ひっくり返せば未来になる。",["砂","時間","時計","死","始まり","円"]],
+"羅針盤":["揺れながらも、北だけは見失わない。",["旅","地図","海","船","星","道"]],
+"ピアノ":["白と黒の間に、無数の感情が眠っている。",["音楽","白","黒","鐘","詩","心"]],
+"鐘":["ひとつの音が、街ぜんぶの時間を揃える。",["音楽","時計","夕暮れ","声","祈り","沈黙","余韻"]],
+"翼":["重力という宿命に、生まれた反論。",["鳥","空","飛翔","天使","自由","蝶"]],
+"飛翔":["落ちる恐れを越えた者だけが知る景色。",["翼","鳥","空","自由","階段","夢","落下"]],
+"落下":["飛ぶことと、ほんの紙一重の自由。",["飛翔","重力","深淵","恐れ","雨","星"]],
+"重力":["離れようとするものを、そっと抱きとめる力。",["落下","大地","星","月","愛","海"]],
+"深淵":["覗き込むとき、それもこちらを覗いている。",["海","闇","宇宙","無","絶望","落下","鯨"]],
+"余白":["描かれていない場所に、いちばん多くが宿る。",["詩","沈黙","無","白","静けさ","言葉"]],
+"余韻":["音が消えたあとに、いちばん長く響くもの。",["音楽","沈黙","鐘","別れ","記憶","静けさ"]],
+"名前":["呼ばれることで、世界にひとつだけになる。",["言葉","声","記憶","星","命","出会い"]],
+"約束":["未来に、今日の心を結びつける糸。",["糸","虹","手","時間","別れ","星"]],
+"別れ":["出会いが、ずっと隠し持っていた約束。",["出会い","旅","涙","終わり","夕暮れ","手"]],
+"出会い":["無数のすれ違いの中の、奇跡のような一致。",["別れ","偶然","運命","旅","糸","名前","手"]],
+"距離":["遠さが、想いの強さを測る物差しになる。",["旅","憧れ","星","別れ","道","孤独"]],
+"谷":["高い山があるからこそ、深くいられる。",["山","川","森","影","橋","大地"]],
+"塩":["海の記憶を、結晶のかたちで持ち歩く。",["海","涙","水","白","氷","大地"]],
+"儚い":["消えることを知るから、こんなにも美しい。",["蛍","花","雫","夢","瞬間","雪","蝶"]],
+"ロウソク":["みずからを削りながら、闇に居場所をつくる。",["火","光","祈り","夜","命","儚い"]]
+};
+
+/* ---- グラフを双方向化 & 存在しない語のリンクを除去 ---- */
+const POEM={}, ADJ={};
+for(const w in NET){POEM[w]=NET[w][0]; ADJ[w]=new Set();}
+for(const w in NET){
+  for(const n of NET[w][1]){
+    if(NET[n]){ ADJ[w].add(n); ADJ[n].add(w); }
+  }
+}
+const WORDS=Object.keys(NET);
+for(const w of WORDS) ADJ[w]=[...ADJ[w]];
+
+/* ---- BFS : 目的語から全語への最短距離 ---- */
+function bfsDist(goal){
+  const d={[goal]:0}; const q=[goal];
+  while(q.length){const c=q.shift();
+    for(const n of ADJ[c]) if(d[n]===undefined){d[n]=d[c]+1; q.push(n);}}
+  return d;
+}
+/* 最短経路（1本）を復元 */
+function shortestPath(start,goal){
+  const prev={[start]:null}; const q=[start];
+  while(q.length){const c=q.shift(); if(c===goal)break;
+    for(const n of ADJ[c]) if(prev[n]===undefined){prev[n]=c; q.push(n);}}
+  if(prev[goal]===undefined) return null;
+  const path=[]; let c=goal; while(c!==null){path.unshift(c); c=prev[c];}
+  return path;
+}
+
+/* =========================  状態  ========================= */
+const state={mode:null,start:null,goal:null,cur:null,path:[],dist:{},best:0};
+const LS={codex:"kotoba_codex_v1",scores:"kotoba_scores_v1"};
+let codex=load(LS.codex,{}), scores=load(LS.scores,{});
+function load(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+
+/* =========================  お題  ========================= */
+const PUZZLES=[
+ [ ["涙","星"],["種","森"],["花","死"],["砂","永遠"],["朝","闇"],["龍","涙"] ],
+ [ ["カエル","宇宙"],["鏡","深淵"],["蛇","希望"],["母","宇宙"],["嘘","星"],["翼","深淵"] ],
+ [ ["木","深淵"],["雪","鯨"],["氷","郷愁"],["カエル","足跡"],["銀河","香り"],["灰","鯨"] ]
+];
+
+/* =========================  DOM  ========================= */
+const $=s=>document.querySelector(s);
+const stage=$("#stage"), linesSvg=$("#lines"), centerWord=$("#centerWord"),
+      poemText=$("#poemText"), trailEl=$("#trail");
+
+/* =========================  星空背景  ========================= */
+const sky=$("#sky"), sctx=sky.getContext("2d");
+let stars=[], W,H, traj=[]; // traj: 旅の軌跡座標（星座）
+function resize(){W=sky.width=innerWidth*devicePixelRatio;H=sky.height=innerHeight*devicePixelRatio;
+  sky.style.width=innerWidth+"px";sky.style.height=innerHeight+"px";
+  stars=[]; const n=Math.floor(innerWidth*innerHeight/6500);
+  for(let i=0;i<n;i++)stars.push({x:Math.random()*W,y:Math.random()*H,
+    r:(Math.random()*1.3+.3)*devicePixelRatio,t:Math.random()*Math.PI*2,
+    s:Math.random()*.018+.004,d:Math.random()*.4+.2});}
+addEventListener("resize",resize); resize();
+let tphase=0;
+function drawSky(){
+  sctx.clearRect(0,0,W,H);
+  // nebula
+  const g=sctx.createRadialGradient(W*.5,H*.2,0,W*.5,H*.2,H*.9);
+  g.addColorStop(0,"rgba(60,42,120,.18)");g.addColorStop(.5,"rgba(30,20,70,.08)");g.addColorStop(1,"rgba(0,0,0,0)");
+  sctx.fillStyle=g; sctx.fillRect(0,0,W,H);
+  for(const s of stars){s.t+=s.s; const a=(Math.sin(s.t)*.5+.5)*s.d+.1;
+    sctx.beginPath();sctx.arc(s.x,s.y,s.r,0,7);sctx.fillStyle=`rgba(210,220,255,${a})`;sctx.fill();}
+  requestAnimationFrame(drawSky);
+}
+drawSky();
+
+/* =========================  音  ========================= */
+let AC=null, soundOn=true, ambOn=false, ambNodes=null;
+function ac(){if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume(); return AC;}
+const SCALE=[0,2,4,7,9,12,14,16]; // pentatonic-ish 心地よい音階
+function bell(i){
+  if(!soundOn)return; const c=ac(); const t=c.currentTime;
+  const semis=SCALE[i%SCALE.length]+(i>=SCALE.length?12:0);
+  const f=261.63*Math.pow(2,semis/12);
+  [1,2.01].forEach((m,k)=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type=k?"sine":"triangle"; o.frequency.value=f*m;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(k?.05:.12,t+.01);
+    g.gain.exponentialRampToValueAtTime(.0001,t+1.6);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+1.7);
+  });
+}
+function fanfare(){
+  if(!soundOn)return; const c=ac(); let t=c.currentTime;
+  [0,4,7,12,16].forEach((s,i)=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type="sine"; o.frequency.value=261.63*Math.pow(2,s/12);
+    const st=t+i*.18; g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(.12,st+.03);
+    g.gain.exponentialRampToValueAtTime(.0001,st+1.8);
+    o.connect(g).connect(c.destination); o.start(st); o.stop(st+2);
+  });
+}
+function ambient(on){
+  const c=ac();
+  if(on){
+    ambNodes=[]; const master=c.createGain(); master.gain.value=.0; master.connect(c.destination);
+    master.gain.linearRampToValueAtTime(.06,c.currentTime+2);
+    [55,82.4,110,164.8].forEach((f,i)=>{
+      const o=c.createOscillator(),g=c.createGain(),lp=c.createBiquadFilter();
+      o.type="sine"; o.frequency.value=f; o.detune.value=(i-2)*4;
+      lp.type="lowpass"; lp.frequency.value=420; g.gain.value=.25/(i+1);
+      o.connect(g).connect(lp).connect(master); o.start();
+      ambNodes.push(o);
+    });
+    ambNodes.master=master;
+  } else if(ambNodes){
+    const m=ambNodes.master; m.gain.linearRampToValueAtTime(0,c.currentTime+1.2);
+    const ns=ambNodes; setTimeout(()=>ns.forEach(o=>{try{o.stop()}catch(e){}}),1400); ambNodes=null;
+  }
+}
+
+/* =========================  描画  ========================= */
+let typer=null;
+function typePoem(word){
+  clearInterval(typer);
+  const txt=POEM[word]||""; poemText.textContent=""; let i=0;
+  poemText.innerHTML='<span class="t"></span><span class="cur">▍</span>';
+  const tS=poemText.querySelector(".t"), cS=poemText.querySelector(".cur");
+  typer=setInterval(()=>{
+    if(i>=txt.length){clearInterval(typer); cS.remove(); return;}
+    tS.textContent+=txt[i++];
+  },42);
+}
+function collect(word){
+  if(!codex[word]){codex[word]=1; save(LS.codex,codex);}
+}
+function renderTrail(){
+  trailEl.innerHTML="";
+  state.path.forEach((w,i)=>{
+    if(i>0){const s=document.createElement("span");s.className="sep";s.textContent="⟶";trailEl.appendChild(s);}
+    const s=document.createElement("span"); s.textContent=w;
+    if(i===state.path.length-1)s.className="cur"; trailEl.appendChild(s);
+  });
+  trailEl.scrollLeft=trailEl.scrollWidth;
+}
+function updateHint(){
+  const hint=$("#distHint");
+  if(state.mode==="free"){hint.textContent="— 目的のない海。ただ、漂え。 —";return;}
+  const d=state.dist[state.cur];
+  if(d===0){hint.textContent="";return;}
+  hint.textContent = `意味の距離 — 目的の岸まで、最短 ${d} 歩`;
+}
+
+function renderNode(word,fromFly){
+  state.cur=word; collect(word);
+  centerWord.textContent=word; typePoem(word); renderTrail(); updateHint();
+  // clear stars & lines
+  [...stage.querySelectorAll(".star")].forEach(e=>e.remove());
+  linesSvg.innerHTML="";
+  const rect=stage.getBoundingClientRect();
+  const cx=rect.width/2, cy=rect.height/2;
+  const neigh=ADJ[word].slice();
+  // 自由探索でループしないよう、直前の語は末尾に（除外はしない）
+  const N=neigh.length;
+  const radius=Math.min(rect.width,rect.height)*0.40;
+  neigh.forEach((nw,k)=>{
+    const ang=(-Math.PI/2)+(k/N)*Math.PI*2;
+    let x=cx+Math.cos(ang)*radius, y=cy+Math.sin(ang)*radius;
+    x=Math.max(46,Math.min(rect.width-46,x)); y=Math.max(34,Math.min(rect.height-30,y));
+    // line
+    const ln=document.createElementNS("http://www.w3.org/2000/svg","line");
+    ln.setAttribute("x1",cx);ln.setAttribute("y1",cy);ln.setAttribute("x2",x);ln.setAttribute("y2",y);
+    let warm = state.mode!=="free" && state.dist[nw]!==undefined && state.dist[nw] < (state.dist[word]??99);
+    let isGoal = nw===state.goal;
+    ln.setAttribute("stroke", isGoal?"rgba(244,226,184,.55)": warm?"rgba(244,226,184,.28)":"rgba(138,127,255,.20)");
+    ln.setAttribute("stroke-width", isGoal?1.4:1);
+    linesSvg.appendChild(ln);
+    // star
+    const b=document.createElement("div"); b.className="star"; b.textContent=nw;
+    if(isGoal)b.classList.add("goal"); else if(warm)b.classList.add("warm");
+    b.style.left=x+"px"; b.style.top=y+"px";
+    b.addEventListener("click",()=>step(nw,k,b));
+    stage.appendChild(b);
+  });
+  if(fromFly){
+    const node=stage.querySelector(".node");
+    node.style.transition="none"; node.style.opacity="0"; node.style.transform="translate(-50%,-50%) scale(.7)";
+    requestAnimationFrame(()=>{node.style.transition="all .55s cubic-bezier(.2,.7,.2,1)";
+      node.style.opacity="1"; node.style.transform="translate(-50%,-50%) scale(1)";});
+  }
+}
+
+let busy=false;
+function step(nw,k,el){
+  if(busy)return; busy=true; bell(k);
+  // 選んだ星を中央へ吸い込む / 他をフェード
+  [...stage.querySelectorAll(".star")].forEach(s=>{ if(s===el)s.classList.add("fly"); else s.classList.add("fade"); });
+  const node=stage.querySelector(".node");
+  node.style.transition="all .5s ease"; node.style.opacity="0"; node.style.transform="translate(-50%,-50%) scale(1.25)";
+  setTimeout(()=>{
+    state.path.push(nw);
+    busy=false;
+    if(state.mode!=="free" && nw===state.goal){ win(); }
+    else renderNode(nw,true);
+  },520);
+}
+
+/* =========================  勝利  ========================= */
+function win(){
+  fanfare(); renderTrailWin();
+  const steps=state.path.length-1, best=state.best;
+  let title, lead;
+  if(steps<=best){title="連想の魔術師"; }
+  else if(steps<=best+1){title="意味の航海士"; }
+  else if(steps<=best+3){title="言葉の旅人"; }
+  else {title="さすらいの詩人"; }
+  $("#winTitle").textContent=title;
+  $("#winSteps").textContent=steps;
+  $("#winBest").textContent=best;
+  $("#winPath").innerHTML=state.path.join(' <span style="color:rgba(138,127,255,.6)">⟶</span> ');
+  // スコア保存（お題のみ）
+  if(state.mode==="puzzle"){
+    const key=state.start+">"+state.goal;
+    if(!scores[key]||steps<scores[key]){scores[key]=steps; save(LS.scores,scores);}
+  }
+  setTimeout(()=>showOv("#ovWin"),700);
+}
+function renderTrailWin(){
+  trailEl.innerHTML="";
+  state.path.forEach((w,i)=>{
+    if(i>0){const s=document.createElement("span");s.className="sep";s.textContent="✦";trailEl.appendChild(s);}
+    const s=document.createElement("span"); s.textContent=w; s.className="cur";
+    s.style.color="var(--gold)"; trailEl.appendChild(s);
+  });
+}
+
+/* =========================  ゲーム開始  ========================= */
+function connectedPairs(){ // 旅モード用：適度な距離の組をランダム生成
+  for(let tries=0;tries<60;tries++){
+    const a=WORDS[Math.floor(Math.random()*WORDS.length)];
+    const d=bfsDist(a);
+    const cand=WORDS.filter(w=>d[w]>=3 && d[w]<=6);
+    if(cand.length){const b=cand[Math.floor(Math.random()*cand.length)]; return [a,b,d[b]];}
+  }
+  return ["カエル","宇宙",bfsDist("宇宙")["カエル"]];
+}
+function startGame(mode,start,goal){
+  state.mode=mode;
+  if(mode==="free"){
+    state.start=start||WORDS[Math.floor(Math.random()*WORDS.length)];
+    state.goal=null; state.dist={}; state.best=0;
+    state.cur=state.start; state.path=[state.start];
+    $("#questBar").style.display="none"; $("#qStart").textContent="—";
+  } else {
+    let g,s,b;
+    if(start&&goal){s=start;g=goal; b=bfsDist(g)[s];}
+    else {const p=connectedPairs(); s=p[0];g=p[1];b=p[2];}
+    state.start=s; state.goal=g; state.dist=bfsDist(g); state.best=b;
+    state.cur=s; state.path=[s];
+    $("#questBar").style.display="flex";
+    $("#qStart").textContent=s; $("#qGoal").textContent=g;
+  }
+  hideOv(); renderNode(state.cur,true);
+}
+
+/* =========================  UI / オーバーレイ  ========================= */
+function showOv(id){document.querySelectorAll(".ov").forEach(o=>o.classList.remove("show")); $(id).classList.add("show");}
+function hideOv(){document.querySelectorAll(".ov").forEach(o=>o.classList.remove("show"));}
+
+$("#btnModes").onclick=()=>{ac();showOv("#ovMode");};
+$("#btnBack").onclick=()=>{
+  if(state.path.length>1 && !busy){
+    state.path.pop(); renderNode(state.path[state.path.length-1],true);
+  }
+};
+$("#btnSound").onclick=e=>{soundOn=!soundOn; e.target.classList.toggle("on",soundOn===false);
+  e.target.textContent=soundOn?"♪ 音":"♪ 音 ✕"; if(soundOn)ac();};
+$("#btnAmb").onclick=e=>{ambOn=!ambOn; e.target.classList.toggle("on",ambOn); ac(); ambient(ambOn);};
+$("#btnCodex").onclick=()=>openCodex();
+
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=hideOv);
+document.querySelectorAll("[data-back]").forEach(b=>b.onclick=()=>showOv("#ovMode"));
+
+document.querySelectorAll(".modebtn").forEach(b=>b.onclick=()=>{
+  const m=b.dataset.mode;
+  if(m==="puzzle"){buildPuzzles(0); showOv("#ovPuzzle");}
+  else startGame(m);
+});
+
+/* お題 */
+let curDiff=0;
+function buildPuzzles(d){
+  curDiff=d;
+  document.querySelectorAll("#diffSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.d===d));
+  const list=$("#puzzleList"); list.innerHTML="";
+  PUZZLES[d].forEach(([s,g])=>{
+    const best=bfsDist(g)[s]; const key=s+">"+g; const sc=scores[key];
+    const c=document.createElement("div"); c.className="pcard";
+    c.innerHTML=`<div class="pw">${s} <span class="pa">⟶</span> ${g}</div>
+      <div class="pmeta">最短 ${best} 歩 ${sc?`· <span class="star-y">★ 自己最短 ${sc}</span>`:""}</div>`;
+    c.onclick=()=>startGame("puzzle",s,g);
+    list.appendChild(c);
+  });
+}
+document.querySelectorAll("#diffSeg button").forEach(b=>b.onclick=()=>buildPuzzles(+b.dataset.d));
+
+/* win buttons */
+$("#winAgain").onclick=()=>{ if(state.mode==="free")startGame("free",state.start);
+  else startGame(state.mode,state.start,state.goal); };
+$("#winNew").onclick=()=>{ if(state.mode==="puzzle"){buildPuzzles(curDiff);showOv("#ovPuzzle");}
+  else startGame(state.mode); };
+
+/* 言葉図鑑 */
+function openCodex(){
+  const keys=Object.keys(codex).filter(w=>NET[w]);
+  $("#codexProg").textContent=`${keys.length} / ${WORDS.length} の言葉に出会った`;
+  $("#codexPoem").textContent= keys.length? "通った言葉を選ぶと、その一文が浮かびます。" : "まだ、ひとつも。さあ、旅へ。";
+  const grid=$("#codexGrid"); grid.innerHTML="";
+  // 出会った語を先頭、未出会いは伏せ字
+  WORDS.forEach(w=>{
+    const got=codex[w];
+    const el=document.createElement("div"); el.className="cw";
+    el.textContent= got? w : "✦";
+    if(!got)el.style.opacity=".3";
+    if(got)el.onclick=()=>{ $("#codexPoem").textContent="「"+w+"」　"+POEM[w]; };
+    grid.appendChild(el);
+  });
+  showOv("#ovCodex");
+}
+
+/* =========================  起動  ========================= */
+showOv("#ovMode");
+</script>
+</body>
+</html>

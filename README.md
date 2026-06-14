@@ -24,6 +24,7 @@
 | 016 | リズム - 音を、重ねる | [day016-rhythm](./day016-rhythm/) |
 | 017 | マンダラ - 描くほど、美しい | [day017-mandala](./day017-mandala/) |
 | 018 | ばぶやく - あかちゃん語ほんやく機 | [day018-babyaku](./day018-babyaku/) |
+| 019 | コトバの旅 - 意味の海をわたる | [day019-kotoba](./day019-kotoba/) |
 
 ## ルール
 
