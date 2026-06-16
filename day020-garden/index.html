@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>どうぶつの庭 - Little Garden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --grass:#c8e6c9; --grass2:#a5d6a7; --sky:#b3e5fc; --sky2:#e1f5fe;
+  --cream:#fff8e1; --sakura:#f8bbd0; --brown:#a1887f; --ink:#5d4037;
+  --gold:#ffca28; --shadow:rgba(93,64,55,.18);
+  --card:#fffdf7; --soft:#fce4ec;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:'M PLUS Rounded 1c','Zen Maru Gothic',sans-serif;
+  color:var(--ink);
+  background:linear-gradient(180deg,#d7f0fb 0%,#e8f7e6 100%);
+  overflow:hidden;
+  user-select:none;
+  -webkit-user-select:none;
+}
+#app{
+  position:relative;
+  max-width:520px;
+  height:100dvh;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  background:linear-gradient(180deg,#cdeefb 0%,#e6f7e3 55%,#dff3da 100%);
+  box-shadow:0 0 40px rgba(0,0,0,.08);
+  overflow:hidden;
+}
+
+/* ---------- Top bar ---------- */
+#topbar{
+  position:relative;z-index:30;
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;
+  flex:0 0 auto;
+}
+.logo{font-family:'Zen Maru Gothic';font-weight:900;font-size:18px;color:#6d4c41;letter-spacing:.5px;display:flex;align-items:center;gap:6px;}
+.logo .leaf{display:inline-block;animation:sway 3s ease-in-out infinite;}
+.spacer{flex:1;}
+.coin{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,.75);backdrop-filter:blur(4px);
+  padding:6px 12px;border-radius:20px;font-weight:800;color:#8d6e63;
+  box-shadow:0 3px 0 var(--shadow);font-size:15px;
+}
+.coin .nut{font-size:16px;}
+.iconbtn{
+  width:38px;height:38px;border:none;border-radius:50%;
+  background:rgba(255,255,255,.75);color:#8d6e63;font-size:17px;
+  box-shadow:0 3px 0 var(--shadow);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:transform .12s;
+}
+.iconbtn:active{transform:scale(.9);}
+
+/* ---------- Garden ---------- */
+#garden{
+  position:relative;flex:1;overflow:hidden;
+}
+#sky{position:absolute;inset:0;background:linear-gradient(180deg,#bfe9fb 0%,#dff3fb 40%,transparent 70%);}
+.cloud{position:absolute;background:#fff;border-radius:50px;opacity:.85;filter:blur(.3px);animation:drift linear infinite;}
+.cloud::before,.cloud::after{content:'';position:absolute;background:#fff;border-radius:50%;}
+.sun{position:absolute;top:18px;right:24px;width:54px;height:54px;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%,#fff3b0,#ffd54f);box-shadow:0 0 30px #ffe082aa;animation:pulse 4s ease-in-out infinite;z-index:1;}
+#ground{position:absolute;left:0;right:0;bottom:0;height:62%;
+  background:linear-gradient(180deg,#d6efc7 0%,#bfe6ad 60%,#aee09b 100%);
+  border-radius:48% 48% 0 0/14% 14% 0 0;box-shadow:inset 0 6px 12px #ffffff55;}
+.pond{position:absolute;bottom:7%;left:6%;width:34%;height:16%;
+  background:radial-gradient(circle at 40% 30%,#cdeffd,#9ed8f5);border-radius:50%;
+  box-shadow:inset 0 4px 8px #ffffff88, 0 2px 4px #88c0e055;border:3px solid #b3e5fc;}
+.gtree{position:absolute;z-index:2;}
+.flower{position:absolute;z-index:2;font-size:18px;animation:sway 4s ease-in-out infinite;transform-origin:bottom center;}
+
+#spots{position:absolute;inset:0;z-index:5;}
+.spot{position:absolute;width:30%;max-width:120px;transform:translate(-50%,-50%);text-align:center;}
+.itemslot{position:absolute;z-index:4;transform:translate(-50%,-50%);width:64px;height:64px;display:flex;align-items:flex-end;justify-content:center;}
+
+.animal{
+  position:relative;width:100%;cursor:pointer;
+  filter:drop-shadow(0 6px 5px rgba(93,64,55,.22));
+}
+.animal svg{width:100%;height:auto;display:block;overflow:visible;}
+.shadow{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:60%;height:9px;
+  background:rgba(93,64,55,.16);border-radius:50%;filter:blur(2px);z-index:-1;}
+.nametag{
+  position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+  background:rgba(255,255,255,.92);padding:1px 9px;border-radius:12px;font-size:11px;font-weight:700;
+  color:#7b5e52;white-space:nowrap;box-shadow:0 2px 0 var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none;
+}
+.animal:hover .nametag{opacity:1;}
+.legend-aura{position:absolute;inset:-18%;border-radius:50%;z-index:-2;
+  background:radial-gradient(circle,rgba(255,236,179,.55),transparent 65%);
+  animation:auraPulse 2.2s ease-in-out infinite;}
+.spark{position:absolute;font-size:13px;pointer-events:none;animation:sparkle 1.6s linear infinite;}
+
+/* idle anims */
+.bob{animation:bob 2.4s ease-in-out infinite;}
+.wig{animation:wig 2s ease-in-out infinite;}
+.squ{animation:squ 1.8s ease-in-out infinite;}
+.pop{animation:pop .55s cubic-bezier(.34,1.56,.64,1);}
+.jump{animation:jump .5s ease;}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes wig{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes squ{0%,100%{transform:scaleY(1) scaleX(1)}50%{transform:scaleY(.92) scaleX(1.05)}}
+@keyframes pop{0%{transform:scale(0) translateY(20px);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+@keyframes jump{0%,100%{transform:translateY(0)}40%{transform:translateY(-18px)}}
+@keyframes auraPulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.9;transform:scale(1.08)}}
+@keyframes sparkle{0%{transform:translateY(0) scale(.6);opacity:0}30%{opacity:1}100%{transform:translateY(-22px) scale(1.1);opacity:0}}
+@keyframes sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes drift{from{transform:translateX(-120px)}to{transform:translateX(560px)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+.float{position:absolute;pointer-events:none;z-index:40;font-size:20px;animation:floatUp 1.1s ease-out forwards;}
+@keyframes floatUp{0%{transform:translateY(0) scale(.6);opacity:0}25%{opacity:1}100%{transform:translateY(-60px) scale(1.2);opacity:0}}
+
+.ambient{position:absolute;pointer-events:none;z-index:6;opacity:.8;animation:ambFall linear forwards;}
+@keyframes ambFall{0%{transform:translateY(-20px) rotate(0);opacity:0}10%{opacity:.9}100%{transform:translateY(110vh) rotate(360deg);opacity:0}}
+
+/* ---------- Action bar ---------- */
+#actions{
+  position:relative;z-index:20;flex:0 0 auto;
+  display:flex;gap:8px;padding:8px 12px 4px;
+}
+.act{
+  flex:1;border:none;border-radius:16px;padding:11px 6px;cursor:pointer;
+  font-family:inherit;font-weight:800;font-size:13.5px;color:#fff;
+  box-shadow:0 4px 0 rgba(0,0,0,.12);transition:transform .1s, box-shadow .1s;
+  display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.2;
+}
+.act:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.12);}
+.act .big{font-size:18px;}
+.act.wait{background:linear-gradient(180deg,#ffd54f,#ffb300);color:#7a4e00;}
+.act.feed{background:linear-gradient(180deg,#aed581,#7cb342);}
+.act.shop{background:linear-gradient(180deg,#90caf9,#42a5f5);}
+.foodbar{padding:2px 12px 8px;}
+.foodbar .bar{height:9px;background:#e0d4c4;border-radius:8px;overflow:hidden;box-shadow:inset 0 1px 2px #00000018;}
+.foodbar .fill{height:100%;background:linear-gradient(90deg,#ffd54f,#ff8f00);border-radius:8px;transition:width .4s;}
+.foodbar .lbl{font-size:11px;font-weight:700;color:#8d6e63;margin-bottom:3px;display:flex;justify-content:space-between;}
+
+/* ---------- Bottom nav ---------- */
+#nav{
+  flex:0 0 auto;display:flex;background:var(--card);
+  box-shadow:0 -4px 16px rgba(0,0,0,.06);padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  position:relative;z-index:30;
+}
+.navbtn{
+  flex:1;border:none;background:none;cursor:pointer;font-family:inherit;
+  padding:6px 0 4px;color:#bcaaa4;font-weight:700;font-size:11px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s;
+}
+.navbtn .ic{font-size:21px;transition:transform .15s;}
+.navbtn.on{color:#66bb6a;}
+.navbtn.on .ic{transform:translateY(-2px) scale(1.12);}
+.navbtn .badge{position:absolute;}
+
+/* ---------- Panels (modal-ish) ---------- */
+.panel{
+  position:absolute;inset:0;z-index:50;background:linear-gradient(180deg,#fffdf9,#fdf3e7);
+  display:flex;flex-direction:column;transform:translateY(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+.panel.open{transform:translateY(0);pointer-events:auto;}
+.phead{display:flex;align-items:center;gap:10px;padding:14px 16px 8px;flex:0 0 auto;}
+.phead h2{font-family:'Zen Maru Gothic';font-weight:900;font-size:19px;color:#6d4c41;flex:1;}
+.pbody{flex:1;overflow-y:auto;padding:6px 14px 20px;-webkit-overflow-scrolling:touch;}
+.closeb{width:34px;height:34px;border:none;border-radius:50%;background:#f1e3d3;color:#9c8576;font-size:18px;font-weight:800;cursor:pointer;}
+.closeb:active{transform:scale(.9);}
+
+/* collection */
+.prog{background:#fff;border-radius:16px;padding:12px 14px;margin-bottom:12px;box-shadow:0 3px 10px #e0c9a833;}
+.prog .top{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;color:#7b5e52;margin-bottom:6px;}
+.prog .top b{font-size:22px;color:#ef9a3d;}
+.prog .bar{height:12px;background:#efe2d2;border-radius:8px;overflow:hidden;}
+.prog .fill{height:100%;background:linear-gradient(90deg,#a5d6a7,#66bb6a);border-radius:8px;transition:width .5s;}
+.dexgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.dexcard{
+  background:#fff;border-radius:16px;padding:8px 4px 7px;text-align:center;
+  box-shadow:0 3px 8px #e0c9a830;position:relative;cursor:pointer;transition:transform .12s;border:2px solid transparent;
+}
+.dexcard:active{transform:scale(.95);}
+.dexcard.seen{border-color:#ffe0b2;}
+.dexcard .pic{width:62px;height:62px;margin:0 auto 2px;display:flex;align-items:center;justify-content:center;}
+.dexcard .pic svg{width:100%;height:100%;overflow:visible;}
+.dexcard .nm{font-size:12px;font-weight:800;color:#7b5e52;}
+.dexcard .cnt{font-size:10px;color:#b0a;color:#bcaaa4;font-weight:700;}
+.dexcard.locked .pic{filter:brightness(0) opacity(.18);}
+.dexcard.locked .nm{color:#cfc1b6;}
+.rchip{position:absolute;top:5px;left:5px;font-size:8.5px;font-weight:800;padding:1px 5px;border-radius:8px;color:#fff;}
+.r0{background:#9ccc65;}.r1{background:#4fc3f7;}.r2{background:#ba68c8;}.r3{background:linear-gradient(90deg,#ff8a65,#ffd54f,#ba68c8);}
+.newbadge{position:absolute;top:4px;right:4px;background:#ff7043;color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:8px;}
+
+/* shop */
+.shoptabs{display:flex;gap:6px;margin-bottom:10px;}
+.shoptab{flex:1;border:none;background:#f1e3d3;color:#9c8576;font-family:inherit;font-weight:800;font-size:13px;padding:8px;border-radius:12px;cursor:pointer;}
+.shoptab.on{background:#ffce6b;color:#7a4e00;}
+.item{
+  background:#fff;border-radius:16px;padding:11px 12px;margin-bottom:9px;
+  display:flex;align-items:center;gap:11px;box-shadow:0 3px 8px #e0c9a830;
+}
+.item .emo{font-size:30px;width:46px;text-align:center;flex:0 0 auto;}
+.item .info{flex:1;min-width:0;}
+.item .info .t{font-weight:800;color:#6d4c41;font-size:14.5px;}
+.item .info .d{font-size:11.5px;color:#9c8576;line-height:1.4;margin-top:2px;}
+.item .buy{
+  border:none;border-radius:14px;padding:9px 13px;font-family:inherit;font-weight:800;font-size:13px;
+  background:linear-gradient(180deg,#ffd54f,#ffb300);color:#7a4e00;cursor:pointer;box-shadow:0 3px 0 #d99a00;
+  display:flex;flex-direction:column;align-items:center;gap:1px;flex:0 0 auto;min-width:62px;
+}
+.item .buy:active{transform:translateY(2px);box-shadow:0 1px 0 #d99a00;}
+.item .buy.owned{background:#c8e6c9;color:#558b2f;box-shadow:0 3px 0 #aed581;}
+.item .buy.placed{background:#a5d6a7;color:#2e7d32;}
+.item .buy small{font-size:10px;font-weight:700;opacity:.85;}
+.item.lock{opacity:.6;}
+.item.lock .buy{background:#e0d4c4;color:#9c8576;box-shadow:0 3px 0 #c4b4a0;}
+
+/* achievements */
+.ach{background:#fff;border-radius:14px;padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:0 3px 8px #e0c9a830;}
+.ach .ic{font-size:26px;width:38px;text-align:center;}
+.ach .info .t{font-weight:800;color:#6d4c41;font-size:14px;}
+.ach .info .d{font-size:11.5px;color:#9c8576;}
+.ach.locked{opacity:.45;filter:grayscale(.6);}
+.ach .chk{margin-left:auto;font-size:18px;}
+
+/* arrival / detail modal */
+.overlay{position:absolute;inset:0;z-index:60;background:rgba(60,40,30,.42);backdrop-filter:blur(2px);
+  display:flex;align-items:center;justify-content:center;padding:22px;opacity:0;pointer-events:none;transition:opacity .25s;}
+.overlay.open{opacity:1;pointer-events:auto;}
+.modal{background:linear-gradient(180deg,#fffef9,#fdf2e0);border-radius:24px;padding:20px 18px;max-width:340px;width:100%;
+  box-shadow:0 16px 40px rgba(0,0,0,.25);text-align:center;transform:scale(.85);transition:transform .3s cubic-bezier(.34,1.56,.64,1);max-height:86%;overflow-y:auto;}
+.overlay.open .modal{transform:scale(1);}
+.modal h3{font-family:'Zen Maru Gothic';font-weight:900;font-size:20px;color:#6d4c41;margin-bottom:4px;}
+.modal .sub{font-size:12.5px;color:#9c8576;margin-bottom:10px;}
+.arr-list{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:8px 0 4px;}
+.arr-item{width:78px;text-align:center;}
+.arr-item .pic{width:70px;height:70px;margin:0 auto;}
+.arr-item .pic svg{width:100%;height:100%;overflow:visible;}
+.arr-item .nm{font-size:11px;font-weight:800;color:#7b5e52;}
+.arr-item.isnew .nm{color:#ff7043;}
+.detail-pic{width:120px;height:120px;margin:6px auto;}
+.detail-pic svg{width:100%;height:100%;overflow:visible;}
+.profile{background:#fff7ec;border-radius:14px;padding:11px 13px;font-size:13px;color:#7b5e52;line-height:1.6;text-align:left;margin:8px 0;}
+.profile .row{display:flex;gap:6px;margin-top:3px;}
+.profile .row b{color:#a1887f;min-width:54px;flex:0 0 auto;}
+.mbtn{border:none;border-radius:16px;padding:12px 28px;font-family:inherit;font-weight:800;font-size:15px;
+  background:linear-gradient(180deg,#aed581,#7cb342);color:#fff;cursor:pointer;box-shadow:0 4px 0 #689f38;margin-top:6px;}
+.mbtn:active{transform:translateY(2px);box-shadow:0 2px 0 #689f38;}
+
+.toast{position:absolute;left:50%;bottom:88px;transform:translateX(-50%) translateY(20px);z-index:70;
+  background:rgba(74,52,40,.92);color:#fff;padding:9px 18px;border-radius:20px;font-weight:700;font-size:13px;
+  opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90%;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.rainbowtxt{background:linear-gradient(90deg,#ff8a80,#ffd180,#ffff8d,#a7ffeb,#82b1ff,#b388ff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;font-weight:900;}
+
+.placehint{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:25;
+  background:rgba(124,179,66,.95);color:#fff;font-weight:800;font-size:12.5px;padding:7px 16px;border-radius:18px;
+  box-shadow:0 4px 12px rgba(0,0,0,.15);display:none;}
+.placehint.show{display:block;animation:pop .4s;}
+.spot.placing{cursor:pointer;}
+.spot.placing .ring{position:absolute;inset:-6px;border:3px dashed #7cb34299;border-radius:50%;
+  width:58px;height:58px;left:50%;top:50%;transform:translate(-50%,-50%);animation:ringp 1.2s ease-in-out infinite;}
+@keyframes ringp{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.15);opacity:1}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="logo"><span class="leaf">🌿</span>どうぶつの庭</div>
+    <div class="spacer"></div>
+    <div class="coin"><span class="nut">🌰</span><span id="nutCount">0</span></div>
+    <button class="iconbtn" id="soundBtn" title="サウンド">🔊</button>
+  </div>
+
+  <div id="garden">
+    <div id="sky"></div>
+    <div class="sun"></div>
+    <div id="spots"></div>
+    <div class="placehint" id="placeHint">そっと置く場所をえらんでね</div>
+  </div>
+
+  <div class="foodbar">
+    <div class="lbl"><span id="foodName">えさ</span><span id="foodCnt"></span></div>
+    <div class="bar"><div class="fill" id="foodFill"></div></div>
+  </div>
+  <div id="actions">
+    <button class="act wait" id="waitBtn"><span class="big">⏳</span>ちょっと待つ</button>
+    <button class="act feed" id="feedBtn"><span class="big">🍚</span>えさ・グッズ</button>
+    <button class="act shop" id="shopBtn"><span class="big">🛒</span>おみせ</button>
+  </div>
+
+  <div id="nav">
+    <button class="navbtn on" data-tab="garden"><span class="ic">🏡</span>にわ</button>
+    <button class="navbtn" data-tab="dex"><span class="ic">📖</span>ずかん</button>
+    <button class="navbtn" data-tab="shop2"><span class="ic">🛒</span>おみせ</button>
+    <button class="navbtn" data-tab="ach"><span class="ic">🏆</span>じっせき</button>
+  </div>
+
+  <!-- Collection panel -->
+  <div class="panel" id="dexPanel">
+    <div class="phead"><h2>📖 どうぶつずかん</h2><button class="closeb" data-close>✕</button></div>
+    <div class="pbody">
+      <div class="prog">
+        <div class="top"><span>コンプリート</span><span><b id="dexDone">0</b>/<span id="dexTotal">0</span>しゅるい</span></div>
+        <div class="bar"><div class="fill" id="dexFill"></div></div>
+      </div>
+      <div class="dexgrid" id="dexGrid"></div>
+    </div>
+  </div>
+
+  <!-- Shop panel -->
+  <div class="panel" id="shopPanel">
+    <div class="phead"><h2>🛒 おみせ</h2><button class="closeb" data-close>✕</button></div>
+    <div class="pbody">
+      <div class="shoptabs">
+        <button class="shoptab on" data-shop="feed">🍚 えさ</button>
+        <button class="shoptab" data-shop="goods">🎀 グッズ</button>
+      </div>
+      <div id="shopList"></div>
+    </div>
+  </div>
+
+  <!-- Feed/goods placement panel -->
+  <div class="panel" id="invPanel">
+    <div class="phead"><h2>🍚 えさ・グッズ</h2><button class="closeb" data-close>✕</button></div>
+    <div class="pbody" id="invBody"></div>
+  </div>
+
+  <!-- Achievements panel -->
+  <div class="panel" id="achPanel">
+    <div class="phead"><h2>🏆 じっせき</h2><button class="closeb" data-close>✕</button></div>
+    <div class="pbody" id="achBody"></div>
+  </div>
+
+  <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================
+   どうぶつの庭 - Little Garden   (Day 020)
+   ========================================================= */
+
+/* ---------- SVG animal builder ---------- */
+// 共通のまるっこい体に、耳・しっぽ・特別パーツを足して28種を描き分ける
+function sv(parts){ return '<svg viewBox="0 0 100 100">'+parts+'</svg>'; }
+function ell(cx,cy,rx,ry,f,extra=''){ return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${f}" ${extra}/>`; }
+function cir(cx,cy,r,f,extra=''){ return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${f}" ${extra}/>`; }
+function pth(d,f,extra=''){ return `<path d="${d}" fill="${f}" ${extra}/>`; }
+
+// 目: ふつう / きらきら / ねむい
+function eyes(style,col='#3e2723'){
+  if(style==='sparkle')
+    return `<g>${cir(40,55,6,'#fff')}${cir(60,55,6,'#fff')}${cir(40,55,4,col)}${cir(60,55,4,col)}${cir(41.5,53,1.6,'#fff')}${cir(61.5,53,1.6,'#fff')}<text x="33" y="48" font-size="7">✨</text></g>`;
+  if(style==='sleep')
+    return `<path d="M35 55 q5 5 10 0" stroke="${col}" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M55 55 q5 5 10 0" stroke="${col}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  // default round shiny
+  return `${cir(40,55,4.6,col)}${cir(60,55,4.6,col)}${cir(41.6,53.2,1.7,'#fff')}${cir(61.6,53.2,1.7,'#fff')}`;
+}
+function cheeks(c='#f8a5c0'){ return `${cir(31,62,4.2,c,'opacity=".7"')}${cir(69,62,4.2,c,'opacity=".7"')}`; }
+function mouth(d='M46 63 q4 4 8 0'){ return `<path d="${d}" stroke="#7a4a3a" stroke-width="1.8" fill="none" stroke-linecap="round"/>`; }
+function nose(c='#5d4037'){ return cir(50,60,2.2,c); }
+
+// 耳プリセット
+const EAR={
+  cat:(c)=>pth('M28 38 L24 18 L42 30 Z',c)+pth('M72 38 L76 18 L58 30 Z',c)+pth('M30 35 L29 24 L38 31 Z','#f8a5c0')+pth('M70 35 L71 24 L62 31 Z','#f8a5c0'),
+  fox:(c,c2)=>pth('M26 38 L20 12 L44 28 Z',c)+pth('M74 38 L80 12 L56 28 Z',c)+pth('M28 34 L25 19 L39 29 Z',c2||'#fff')+pth('M72 34 L75 19 L61 29 Z',c2||'#fff'),
+  round:(c)=>cir(28,32,11,c)+cir(72,32,11,c),
+  innerRound:(c,c2)=>cir(28,32,11,c)+cir(72,32,11,c)+cir(28,32,5,c2)+cir(72,32,5,c2),
+  rabbit:(c,c2)=>ell(36,22,7,20,c)+ell(64,22,7,20,c)+ell(36,24,3.2,14,c2||'#f8a5c0')+ell(64,24,3.2,14,c2||'#f8a5c0'),
+  dog:(c)=>ell(26,44,9,15,c,'transform="rotate(18 26 44)"')+ell(74,44,9,15,c,'transform="rotate(-18 74 44)"'),
+  owl:(c)=>pth('M30 30 L34 16 L42 28 Z',c)+pth('M70 30 L66 16 L58 28 Z',c),
+  squirrel:(c)=>pth('M30 36 L26 16 L42 30 Z',c)+pth('M70 36 L74 16 L58 30 Z',c),
+  panda:(c)=>cir(28,30,10,c)+cir(72,30,10,c),
+  none:()=>''
+};
+
+// 体（まんまる）
+function body(c,belly){
+  return ell(50,62,32,30,c)+ (belly?ell(50,70,19,17,belly):'') ;
+}
+function feet(c){ return ell(40,90,7,5,c)+ell(60,90,7,5,c); }
+function tail(d,c){ return pth(d,c); }
+
+// ---- 各どうぶつ定義 ----
+// id, 名前, レア度(0=コモン,1=アンコモン,2=レア,3=激レア), 性格, 好物(feedId), 好きグッズ(goodId), 一言, svg
+const ANIMALS=[
+ // ---- コモン ----
+ {id:'cat',n:'ねこ',r:0,per:'きまぐれ',food:'basic',good:'cushion',bio:'ひだまりが大すき。気がむいたら遊びに来る、自由なねこさん。',
+  svg:()=>sv(tail('M78 70 q24 -2 18 -22 q-3 12 -12 12',' #b0a8a0')+body('#c9beb4','#f3ede6')+feet('#b8aea4')+EAR.cat('#c9beb4')+eyes()+cheeks()+nose('#d98a9a')+mouth()) },
+ {id:'dog',n:'いぬ',r:0,per:'げんき',food:'basic',good:'ball',bio:'しっぽぶんぶん。ボールがあると大よろこびのワンコ。',
+  svg:()=>sv(tail('M80 74 q16 4 12 -10',' #c79a6a')+body('#e3b97e','#fbe6cf')+feet('#d3a86c')+EAR.dog('#c79a6a')+eyes()+cheeks()+cir(50,60,2.6,'#5d4037')+mouth('M44 64 q6 5 12 0')+ell(50,67,5,3,'#f3d9b0')) },
+ {id:'sparrow',n:'すずめ',r:0,per:'ちょこまか',food:'basic',good:'ball',bio:'ちゅんちゅん。小さな体でせわしなく動きまわる。',
+  svg:()=>sv(body('#bfa07a','#f5ead9')+ell(50,86,16,7,'#bfa07a')+EAR.none()+pth('M50 60 L62 64 L50 68 Z','#f5a623')+eyes()+cir(36,46,8,'#8d6e63','opacity=".5"')+pth('M22 70 q-14 4 -6 -8','#9c7a52')) },
+ {id:'rabbit',n:'うさぎ',r:0,per:'おくびょう',food:'premium',good:'cushion',bio:'ふわふわのしっぽ。ぴょんぴょん跳ねて様子をうかがう。',
+  svg:()=>sv(EAR.rabbit('#f3e9e6')+body('#f6ede9','#fffdfc')+feet('#ece0db')+cir(80,80,7,'#fff','stroke="#eadfd9" stroke-width="1"')+eyes('dot','#b76e79')+cheeks()+nose('#e79aa8')+mouth()) },
+ {id:'squirrel',n:'りす',r:0,per:'よくばり',food:'basic',good:'chest',bio:'ほっぺに木の実をいっぱい。たからものをためこむのが趣味。',
+  svg:()=>sv(tail('M76 66 q34 -6 4 -44 q18 26 -8 36',' #c97e4a')+body('#d98e54','#f7e3cf')+feet('#c97e4a')+EAR.squirrel('#c97e4a')+eyes()+cir(34,63,5.5,'#f0b27a','opacity=".8"')+cir(66,63,5.5,'#f0b27a','opacity=".8"')+nose('#6d4037')+mouth()) },
+ {id:'hedgehog',n:'はりねずみ',r:0,per:'てれや',food:'basic',good:'cushion',bio:'まるくなるとトゲトゲボール。なれると鼻をくんくん。',
+  svg:()=>sv(pth('M50 30 L40 50 L30 44 L40 58 L26 60 L40 66 L32 78 L46 70 L50 84 L54 70 L68 78 L60 66 L74 60 L60 58 L70 44 L60 50 Z','#8d6e63')+ell(50,72,20,17,'#f1d9c4')+feet('#d7b89c')+eyes('dot','#5d4037')+cheeks()+cir(50,74,2.4,'#5d4037')+mouth('M46 78 q4 3 8 0')) },
+ {id:'chick',n:'ひよこ',r:0,per:'あまえんぼ',food:'basic',good:'cushion',bio:'ぴよぴよ。だれかのあとをついて歩くのが大すき。',
+  svg:()=>sv(body('#ffe082','#fff3c4')+feet('#ffb300')+pth('M50 60 L60 63 L50 66 Z','#ff9800')+eyes('dot','#5d4037')+cheeks('#ffab91')+ell(28,32,5,7,'#ffe082')+ell(72,32,5,7,'#ffe082')+ell(50,30,5,8,'#ffe082')) },
+ {id:'mouse',n:'ねずみ',r:0,per:'すばしっこい',food:'basic',good:'chest',bio:'チューチュー。すきまから顔をのぞかせる小さな住人。',
+  svg:()=>sv(tail('M80 76 q22 6 14 -12',' #c8b9c0')+body('#cfc3cb','#f6eef3')+feet('#bfb0b8')+EAR.round('#cfc3cb')+cir(28,32,5,'#f5c6d6')+cir(72,32,5,'#f5c6d6')+eyes('dot','#4a2f3a')+cheeks()+cir(50,60,2.2,'#d96a8a')+mouth()) },
+ // ---- アンコモン ----
+ {id:'fox',n:'きつね',r:1,per:'いたずら',food:'premium',good:'ball',bio:'こんっ。すました顔でいたずらをしかけてくる山のこ。',
+  svg:()=>sv(tail('M78 70 q30 0 22 -26 q-2 16 -14 18 l8 6 z','#fff')+EAR.fox('#e8743b','#fff')+body('#ef8c4a','#fff4ec')+feet('#cf6a2a')+ell(50,70,15,13,'#fff')+eyes()+cheeks()+nose('#4a2f23')+mouth()) },
+ {id:'tanuki',n:'たぬき',r:1,per:'のんき',food:'premium',good:'kotatsu',bio:'ぽんぽこ。葉っぱで化けるのが得意…なつもりのまんまる。',
+  svg:()=>sv(tail('M80 78 q20 6 16 -10','#6d5d52')+body('#a3897a','#efe2d6')+feet('#7a6557')+EAR.round('#8d6e63')+pth('M30 50 q8 -6 16 0 q-2 12 -10 10 q-8 0 -6 -10','#5d4a40')+pth('M70 50 q-8 -6 -16 0 q2 12 10 10 q8 0 6 -10','#5d4a40')+eyes('dot','#3e2723')+nose('#3e2723')+mouth()) },
+ {id:'owl',n:'フクロウ',r:1,per:'もの知り',food:'premium',good:'chest',bio:'ホーホー。夜の森のもの知り博士。じーっと見つめてくる。',
+  svg:()=>sv(EAR.owl('#9e8a78')+body('#b09a86','#efe6da')+feet('#f5a623')+cir(40,55,11,'#fff8ef')+cir(60,55,11,'#fff8ef')+cir(40,55,5,'#3e2723')+cir(60,55,5,'#3e2723')+cir(41.5,53,1.6,'#fff')+cir(61.5,53,1.6,'#fff')+pth('M50 62 L56 68 L44 68 Z','#f5a623')+pth('M30 74 q-4 8 6 8','#9e8a78')+pth('M70 74 q4 8 -6 8','#9e8a78')) },
+ {id:'hamster',n:'ハムスター',r:1,per:'たべすぎ',food:'premium',good:'chest',bio:'ほっぺがぱんぱん。ひまわりのタネをためこむ名人。',
+  svg:()=>sv(body('#e9c89a','#fff6e8')+feet('#dcb784')+EAR.round('#d8b282')+cir(30,64,8,'#f3dcb8')+cir(70,64,8,'#f3dcb8')+eyes('dot','#4a2f23')+nose('#c98a6a')+mouth()) },
+ {id:'parakeet',n:'インコ',r:1,per:'おしゃべり',food:'premium',good:'ball',bio:'おはよう！おしゃべり大すき。色あざやかな羽がじまん。',
+  svg:()=>sv(body('#7ec8a8','#d4f0e2')+ell(50,74,16,14,'#ffe082')+feet('#ff8a65')+ell(50,30,7,9,'#ff8a65')+ell(40,28,4,6,'#ffd54f')+ell(60,28,4,6,'#ffd54f')+pth('M50 58 L60 62 L50 67 Z','#37474f')+eyes('dot','#263238')+cheeks('#fff')) },
+ {id:'frog',n:'カエル',r:1,per:'のんびり',food:'basic',good:'cushion',bio:'ケロケロ。雨上がりの池のほとりでまったり日向ぼっこ。',
+  svg:()=>sv(body('#9ccc65','#e6f4cf')+feet('#7cb342')+cir(34,38,10,'#aed581')+cir(66,38,10,'#aed581')+cir(34,38,5,'#fff')+cir(66,38,5,'#fff')+cir(34,39,3,'#2e3d12')+cir(66,39,3,'#2e3d12')+pth('M38 64 q12 8 24 0','#4a6b1e','stroke="#4a6b1e" stroke-width="2.4" fill="none" stroke-linecap="round"')+cheeks('#f48fb1')) },
+ {id:'bat',n:'こうもり',r:1,per:'さびしがり',food:'premium',good:'hammock',bio:'きーきー。さかさまでぶらさがる夜のおともだち。',
+  svg:()=>sv(pth('M20 50 q-14 -10 -4 16 q10 -6 14 2 z','#6a4a6e')+pth('M80 50 q14 -10 4 16 q-10 -6 -14 2 z','#6a4a6e')+body('#7e5a82','#cdb6cf')+feet('#6a4a6e')+pth('M34 36 L40 50 L46 38 Z','#7e5a82')+pth('M66 36 L60 50 L54 38 Z','#7e5a82')+eyes('dot','#2e1a30')+cheeks('#f48fb1')+pth('M46 62 l2 4 l2 -4 l2 4 l2 -4','none','stroke="#3e2030" stroke-width="1.4" fill="none"')) },
+ // ---- レア ----
+ {id:'panda',n:'パンダ',r:2,per:'ねぼすけ',food:'deluxe',good:'kotatsu',bio:'もぐもぐ、ごろん。一日のほとんどを食べるか寝るかで過ごす。',
+  svg:()=>sv(EAR.panda('#3a3a3a')+body('#ffffff','#f5f5f5')+ell(40,52,9,11,'#3a3a3a','transform="rotate(20 40 52)"')+ell(60,52,9,11,'#3a3a3a','transform="rotate(-20 60 52)"')+ell(28,82,8,6,'#3a3a3a')+ell(72,82,8,6,'#3a3a3a')+cir(40,53,3.4,'#fff')+cir(60,53,3.4,'#fff')+cir(40,53,2,'#222')+cir(60,53,2,'#222')+cir(50,60,3,'#222')+mouth('M45 65 q5 4 10 0')) },
+ {id:'koala',n:'コアラ',r:2,per:'まったり',food:'deluxe',good:'hammock',bio:'木にぎゅっ。一日20時間ねむる、おねむのもふもふさん。',
+  svg:()=>sv(EAR.round('#9aa7ab')+cir(28,32,7,'#cfd8dc')+cir(72,32,7,'#cfd8dc')+body('#9aa7ab','#cfd8dc')+feet('#7d8a8e')+ell(50,63,8,9,'#5d6a6e')+eyes('dot','#2a2a2a')+cheeks('#f48fb1')+mouth()) },
+ {id:'penguin',n:'ペンギン',r:2,per:'ぎこちない',food:'deluxe',good:'ball',bio:'よちよち。歩くのは苦手だけど、すべるのは大の得意。',
+  svg:()=>sv(body('#37474f','#ffffff')+ell(50,72,15,16,'#fff')+ell(26,66,6,12,'#37474f','transform="rotate(20 26 66)"')+ell(74,66,6,12,'#37474f','transform="rotate(-20 74 66)"')+ell(42,92,7,4,'#ff9800')+ell(58,92,7,4,'#ff9800')+pth('M50 56 L58 60 L50 64 Z','#ff9800')+cir(43,52,3.6,'#222')+cir(57,52,3.6,'#222')+cir(44,51,1.2,'#fff')+cir(58,51,1.2,'#fff')+cheeks('#f48fb1')) },
+ {id:'polarbear',n:'しろくま',r:2,per:'おっとり',food:'deluxe',good:'kotatsu',bio:'もふっ。大きな体でおっとり。氷の上がいちばん落ち着く。',
+  svg:()=>sv(EAR.round('#f0f4f7')+body('#fbfdff','#eef4f8')+feet('#e6eef2')+ell(50,64,9,8,'#dfe9ee')+eyes('dot','#3a3a3a')+cir(50,61,2.6,'#3a3a3a')+cheeks('#cfe8f5')+mouth('M45 66 q5 4 10 0')) },
+ {id:'redpanda',n:'レッサーパンダ',r:2,per:'がんばりや',food:'deluxe',good:'chest',bio:'りんりん。両手をあげて大きく見せる、けなげなしぐさが人気。',
+  svg:()=>sv(tail('M78 70 q28 4 22 -20 q-2 10 -8 12 q4 4 0 8 q-4 -2 -6 2 z','#b5651d')+EAR.innerRound('#a0522d','#fff')+body('#d2691e','#fff0e0')+feet('#8b4513')+pth('M34 58 q-8 4 -10 -4 q6 2 10 -2','#fff')+pth('M66 58 q8 4 10 -4 q-6 2 -10 -2','#fff')+ell(50,64,7,8,'#fff')+eyes('dot','#2a2a2a')+cir(50,61,2.4,'#3a2a1a')+cheeks('#f48fb1')) },
+ {id:'otter',n:'カワウソ',r:2,per:'あそびずき',food:'deluxe',good:'ball',bio:'つるん。おなかにお気にいりの石をのせて、池でぷかぷか。',
+  svg:()=>sv(tail('M80 78 q20 8 16 -8','#8d6e63')+body('#a1887f','#efe2d6')+feet('#7a6557')+EAR.round('#8d6e63')+ell(50,66,11,8,'#f3e3d3')+cir(44,64,3,'#3e2723')+cir(56,64,3,'#3e2723')+cir(50,62,2.6,'#3e2723')+eyes('dot','#3e2723')+cheeks('#f48fb1')+mouth('M46 70 q4 3 8 0')) },
+ {id:'shoebill',n:'ハシビロコウ',r:2,per:'動かない',food:'deluxe',good:'cushion',bio:'……。何時間でも動かない。目が合うとちょっとうれしい。',
+  svg:()=>sv(body('#90a4ae','#cfd8dc')+ell(50,88,16,7,'#90a4ae')+pth('M40 60 q10 16 20 0 q-2 6 -10 6 q-8 0 -10 -6 z','#78909c')+cir(42,52,4,'#fff')+cir(58,52,4,'#fff')+cir(42,52,2,'#222')+cir(58,52,2,'#222')+pth('M30 40 q-6 -8 6 -6','#78909c')+pth('M40 34 q6 -10 14 -2','#b0bec5')) },
+ // ---- 激レア（ファンタジー） ----
+ {id:'unicorn',n:'ユニコーン',r:3,per:'けだかい',food:'legend',good:'rainbow',bio:'虹をわたって現れる伝説の一角獣。出会えた者には幸運が訪れるという。',
+  svg:()=>sv(pth('M50 8 L46 32 L54 32 Z','#ffd54f','stroke="#ffb300" stroke-width="1"')+pth('M30 34 q-10 -16 0 -18 q4 10 10 14 z','#f8bbd0')+pth('M70 34 q10 -16 0 -18 q-4 10 -10 14 z','#f8bbd0')+EAR.cat('#fff')+body('#ffffff','#fdf2f8')+feet('#f3e6ef')+pth('M40 30 q10 -6 20 0 q-4 14 -10 6 q-6 8 -10 -6','#f8bbd0','opacity=".8"')+eyes('sparkle','#7b3f7b')+cheeks()+nose('#e79aa8')+mouth()) },
+ {id:'dragon',n:'ベビードラゴン',r:3,per:'やんちゃ',food:'legend',good:'chest',bio:'たまごからかえったばかりの竜のあかちゃん。たからものに目がない。',
+  svg:()=>sv(pth('M16 52 q-12 -14 0 -16 q-2 10 8 12 z','#7cb342')+pth('M84 52 q12 -14 0 -16 q2 10 -8 12 z','#7cb342')+pth('M40 26 L44 14 L48 26 Z','#558b2f')+pth('M60 26 L56 14 L52 26 Z','#558b2f')+body('#9ccc65','#e6f4cf')+pth('M50 32 q4 8 0 16 q-4 -8 0 -16','#558b2f')+feet('#7cb342')+eyes('sparkle','#33691e')+cheeks('#ff8a80')+pth('M42 64 q8 6 16 0','#33691e','stroke="#33691e" stroke-width="2" fill="none" stroke-linecap="round"')+pth('M30 50 L28 46 M70 50 L72 46','none','stroke="#fff8e1" stroke-width="2"')) },
+ {id:'ninetails',n:'九尾のきつね',r:3,per:'みやびやか',food:'legend',good:'rainbow',bio:'九つの尾をもつ、神さびた金色のきつね。めったに姿を見せない。',
+  svg:()=>sv(
+    pth('M76 70 q26 -8 18 -28 q-2 12 -10 14 z','#ffd54f')+pth('M78 72 q28 4 26 -18 q-4 12 -14 12 z','#ffca28')+pth('M76 74 q22 14 30 -4 q-8 10 -18 4 z','#ffd54f')+pth('M24 70 q-26 -8 -18 -28 q2 12 10 14 z','#ffd54f')+pth('M22 72 q-28 4 -26 -18 q4 12 14 12 z','#ffca28')
+    +EAR.fox('#ffca28','#fff')+body('#ffd54f','#fffde7')+feet('#f5b300')+ell(50,70,15,13,'#fff')+eyes('sparkle','#6d4c00')+cheeks('#ffab91')+nose('#5d4037')+mouth()+`<text x="36" y="40" font-size="8">✨</text>`) },
+ {id:'whitebeast',n:'白王',r:3,per:'おごそか',food:'legend',good:'rainbow',bio:'森のおくに棲むという伝説の白いけもの。月の夜にだけ庭をおとずれる。',
+  svg:()=>sv(pth('M50 6 L46 26 L54 26 Z','#e1f5fe')+EAR.fox('#ffffff','#e1f5fe')+body('#ffffff','#eaf6ff')+feet('#e3eef5')+pth('M36 28 q14 -8 28 0 q-6 16 -14 8 q-8 8 -14 -8','#cfeaff','opacity=".8"')+eyes('sparkle','#2962a8')+cheeks('#b3e5fc')+nose('#5d6a8a')+mouth()+`<text x="64" y="40" font-size="8">❄️</text>`) },
+ {id:'phoenix',n:'フェニックス',r:3,per:'ほこり高い',food:'legend',good:'rainbow',bio:'よみがえりをくり返す不死の鳥。その羽はあたたかな光をはなつ。',
+  svg:()=>sv(pth('M50 4 q-6 14 0 24 q6 -10 0 -24','#ff7043')+pth('M40 8 q-4 12 2 20','#ffa726','stroke="#ffa726" stroke-width="3" fill="none"')+pth('M60 8 q4 12 -2 20','#ffa726','stroke="#ffa726" stroke-width="3" fill="none"')
+    +pth('M18 54 q-16 -8 -6 16 q8 -8 16 -2 z','#ff8a65')+pth('M82 54 q16 -8 6 16 q-8 -8 -16 -2 z','#ff8a65')
+    +body('#ff7043','#ffd180')+feet('#e65100')+pth('M50 58 L60 62 L50 66 Z','#ffca28')+eyes('sparkle','#5d1a00')+cheeks('#ffe082')+`<text x="62" y="86" font-size="9">🔥</text>`) },
+ {id:'spirit',n:'森の精霊',r:3,per:'ふしぎ',food:'legend',good:'rainbow',bio:'木もれ日のなかにふわりと現れる、緑のひかりをまとった小さな精霊。',
+  svg:()=>sv(cir(50,60,30,'#aed581','opacity=".35"')+body('#c5e1a5','#f1f8e9')+EAR.rabbit('#c5e1a5','#dcedc8')+feet('#aed581')+pth('M30 36 q10 -8 20 0','#9ccc65','stroke="#9ccc65" stroke-width="2" fill="none"')+eyes('sparkle','#33691e')+cheeks('#aed581')+mouth('M46 63 q4 4 8 0')+`<text x="20" y="44" font-size="8">🌿</text><text x="68" y="50" font-size="7">✨</text>`) },
+];
+const ANIMAL_MAP={}; ANIMALS.forEach(a=>ANIMAL_MAP[a.id]=a);
+const RNAME=['コモン','アンコモン','レア','激レア'];
+
+/* ---------- Feeds ---------- */
+// w: レア度ごとの出現ウェイト
+const FEEDS={
+  basic:  {id:'basic', n:'きほんの えさ', emo:'🌾', desc:'タネと野菜のミックス。定番のどうぶつが来やすい。', cost:6,  servings:8,  w:[72,24,4,0]},
+  premium:{id:'premium',n:'こうきゅうな えさ',emo:'🍖', desc:'ちょっと贅沢なごちそう。めずらしい子も来るかも。', cost:18, servings:8,  w:[34,42,21,3]},
+  deluxe: {id:'deluxe', n:'とくせいごちそう',emo:'🍱', desc:'特別な日のフルコース。レアなお客さまを呼ぶ。', cost:48, servings:7,  w:[10,28,50,12]},
+  legend: {id:'legend', n:'伝説のフルーツ', emo:'🍇', desc:'虹色にかがやく幻の実。伝説の存在をひきよせる…！', cost:120,servings:6,  w:[0,12,42,46]},
+};
+const FEED_ORDER=['basic','premium','deluxe','legend'];
+
+/* ---------- Goods ---------- */
+// boost: レア度別の倍率 / nuts: 来訪ごとの追加木の実 / unlock: 図鑑この種数で解放
+const GOODS={
+  cushion:{id:'cushion',n:'ふかふかクッション',emo:'🛋️',desc:'のんびり屋が長居する。木の実+1。',cost:30,boost:[1.3,1,1,1],nuts:1,unlock:0},
+  ball:   {id:'ball',   n:'ころころボール', emo:'⚽',desc:'元気な子が遊びに来やすくなる。',cost:28,boost:[1.3,1.2,1,1],nuts:1,unlock:0},
+  hammock:{id:'hammock',n:'ゆらゆらハンモック',emo:'🏖️',desc:'まったり系がうとうと。木の実+2。',cost:60,boost:[1,1.3,1.2,1],nuts:2,unlock:3},
+  kotatsu:{id:'kotatsu',n:'あったかこたつ',emo:'🍵',desc:'みんな集まってぬくぬく。木の実+2。',cost:90,boost:[1.2,1.2,1.3,1],nuts:2,unlock:6},
+  chest:  {id:'chest',  n:'たからばこ',     emo:'🎁',desc:'きらきら好きが寄ってくる。レア率アップ。',cost:160,boost:[1,1.1,1.6,1.2],nuts:3,unlock:10},
+  rainbow:{id:'rainbow',n:'にじのオブジェ', emo:'🌈',desc:'伝説のオーラ。激レアの出現率が大幅アップ！',cost:450,boost:[1,1,1.2,2.6],nuts:5,unlock:15},
+};
+const GOODS_ORDER=['cushion','ball','hammock','kotatsu','chest','rainbow'];
+const MAX_GOODS=3;
+
+/* ---------- Achievements ---------- */
+const ACHS=[
+  {id:'first',  ic:'🐾',t:'はじめての出会い',d:'はじめてどうぶつが遊びに来た',chk:s=>seenCount()>=1},
+  {id:'rare',   ic:'💜',t:'レアとの遭遇',  d:'レアのどうぶつに出会った',chk:s=>seenAnyR(2)},
+  {id:'legend', ic:'🌈',t:'伝説との邂逅',  d:'激レアのどうぶつに出会った',chk:s=>seenAnyR(3)},
+  {id:'ten',    ic:'🔟',t:'にぎやかな庭',  d:'10しゅるい集めた',chk:s=>seenCount()>=10},
+  {id:'twenty', ic:'✨',t:'どうぶつ博士',  d:'20しゅるい集めた',chk:s=>seenCount()>=20},
+  {id:'all',    ic:'👑',t:'コンプリート！',d:'すべてのどうぶつに出会った',chk:s=>seenCount()>=ANIMALS.length},
+  {id:'regular',ic:'💗',t:'おとくいさま',  d:'同じ子が10回来てくれた',chk:s=>Object.values(s.dex).some(d=>d.count>=10)},
+  {id:'master', ic:'🏡',t:'庭のぬし',     d:'のべ100ひきが遊びに来た',chk:s=>s.totalVisits>=100},
+];
+
+/* ---------- Spot layout (% of garden) ---------- */
+const SPOT_POS=[ {x:30,y:42},{x:68,y:38},{x:50,y:58},{x:24,y:68},{x:74,y:66} ];
+const ITEM_POS=[ {x:50,y:78},{x:82,y:52},{x:16,y:50} ]; // goods display positions
+
+/* ---------- State ---------- */
+const SAVE_KEY='littleGarden_v1';
+let S=null;
+const VISIT_MINUTES=12;   // この実時間ごとに1ひき来訪を抽選
+const WAIT_MINUTES=12;    // 「ちょっと待つ」で進む擬似時間
+
+function freshState(){
+  return {
+    nuts:25,
+    food:{type:'basic', servings:5},
+    ownedGoods:[],
+    placedGoods:[],       // good ids (max 3)
+    dex:{},               // id -> {count}
+    visitors:[],          // {id} occupying spots
+    lastTime:Date.now(),
+    totalVisits:0,
+    achDone:[],
+    sound:true,
+    seenShop:false,
+  };
+}
+function load(){
+  try{ const r=localStorage.getItem(SAVE_KEY); if(r){S=JSON.parse(r); return true;} }catch(e){}
+  S=freshState(); return false;
+}
+function save(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} }
+
+/* ---------- Helpers ---------- */
+function seenCount(){ return Object.keys(S.dex).length; }
+function seenAnyR(r){ return Object.keys(S.dex).some(id=>ANIMAL_MAP[id].r===r); }
+function compRate(){ return seenCount()/ANIMALS.length; }
+function $(s){ return document.querySelector(s); }
+function el(tag,cls,html){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
+
+/* ---------- Sound (Web Audio) ---------- */
+let AC=null;
+function ac(){ if(!AC){ try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return AC; }
+function tone(freq,dur,type='sine',vol=.18,when=0){
+  if(!S.sound)return; const c=ac(); if(!c)return;
+  const t=c.currentTime+when;
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+.02);
+}
+function sfxTap(){ tone(660,.12,'sine',.14); tone(990,.1,'sine',.08,.04); }
+function sfxGet(){ [523,659,784].forEach((f,i)=>tone(f,.16,'triangle',.13,i*.06)); }
+function sfxBuy(){ tone(440,.1,'square',.1); tone(660,.14,'square',.1,.08); }
+function sfxNew(){ [523,659,784,1046].forEach((f,i)=>tone(f,.22,'triangle',.14,i*.09)); }
+function sfxRare(){ [659,880,1046,1318,1760].forEach((f,i)=>tone(f,.3,'sine',.13,i*.1)); }
+function sfxPlace(){ tone(300,.16,'sine',.12); }
+
+/* ---------- Visit simulation ---------- */
+function weightedPick(weights){
+  let t=0; for(const w of weights)t+=w; if(t<=0)return -1;
+  let r=Math.random()*t;
+  for(let i=0;i<weights.length;i++){ r-=weights[i]; if(r<0)return i; }
+  return weights.length-1;
+}
+function placedBoost(){
+  const b=[1,1,1,1];
+  S.placedGoods.forEach(gid=>{ const g=GOODS[gid]; if(g) g.boost.forEach((m,i)=>b[i]*=m); });
+  return b;
+}
+function pickAnimalForTier(tier){
+  const pool=ANIMALS.filter(a=>a.r===tier);
+  if(!pool.length)return null;
+  // お気に入りの餌/グッズが置いてあると、その子の出やすさが上がる
+  const ws=pool.map(a=>{
+    let w=1;
+    if(S.food.type===a.food)w*=2.2;
+    if(S.placedGoods.includes(a.good))w*=1.8;
+    return w;
+  });
+  return pool[weightedPick(ws)];
+}
+// 1ひき分の来訪を試みる。来たらanimal、来なかったらnull
+function rollVisit(){
+  if(S.food.servings<=0)return null;
+  const feed=FEEDS[S.food.type];
+  const boost=placedBoost();
+  const w=feed.w.map((x,i)=>x*boost[i]);
+  const tier=weightedPick(w);
+  if(tier<0)return null;
+  const a=pickAnimalForTier(tier);
+  if(!a)return null;
+  S.food.servings--;
+  return a;
+}
+
+// 経過時間ぶんの来訪をまとめて処理。戻り値: 新たに来た動物配列(id) と 新規発見配列
+function processElapsed(elapsedMin){
+  const result={arrived:[], newly:[], raredisc:false};
+  let slotsFree=SPOT_POS.length - S.visitors.length;
+  if(slotsFree<=0)return result;
+  let chances=Math.floor(elapsedMin/VISIT_MINUTES);
+  if(chances<=0)return result;
+  if(chances>40)chances=40; // 久しぶりでも上限
+  for(let i=0;i<chances && slotsFree>0;i++){
+    const a=rollVisit();
+    if(!a)break;
+    // visit確率: チャンスごとに必ず1ひきではなく、少しゆらぎ
+    S.visitors.push({id:a.id});
+    S.totalVisits++;
+    const wasNew=!S.dex[a.id];
+    if(!S.dex[a.id])S.dex[a.id]={count:0};
+    S.dex[a.id].count++;
+    // 木の実報酬
+    let reward=[2,5,12,40][a.r];
+    S.placedGoods.forEach(gid=>{ if(GOODS[gid]) reward+=GOODS[gid].nuts; });
+    if(S.food.type===a.food)reward+=2;
+    if(wasNew)reward+=[5,15,40,120][a.r];
+    S.nuts+=reward;
+    result.arrived.push({id:a.id,reward,isNew:wasNew});
+    if(wasNew)result.newly.push(a.id);
+    if(a.r>=2 && wasNew)result.raredisc=true;
+    slotsFree--;
+  }
+  return result;
+}
+
+/* ---------- Rendering: garden ---------- */
+function decorateGarden(){
+  const g=$('#garden');
+  // 既存の装飾を消す（spots/sky/sun/hint以外）
+  [...g.querySelectorAll('.cloud,.ground,#ground,.gtree,.flower,.pond')].forEach(e=>e.remove());
+  // ground
+  const ground=el('div'); ground.id='ground'; g.insertBefore(ground,$('#spots'));
+  // pond
+  const pond=el('div','pond'); g.insertBefore(pond,$('#spots'));
+  // clouds
+  for(let i=0;i<3;i++){
+    const c=el('div','cloud'); const w=40+i*16;
+    c.style.width=w+'px'; c.style.height=(w*.42)+'px';
+    c.style.top=(10+i*16)+'px'; c.style.left=(-60-i*40)+'px';
+    c.style.animationDuration=(26+i*9)+'s'; c.style.animationDelay=(-i*8)+'s';
+    g.insertBefore(c,$('#spots'));
+  }
+  // trees
+  const trees=[{x:8,y:30,s:1},{x:86,y:24,s:.8}];
+  trees.forEach(t=>{
+    const tr=el('div','gtree');
+    const sz=70*t.s;
+    tr.style.left=t.x+'%'; tr.style.top=t.y+'%'; tr.style.fontSize=sz+'px';
+    tr.innerHTML='🌳';
+    g.insertBefore(tr,$('#spots'));
+  });
+  // flowers: コンプ率で増える
+  const fcount=4+Math.floor(compRate()*14);
+  const flowers=['🌷','🌸','🌼','🌻','🏵️','🌺'];
+  for(let i=0;i<fcount;i++){
+    const f=el('div','flower');
+    f.textContent=flowers[i%flowers.length];
+    f.style.left=(6+ (i*37)%88 )+'%';
+    f.style.top=(58+ (i*23)%34 )+'%';
+    f.style.fontSize=(14+ (i%3)*3 )+'px';
+    f.style.animationDelay=(-i*.5)+'s';
+    g.insertBefore(f,$('#spots'));
+  }
+}
+
+function renderSpots(){
+  const wrap=$('#spots'); wrap.innerHTML='';
+  // グッズ表示
+  S.placedGoods.forEach((gid,i)=>{
+    if(i>=ITEM_POS.length)return;
+    const p=ITEM_POS[i];
+    const it=el('div','itemslot');
+    it.style.left=p.x+'%'; it.style.top=p.y+'%';
+    it.style.fontSize='34px'; it.textContent=GOODS[gid].emo;
+    wrap.appendChild(it);
+  });
+  // どうぶつ
+  S.visitors.forEach((v,i)=>{
+    if(i>=SPOT_POS.length)return;
+    const a=ANIMAL_MAP[v.id]; if(!a)return;
+    const p=SPOT_POS[i];
+    const spot=el('div','spot');
+    spot.style.left=p.x+'%'; spot.style.top=p.y+'%';
+    const idle=['bob','wig','squ'][ (v.id.charCodeAt(0)+i)%3 ];
+    const aura = a.r===3 ? '<div class="legend-aura"></div>' : '';
+    const sparks = a.r===3 ? '<div class="spark" style="top:-6px;left:6px">✨</div><div class="spark" style="top:6px;right:0;animation-delay:.6s">⭐</div>' : (a.r===2?'<div class="spark" style="top:0;right:4px">✨</div>':'');
+    spot.innerHTML=`<div class="animal pop" data-id="${v.id}">${aura}${sparks}<div class="nametag">${a.n}</div>${a.svg()}<div class="shadow"></div></div>`;
+    const an=spot.querySelector('.animal');
+    // 着地後にidleアニメへ
+    setTimeout(()=>{ an.classList.remove('pop'); an.classList.add(idle); }, 560);
+    an.addEventListener('click',(e)=>tapAnimal(e,an,a));
+    wrap.appendChild(spot);
+  });
+}
+
+function tapAnimal(e,node,a){
+  sfxTap();
+  node.classList.remove('bob','wig','squ');
+  node.classList.add('jump');
+  setTimeout(()=>{ node.classList.remove('jump'); node.classList.add(['bob','wig','squ'][Math.floor(Math.random()*3)]); },520);
+  // ハートをふわり
+  const rect=node.getBoundingClientRect();
+  const app=$('#app').getBoundingClientRect();
+  const hearts=['💕','💖','✨','🌸','😊'];
+  for(let i=0;i<3;i++){
+    const f=el('div','float');
+    f.textContent=hearts[Math.floor(Math.random()*hearts.length)];
+    f.style.left=(rect.left-app.left+rect.width/2-10+(Math.random()*30-15))+'px';
+    f.style.top=(rect.top-app.top+10)+'px';
+    f.style.animationDelay=(i*.08)+'s';
+    $('#app').appendChild(f);
+    setTimeout(()=>f.remove(),1300);
+  }
+  if(a.r>=2)setTimeout(()=>tone(880+a.r*120,.18,'sine',.1),0);
+}
+
+/* ---------- HUD ---------- */
+function renderHUD(){
+  $('#nutCount').textContent=S.nuts;
+  const f=FEEDS[S.food.type];
+  $('#foodName').textContent=f.emo+' '+f.n;
+  $('#foodCnt').textContent=S.food.servings>0? ('あと '+S.food.servings):'なくなった！';
+  const pct=Math.max(0,Math.min(100,(S.food.servings/Math.max(f.servings,1))*100));
+  $('#foodFill').style.width=pct+'%';
+  $('#soundBtn').textContent=S.sound?'🔊':'🔇';
+}
+
+/* ---------- Toast ---------- */
+let toastT=null;
+function toast(msg){
+  const t=$('#toast'); t.innerHTML=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+/* ---------- Ambient floating petals ---------- */
+function spawnAmbient(){
+  const g=$('#garden'); if(!g)return;
+  const e=el('div','ambient');
+  const kinds=['🍃','🌸','🍃','✨'];
+  e.textContent=kinds[Math.floor(Math.random()*kinds.length)];
+  e.style.left=(Math.random()*100)+'%';
+  e.style.top='-20px';
+  e.style.fontSize=(12+Math.random()*8)+'px';
+  e.style.animationDuration=(7+Math.random()*5)+'s';
+  g.appendChild(e);
+  setTimeout(()=>e.remove(),12000);
+}
+
+/* ---------- Arrival modal ---------- */
+function showArrival(res){
+  if(!res.arrived.length)return;
+  const m=$('#modal');
+  const totalNuts=res.arrived.reduce((s,x)=>s+x.reward,0);
+  const isRare=res.raredisc;
+  let html=`<h3>${isRare?'<span class="rainbowtxt">✨ おめでとう！ ✨</span>':'🐾 ただいま！'}</h3>`;
+  html+=`<div class="sub">${res.arrived.length}ひきが あそびに来ていました</div>`;
+  html+=`<div class="arr-list">`;
+  res.arrived.forEach(x=>{
+    const a=ANIMAL_MAP[x.id];
+    html+=`<div class="arr-item ${x.isNew?'isnew':''}"><div class="pic">${a.svg()}</div><div class="nm">${a.n}${x.isNew?' 🆕':''}</div></div>`;
+  });
+  html+=`</div>`;
+  if(res.newly.length){
+    html+=`<div class="sub" style="color:#ff7043;font-weight:800;margin-top:6px">🎉 ${res.newly.length}しゅるい あたらしいおともだち！</div>`;
+  }
+  html+=`<div class="profile" style="text-align:center;font-weight:800;color:#ef9a3d">🌰 ${totalNuts} もらった！</div>`;
+  html+=`<button class="mbtn" id="arrOk">うれしい！</button>`;
+  m.innerHTML=html;
+  $('#overlay').classList.add('open');
+  $('#arrOk').onclick=()=>{ $('#overlay').classList.remove('open'); };
+  if(isRare){ sfxRare(); confettiRainbow(); }
+  else if(res.newly.length){ sfxNew(); }
+  else { sfxGet(); }
+}
+
+function confettiRainbow(){
+  const app=$('#app');
+  const ems=['🌈','✨','⭐','💫','🎊','💕'];
+  for(let i=0;i<24;i++){
+    const f=el('div','float');
+    f.textContent=ems[Math.floor(Math.random()*ems.length)];
+    f.style.left=(Math.random()*100)+'%';
+    f.style.top=(30+Math.random()*40)+'%';
+    f.style.fontSize=(16+Math.random()*16)+'px';
+    f.style.animationDuration=(1+Math.random())+'s';
+    f.style.animationDelay=(Math.random()*.4)+'s';
+    app.appendChild(f);
+    setTimeout(()=>f.remove(),1800);
+  }
+}
+
+/* ---------- Animal detail (from dex) ---------- */
+function showDetail(id){
+  const a=ANIMAL_MAP[id];
+  const seen=!!S.dex[id];
+  const m=$('#modal');
+  if(!seen){
+    m.innerHTML=`<h3>？？？</h3><div class="detail-pic" style="filter:brightness(0) opacity(.15)">${a.svg()}</div>
+      <div class="profile" style="text-align:center">まだ出会っていないどうぶつ。<br>えさをかえて待ってみよう！</div>
+      <button class="mbtn" id="dOk">とじる</button>`;
+  }else{
+    const d=S.dex[id];
+    m.innerHTML=`<h3>${a.n}</h3>
+      <div class="sub"><span class="rchip r${a.r}" style="position:static;display:inline-block">${RNAME[a.r]}</span></div>
+      <div class="detail-pic">${a.svg()}</div>
+      <div class="profile">
+        ${a.bio}
+        <div class="row"><b>せいかく</b><span>${a.per}</span></div>
+        <div class="row"><b>すきな餌</b><span>${FEEDS[a.food].emo} ${FEEDS[a.food].n}</span></div>
+        <div class="row"><b>すきグッズ</b><span>${GOODS[a.good].emo} ${GOODS[a.good].n}</span></div>
+        <div class="row"><b>来た回数</b><span>💗 ${d.count} 回</span></div>
+      </div>
+      <button class="mbtn" id="dOk">とじる</button>`;
+  }
+  $('#overlay').classList.add('open');
+  $('#dOk').onclick=()=>$('#overlay').classList.remove('open');
+  if(seen)sfxTap();
+}
+
+/* ---------- Panels ---------- */
+function openPanel(p){ p.classList.add('open'); }
+function closePanels(){ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('open')); }
+
+function renderDex(){
+  $('#dexTotal').textContent=ANIMALS.length;
+  $('#dexDone').textContent=seenCount();
+  $('#dexFill').style.width=(compRate()*100)+'%';
+  const grid=$('#dexGrid'); grid.innerHTML='';
+  ANIMALS.forEach(a=>{
+    const seen=!!S.dex[a.id];
+    const c=el('div','dexcard '+(seen?'seen':'locked'));
+    c.innerHTML=`<span class="rchip r${a.r}">${RNAME[a.r]}</span>
+      <div class="pic">${a.svg()}</div>
+      <div class="nm">${seen?a.n:'？？？'}</div>
+      <div class="cnt">${seen?('💗 '+S.dex[a.id].count+'回'):''}</div>`;
+    c.onclick=()=>showDetail(a.id);
+    grid.appendChild(c);
+  });
+}
+
+let shopTab='feed';
+function renderShop(){
+  const list=$('#shopList'); list.innerHTML='';
+  document.querySelectorAll('.shoptab').forEach(t=>t.classList.toggle('on',t.dataset.shop===shopTab));
+  if(shopTab==='feed'){
+    FEED_ORDER.forEach(fid=>{
+      const f=FEEDS[fid];
+      const it=el('div','item');
+      it.innerHTML=`<div class="emo">${f.emo}</div>
+        <div class="info"><div class="t">${f.n}</div><div class="d">${f.desc}<br><span style="color:#a1887f">えさ ${f.servings}回ぶん</span></div></div>
+        <button class="buy" data-feed="${fid}"><span>🌰${f.cost}</span><small>かう</small></button>`;
+      list.appendChild(it);
+    });
+    list.querySelectorAll('[data-feed]').forEach(b=>b.onclick=()=>buyFeed(b.dataset.feed));
+  }else{
+    GOODS_ORDER.forEach(gid=>{
+      const g=GOODS[gid];
+      const owned=S.ownedGoods.includes(gid);
+      const placed=S.placedGoods.includes(gid);
+      const locked=seenCount()<g.unlock && !owned;
+      const it=el('div','item'+(locked?' lock':''));
+      let btn;
+      if(locked){ btn=`<button class="buy" disabled><span>🔒</span><small>${g.unlock}種で解放</small></button>`; }
+      else if(!owned){ btn=`<button class="buy" data-good="${gid}"><span>🌰${g.cost}</span><small>かう</small></button>`; }
+      else if(placed){ btn=`<button class="buy placed" data-toggle="${gid}"><span>✓</span><small>はずす</small></button>`; }
+      else { btn=`<button class="buy owned" data-toggle="${gid}"><span>もってる</span><small>おく</small></button>`; }
+      it.innerHTML=`<div class="emo">${g.emo}</div>
+        <div class="info"><div class="t">${g.n}</div><div class="d">${g.desc}</div></div>${btn}`;
+      list.appendChild(it);
+    });
+    list.querySelectorAll('[data-good]').forEach(b=>b.onclick=()=>buyGood(b.dataset.good));
+    list.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>togglePlace(b.dataset.toggle));
+  }
+}
+
+function buyFeed(fid){
+  const f=FEEDS[fid];
+  if(S.nuts<f.cost){ toast('🌰 木の実がたりないよ'); return; }
+  S.nuts-=f.cost;
+  // 同じ餌なら補充、違えば置きかえ
+  if(S.food.type===fid) S.food.servings+=f.servings;
+  else S.food={type:fid,servings:f.servings};
+  sfxBuy(); save(); renderHUD(); renderShop();
+  toast(`${f.emo} ${f.n}をおいたよ！`);
+}
+function buyGood(gid){
+  const g=GOODS[gid];
+  if(S.nuts<g.cost){ toast('🌰 木の実がたりないよ'); return; }
+  S.nuts-=g.cost; S.ownedGoods.push(gid);
+  sfxBuy(); save(); renderHUD(); renderShop();
+  toast(`${g.emo} ${g.n}を かった！`);
+}
+function togglePlace(gid){
+  const i=S.placedGoods.indexOf(gid);
+  if(i>=0){ S.placedGoods.splice(i,1); toast('はずしたよ'); }
+  else{
+    if(S.placedGoods.length>=MAX_GOODS){ toast(`グッズは${MAX_GOODS}つまで`); return; }
+    S.placedGoods.push(gid); sfxPlace(); toast('にわに おいたよ！');
+  }
+  save(); renderShop(); renderSpots();
+}
+
+function renderInv(){
+  const b=$('#invBody'); b.innerHTML='';
+  // 現在の餌
+  const f=FEEDS[S.food.type];
+  const fc=el('div','prog');
+  fc.innerHTML=`<div class="top"><span>${f.emo} ${f.n}</span><span><b>${S.food.servings}</b>回ぶん</span></div>
+    <div class="bar"><div class="fill" style="width:${Math.min(100,(S.food.servings/Math.max(f.servings,1))*100)}%"></div></div>
+    <div style="font-size:11.5px;color:#9c8576;margin-top:6px">えさがなくなると どうぶつが来なくなるよ。おみせで補充してね。</div>`;
+  b.appendChild(fc);
+  // 餌をかえる
+  const fh=el('div'); fh.innerHTML='<div style="font-weight:800;color:#6d4c41;margin:6px 2px">🍚 えさをかえる／補充</div>'; b.appendChild(fh);
+  FEED_ORDER.forEach(fid=>{
+    const fe=FEEDS[fid];
+    const it=el('div','item');
+    it.innerHTML=`<div class="emo">${fe.emo}</div>
+      <div class="info"><div class="t">${fe.n}</div><div class="d">${fe.desc}</div></div>
+      <button class="buy" data-feed="${fid}"><span>🌰${fe.cost}</span><small>${S.food.type===fid?'補充':'おく'}</small></button>`;
+    b.appendChild(it);
+  });
+  // グッズ
+  const gh=el('div'); gh.innerHTML=`<div style="font-weight:800;color:#6d4c41;margin:12px 2px 6px">🎀 グッズ（${S.placedGoods.length}/${MAX_GOODS} 設置中）</div>`; b.appendChild(gh);
+  if(!S.ownedGoods.length){
+    const e=el('div','item'); e.innerHTML=`<div class="emo">🛒</div><div class="info"><div class="d">まだグッズを持っていないよ。おみせで買ってみよう！</div></div>`; b.appendChild(e);
+  }
+  S.ownedGoods.forEach(gid=>{
+    const g=GOODS[gid]; const placed=S.placedGoods.includes(gid);
+    const it=el('div','item');
+    it.innerHTML=`<div class="emo">${g.emo}</div>
+      <div class="info"><div class="t">${g.n}</div><div class="d">${g.desc}</div></div>
+      <button class="buy ${placed?'placed':'owned'}" data-toggle="${gid}"><span>${placed?'✓':'おく'}</span><small>${placed?'はずす':''}</small></button>`;
+    b.appendChild(it);
+  });
+  b.querySelectorAll('[data-feed]').forEach(btn=>btn.onclick=()=>{buyFeed(btn.dataset.feed); renderInv();});
+  b.querySelectorAll('[data-toggle]').forEach(btn=>btn.onclick=()=>{togglePlace(btn.dataset.toggle); renderInv();});
+}
+
+function renderAch(){
+  const b=$('#achBody'); b.innerHTML='';
+  ACHS.forEach(a=>{
+    const done=S.achDone.includes(a.id);
+    const it=el('div','ach'+(done?'':' locked'));
+    it.innerHTML=`<div class="ic">${a.ic}</div>
+      <div class="info"><div class="t">${a.t}</div><div class="d">${a.d}</div></div>
+      <div class="chk">${done?'✅':'⬜'}</div>`;
+    b.appendChild(it);
+  });
+}
+
+function checkAch(){
+  let unlocked=[];
+  ACHS.forEach(a=>{
+    if(!S.achDone.includes(a.id) && a.chk(S)){
+      S.achDone.push(a.id); unlocked.push(a);
+    }
+  });
+  if(unlocked.length){
+    save();
+    unlocked.forEach((a,i)=>setTimeout(()=>{ toast(`🏆 じっせき: ${a.t}`); sfxNew(); }, 600+i*1600));
+  }
+}
+
+/* ---------- Wait button ---------- */
+let waiting=false;
+function doWait(){
+  if(waiting)return;
+  if(S.food.servings<=0){ toast('🍚 えさがないよ。おみせで補充してね'); openInvFromHint(); return; }
+  if(S.visitors.length>=SPOT_POS.length){ toast('にわが いっぱい！なでてあげてね'); return; }
+  waiting=true;
+  const btn=$('#waitBtn'); btn.style.opacity='.6';
+  toast('⏳ どうぶつを まっています…');
+  // 擬似的に時間を進める
+  setTimeout(()=>{
+    const res=processElapsed(WAIT_MINUTES*2 + VISIT_MINUTES); // 1〜2ひき来やすく
+    S.lastTime=Date.now();
+    save();
+    decorateGarden(); renderSpots(); renderHUD();
+    if(res.arrived.length)showArrival(res); else toast('まだ だれも来なかった…またね');
+    checkAch();
+    waiting=false; btn.style.opacity='1';
+  },1100);
+}
+function openInvFromHint(){ closePanels(); renderInv(); openPanel($('#invPanel')); }
+
+/* ---------- Init / boot ---------- */
+function boot(){
+  const existed=load();
+  // 経過時間で来訪処理
+  const now=Date.now();
+  const elapsedMin=(now-S.lastTime)/60000;
+  let res=null;
+  if(existed && elapsedMin>=VISIT_MINUTES && S.food.servings>0 && S.visitors.length<SPOT_POS.length){
+    res=processElapsed(elapsedMin);
+  }
+  S.lastTime=now;
+  save();
+
+  decorateGarden(); renderSpots(); renderHUD();
+  bindUI();
+  setInterval(spawnAmbient,2600);
+  spawnAmbient();
+
+  if(res && res.arrived.length){ setTimeout(()=>{ showArrival(res); checkAch(); },500); }
+  else { checkAch(); }
+  // はじめての人へ
+  if(!existed){
+    setTimeout(()=>{
+      const m=$('#modal');
+      m.innerHTML=`<h3>🌿 ようこそ！</h3>
+        <div class="profile">
+          ここは どうぶつが あそびに来る ちいさな庭。<br><br>
+          🍚 <b>えさ</b>をおいて、すこし<b>まつ</b>と…<br>
+          🐾 いろんな子が 遊びに来てくれるよ！<br><br>
+          来た子は <b>ずかん</b>に記録され、<b>木の実🌰</b>がもらえる。<br>
+          木の実で あたらしい えさ や グッズを買って、<br>
+          ぜんぶで<b> ${ANIMALS.length}しゅるい</b>の コンプリートを めざそう！
+        </div>
+        <button class="mbtn" id="welOk">はじめる！</button>`;
+      $('#overlay').classList.add('open');
+      $('#welOk').onclick=()=>{ $('#overlay').classList.remove('open'); toast('⏳「ちょっと待つ」をタップしてみてね'); };
+    },400);
+  }
+}
+
+function bindUI(){
+  $('#waitBtn').onclick=()=>{ if(!AC)ac(); doWait(); };
+  $('#feedBtn').onclick=()=>{ renderInv(); openPanel($('#invPanel')); };
+  $('#shopBtn').onclick=()=>{ shopTab='feed'; renderShop(); openPanel($('#shopPanel')); };
+  $('#soundBtn').onclick=()=>{ S.sound=!S.sound; save(); renderHUD(); if(S.sound){ac();sfxTap();} toast(S.sound?'🔊 サウンド オン':'🔇 サウンド オフ'); };
+
+  document.querySelectorAll('[data-close]').forEach(b=>b.onclick=closePanels);
+  $('#overlay').onclick=(e)=>{ if(e.target.id==='overlay')$('#overlay').classList.remove('open'); };
+
+  document.querySelectorAll('.navbtn').forEach(b=>{
+    b.onclick=()=>{
+      const tab=b.dataset.tab;
+      document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('on',x===b));
+      if(tab!=='garden') { /* keep garden visible behind */ }
+      closePanels();
+      if(tab==='dex'){ renderDex(); openPanel($('#dexPanel')); }
+      else if(tab==='shop2'){ shopTab='feed'; renderShop(); openPanel($('#shopPanel')); }
+      else if(tab==='ach'){ renderAch(); openPanel($('#achPanel')); }
+      if(!AC && S.sound)ac();
+    };
+  });
+  // パネルを閉じたら にわタブに戻す
+  document.querySelectorAll('[data-close]').forEach(b=>{
+    const orig=b.onclick;
+    b.onclick=()=>{ closePanels(); document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('on',x.dataset.tab==='garden')); };
+  });
+
+  document.querySelectorAll('.shoptab').forEach(t=>t.onclick=()=>{ shopTab=t.dataset.shop; renderShop(); });
+}
+
+boot();
+</script>
+</body>
+</html>
