@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#fff8f0">
+<title>ことり - ちいさな相棒</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fff8f0;
+    --grass:#d4f0d4;
+    --sky:#d4ecff;
+    --sakura:#ffe0ec;
+    --ink:#6b5d52;
+    --ink-soft:#9b8d80;
+    --accent:#ff9eb8;
+    --accent2:#7fc8a9;
+    --card:#fffdfa;
+    --shadow:rgba(150,120,90,.18);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,#fff8f0 0%,#ffeede 100%);
+    overflow:hidden;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:manipulation;
+    position:fixed;
+    width:100%;
+    inset:0;
+  }
+  #app{
+    height:100%;
+    max-width:520px;
+    margin:0 auto;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    background:var(--cream);
+    box-shadow:0 0 60px rgba(180,150,120,.15);
+    overflow:hidden;
+  }
+
+  /* ---------- スクリーン共通 ---------- */
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .6s ease;}
+  .screen.active{opacity:1;pointer-events:auto;}
+
+  /* ---------- イントロ / 卵 ---------- */
+  #intro{justify-content:center;align-items:center;text-align:center;padding:24px;gap:10px;}
+  #intro .logo{font-size:13px;letter-spacing:.5em;color:var(--ink-soft);font-weight:500;}
+  #intro h1{font-size:34px;font-weight:900;letter-spacing:.04em;color:var(--ink);}
+  #intro .sub{font-size:13px;color:var(--ink-soft);line-height:1.9;margin-bottom:6px;}
+  .intro-step{display:none;flex-direction:column;align-items:center;gap:16px;width:100%;}
+  .intro-step.show{display:flex;animation:fadeUp .6s ease both;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+  .egg-wrap{position:relative;width:200px;height:240px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .egg{position:relative;width:130px;height:168px;animation:eggIdle 3.2s ease-in-out infinite;transform-origin:50% 90%;}
+  @keyframes eggIdle{0%,100%{transform:rotate(-3deg);}50%{transform:rotate(3deg);}}
+  .egg.wob{animation:eggWob .5s ease;}
+  @keyframes eggWob{0%,100%{transform:rotate(0);}20%{transform:rotate(-12deg);}50%{transform:rotate(11deg);}80%{transform:rotate(-6deg);}}
+  .egg svg{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 18px rgba(180,150,120,.3));}
+  .tap-hint{font-size:13px;color:var(--ink-soft);animation:pulse 1.8s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:.5;}50%{opacity:1;}}
+
+  .choice-grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:360px;}
+  .choice{
+    background:var(--card);border:3px solid transparent;border-radius:22px;padding:12px 10px 10px;
+    width:96px;cursor:pointer;transition:.2s;box-shadow:0 6px 14px var(--shadow);
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  .choice:active{transform:scale(.94);}
+  .choice.sel{border-color:var(--accent);background:var(--sakura);}
+  .choice svg{width:58px;height:58px;}
+  .choice span{font-size:12px;font-weight:700;color:var(--ink);}
+  .color-row{display:flex;gap:12px;justify-content:center;margin-top:4px;}
+  .swatch{width:42px;height:42px;border-radius:50%;cursor:pointer;border:3px solid #fff;box-shadow:0 4px 10px var(--shadow);transition:.18s;}
+  .swatch:active{transform:scale(.9);}
+  .swatch.sel{transform:scale(1.18);box-shadow:0 0 0 3px var(--accent),0 4px 10px var(--shadow);}
+
+  .name-input{
+    font-family:inherit;font-size:22px;font-weight:700;text-align:center;color:var(--ink);
+    background:var(--card);border:3px solid var(--sakura);border-radius:18px;padding:12px 18px;width:240px;
+    outline:none;box-shadow:0 6px 14px var(--shadow);
+  }
+  .name-input:focus{border-color:var(--accent);}
+
+  .btn{
+    font-family:inherit;font-size:16px;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,#ffb0c6,#ff9eb8);border:none;border-radius:30px;
+    padding:14px 38px;cursor:pointer;box-shadow:0 8px 18px rgba(255,158,184,.45);transition:.2s;letter-spacing:.05em;
+  }
+  .btn:active{transform:translateY(2px) scale(.97);box-shadow:0 4px 10px rgba(255,158,184,.4);}
+  .btn:disabled{opacity:.4;cursor:default;box-shadow:none;}
+  .btn.ghost{background:none;color:var(--ink-soft);box-shadow:none;font-weight:700;padding:8px 20px;font-size:14px;}
+
+  /* ---------- メイン ---------- */
+  #main{justify-content:flex-start;}
+  .topbar{display:flex;align-items:center;gap:8px;padding:14px 16px 6px;}
+  .bird-name{font-size:18px;font-weight:900;color:var(--ink);display:flex;align-items:center;gap:7px;}
+  .bond-badge{font-size:11px;font-weight:700;color:#fff;background:var(--accent);padding:3px 11px;border-radius:20px;letter-spacing:.04em;}
+  .topbar .spacer{flex:1;}
+  .icon-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--card);box-shadow:0 4px 10px var(--shadow);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:.18s;}
+  .icon-btn:active{transform:scale(.9);}
+
+  .stats{display:flex;gap:8px;padding:2px 16px 8px;}
+  .stat{flex:1;background:var(--card);border-radius:16px;padding:7px 10px;box-shadow:0 4px 10px var(--shadow);}
+  .stat .lab{font-size:10px;color:var(--ink-soft);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .stat .lab b{font-size:13px;}
+  .bar{height:7px;border-radius:6px;background:#f0e6da;overflow:hidden;}
+  .bar i{display:block;height:100%;border-radius:6px;transition:width .6s ease;}
+  .bar.hunger i{background:linear-gradient(90deg,#ffd089,#ffb04d);}
+  .bar.mood i{background:linear-gradient(90deg,#ffb0c6,#ff8fb0);}
+  .bar.clean i{background:linear-gradient(90deg,#aee3ff,#7fc8e8);}
+
+  /* 部屋 / ステージ */
+  .stage{position:relative;flex:1;margin:4px 14px 0;border-radius:28px;overflow:hidden;box-shadow:inset 0 4px 18px rgba(150,120,90,.12);transition:background 1.2s ease;}
+  .window{position:absolute;top:8%;left:50%;transform:translateX(-50%);width:62%;height:42%;border-radius:18px 18px 14px 14px;overflow:hidden;box-shadow:0 6px 14px rgba(120,140,160,.2),inset 0 0 0 6px rgba(255,255,255,.85);transition:background 1.2s ease;}
+  .window::after{content:"";position:absolute;inset:0;background:
+     linear-gradient(transparent 49%,rgba(255,255,255,.7) 49% 51%,transparent 51%),
+     linear-gradient(90deg,transparent 49%,rgba(255,255,255,.7) 49% 51%,transparent 51%);}
+  .sun{position:absolute;width:46px;height:46px;border-radius:50%;top:18%;left:60%;transition:1.2s ease;}
+  .cloud{position:absolute;background:rgba(255,255,255,.9);border-radius:40px;filter:blur(.4px);}
+  .floor{position:absolute;bottom:0;left:0;right:0;height:26%;background:linear-gradient(180deg,#ffe7cf,#f7d9b3);}
+  .perch{position:absolute;bottom:22%;left:50%;transform:translateX(-50%);width:62%;height:13px;border-radius:10px;background:linear-gradient(180deg,#c89b6d,#9c7044);box-shadow:0 6px 10px rgba(120,90,50,.25);}
+  .perch::before,.perch::after{content:"";position:absolute;bottom:-3px;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#a8d88a,#6fae5c);}
+  .perch::before{left:8%;}.perch::after{right:8%;}
+
+  /* 鳥 */
+  #birdStage{position:absolute;left:50%;bottom:30%;transform:translateX(-50%);width:170px;height:200px;cursor:pointer;transition:left .9s cubic-bezier(.5,1.4,.5,1),bottom .9s cubic-bezier(.5,1.4,.5,1),transform .9s cubic-bezier(.5,1.4,.5,1);z-index:5;}
+  #birdStage svg{width:100%;height:100%;overflow:visible;display:block;}
+
+  /* 鳥アニメ：全体 */
+  .b-all{transform-origin:50% 88%;animation:breathe 3.4s ease-in-out infinite;}
+  @keyframes breathe{0%,100%{transform:translateY(0) scaleX(1) scaleY(1);}50%{transform:translateY(-2px) scaleX(1.015) scaleY(.985);}}
+  #birdStage.hop .b-all{animation:hop .55s cubic-bezier(.3,1.6,.5,1);}
+  @keyframes hop{0%{transform:translateY(0);}30%{transform:translateY(-34px) scaleY(1.06);}55%{transform:translateY(0) scaleY(.9);}70%{transform:translateY(-8px);}100%{transform:translateY(0) scaleY(1);}}
+  #birdStage.bath .b-all{animation:shiver .12s linear infinite;}
+  @keyframes shiver{0%,100%{transform:translate(-2px,0) rotate(-2deg);}50%{transform:translate(2px,1px) rotate(2deg);}}
+  #birdStage.happy .b-all{animation:wiggle .5s ease infinite;}
+  @keyframes wiggle{0%,100%{transform:rotate(-4deg);}50%{transform:rotate(4deg);}}
+  #birdStage.flinch{transform:translateX(-50%) translateX(40px) rotate(8deg) scale(.92)!important;}
+
+  /* 頭：かしげ・ついばみ */
+  .b-head{transform-origin:50% 78%;transition:transform .4s ease;}
+  #birdStage.tilt .b-head{animation:tilt 2.4s ease-in-out;}
+  @keyframes tilt{0%,100%{transform:rotate(0);}30%,60%{transform:rotate(-13deg);}}
+  #birdStage.peck .b-head{animation:peck .45s ease;}
+  @keyframes peck{0%,100%{transform:translateY(0) rotate(0);}40%{transform:translateY(26px) rotate(6deg);}}
+  #birdStage.preen .b-head{animation:preen 1.4s ease;}
+  @keyframes preen{0%,100%{transform:rotate(0) translate(0,0);}25%,65%{transform:rotate(-34deg) translate(-14px,16px);}}
+  #birdStage.snuggle .b-head{transform:rotate(-14deg) translate(-10px,6px);}
+  #birdStage.lookup .b-head{transform:rotate(-7deg) translateY(-4px);}
+  #birdStage.sing .b-head{animation:singbob .35s ease-in-out infinite;}
+  @keyframes singbob{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-5px) rotate(3deg);}}
+
+  /* 翼 */
+  .b-wing-r{transform-origin:62% 38%;transition:transform .3s ease;}
+  .b-wing-l{transform-origin:38% 38%;transition:transform .3s ease;}
+  #birdStage.flap .b-wing-r{animation:flapR .22s ease-in-out infinite;}
+  #birdStage.flap .b-wing-l{animation:flapL .22s ease-in-out infinite;}
+  @keyframes flapR{0%,100%{transform:rotate(6deg);}50%{transform:rotate(-46deg);}}
+  @keyframes flapL{0%,100%{transform:rotate(-6deg);}50%{transform:rotate(46deg);}}
+  #birdStage.bath .b-wing-r{animation:flapR .1s ease-in-out infinite;}
+  #birdStage.bath .b-wing-l{animation:flapL .1s ease-in-out infinite;}
+
+  /* くちばし（さえずり開閉） */
+  .b-beak-low{transform-origin:50% 0;transition:transform .12s ease;}
+  #birdStage.sing .b-beak-low{animation:beakOpen .3s ease-in-out infinite;}
+  @keyframes beakOpen{0%,100%{transform:translateY(0) scaleY(1);}50%{transform:translateY(2px) scaleY(1.9);}}
+
+  /* 目：まばたき・細める・眠い */
+  .eye-lid{transform-origin:50% 0;transform:scaleY(0);transition:transform .12s ease;}
+  #birdStage.blink .eye-lid{transform:scaleY(1);}
+  #birdStage.snuggle .eye-lid,#birdStage.content .eye-lid{transform:scaleY(.62);}
+  #birdStage.sleep .eye-lid{transform:scaleY(.92);}
+  .zzz{opacity:0;}
+  #birdStage.sleep .zzz{opacity:1;animation:zzz 3s ease-in-out infinite;}
+  @keyframes zzz{0%{opacity:0;transform:translate(0,0) scale(.6);}30%{opacity:.9;}100%{opacity:0;transform:translate(14px,-26px) scale(1.1);}}
+
+  /* ふくらむ */
+  #birdStage.fluff .b-all{animation:fluff 2.2s ease;}
+  @keyframes fluff{0%,100%{transform:scale(1);}40%,70%{transform:scale(1.12);}}
+
+  /* 手乗り：指 */
+  .finger{position:absolute;bottom:6%;left:50%;transform:translateX(-50%) translateY(120%);width:80px;height:90px;z-index:4;transition:transform .5s ease;pointer-events:none;}
+  .finger.show{transform:translateX(-50%) translateY(0);}
+
+  /* ハート・音符 */
+  .fx{position:absolute;pointer-events:none;font-size:24px;z-index:8;animation:floatUp 1.5s ease forwards;}
+  @keyframes floatUp{0%{opacity:0;transform:translateY(0) scale(.4) rotate(0);}20%{opacity:1;}100%{opacity:0;transform:translateY(-110px) scale(1.1) rotate(var(--r,18deg));}}
+
+  /* 行動ボタン */
+  .actions{display:flex;gap:6px;padding:10px 12px 16px;flex-wrap:wrap;justify-content:center;}
+  .act{
+    flex:1;min-width:60px;background:var(--card);border:none;border-radius:18px;padding:9px 4px 7px;cursor:pointer;
+    box-shadow:0 5px 12px var(--shadow);display:flex;flex-direction:column;align-items:center;gap:3px;transition:.16s;position:relative;
+  }
+  .act:active{transform:translateY(3px) scale(.95);}
+  .act .emo{font-size:22px;line-height:1;}
+  .act .lab{font-size:10px;font-weight:700;color:var(--ink);}
+  .act:disabled{opacity:.38;}
+  .act .lock{position:absolute;top:4px;right:6px;font-size:10px;}
+
+  /* トースト / メッセージ */
+  .toast{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.7);background:rgba(255,255,255,.96);color:var(--ink);font-weight:800;font-size:16px;padding:16px 26px;border-radius:24px;box-shadow:0 12px 30px var(--shadow);opacity:0;pointer-events:none;z-index:30;text-align:center;line-height:1.6;transition:.3s;max-width:80%;}
+  .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  .toast small{display:block;font-size:12px;color:var(--ink-soft);font-weight:600;margin-top:4px;}
+
+  /* おもちゃ選択シート */
+  .sheet{position:absolute;inset:0;background:rgba(80,60,45,.32);opacity:0;pointer-events:none;transition:.3s;z-index:25;display:flex;align-items:flex-end;}
+  .sheet.show{opacity:1;pointer-events:auto;}
+  .sheet-inner{background:var(--cream);width:100%;border-radius:30px 30px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));transform:translateY(100%);transition:.35s cubic-bezier(.3,1,.4,1);box-shadow:0 -10px 30px var(--shadow);}
+  .sheet.show .sheet-inner{transform:translateY(0);}
+  .sheet h3{font-size:16px;font-weight:900;margin-bottom:14px;text-align:center;}
+  .sheet-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+  .sheet-grid .choice{width:84px;}
+  .sheet-grid .choice svg{width:46px;height:46px;}
+  .sheet-grid .choice .emo{font-size:34px;}
+
+  /* 設定シート */
+  .set-row{display:flex;align-items:center;justify-content:space-between;padding:13px 4px;border-bottom:1px solid #f0e6da;font-size:14px;font-weight:700;}
+  .set-row:last-child{border:none;}
+  .switch{width:48px;height:28px;border-radius:20px;background:#e0d4c6;position:relative;cursor:pointer;transition:.2s;}
+  .switch.on{background:var(--accent2);}
+  .switch i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 2px 5px rgba(0,0,0,.2);}
+  .switch.on i{left:23px;}
+  .danger{color:#d98a8a;font-size:13px;font-weight:700;background:none;border:none;cursor:pointer;text-align:left;padding:13px 4px;}
+
+  .hint{text-align:center;font-size:11px;color:var(--ink-soft);padding:0 16px 4px;min-height:14px;font-weight:500;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== イントロ ===== -->
+  <section id="intro" class="screen active">
+    <!-- step0: タイトル + 卵 -->
+    <div class="intro-step show" data-step="0">
+      <div class="logo">D A Y　0 2 1</div>
+      <h1>ことり</h1>
+      <div class="sub">ちいさな相棒との、ことばのいらない毎日。<br>たまごを、そっとタップしてみて。</div>
+      <div class="egg-wrap" id="eggWrap">
+        <div class="egg" id="egg">
+          <svg viewBox="0 0 130 168">
+            <defs>
+              <radialGradient id="eg" cx="38%" cy="30%" r="80%">
+                <stop offset="0%" stop-color="#fffdf8"/><stop offset="60%" stop-color="#fff0dd"/><stop offset="100%" stop-color="#ffdfc0"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="65" cy="92" rx="58" ry="74" fill="url(#eg)"/>
+            <ellipse cx="46" cy="56" rx="18" ry="26" fill="#fff" opacity=".5"/>
+            <g id="speckles" fill="#ffcf9e" opacity=".8">
+              <circle cx="40" cy="120" r="5"/><circle cx="86" cy="100" r="6"/><circle cx="70" cy="140" r="4"/><circle cx="92" cy="135" r="4"/><circle cx="55" cy="78" r="4"/>
+            </g>
+            <path id="crack" d="" stroke="#c79a6a" stroke-width="2.4" fill="none" stroke-linecap="round" opacity="0"/>
+          </svg>
+        </div>
+      </div>
+      <div class="tap-hint" id="eggHint">タップ ×5 でかえる</div>
+    </div>
+
+    <!-- step1: 種類 -->
+    <div class="intro-step" data-step="1">
+      <h1 style="font-size:24px">どんな子かな？</h1>
+      <div class="sub">気になる子をえらんでね</div>
+      <div class="choice-grid" id="speciesGrid"></div>
+      <button class="btn" id="toColor" disabled>つぎへ</button>
+    </div>
+
+    <!-- step2: 色 -->
+    <div class="intro-step" data-step="2">
+      <h1 style="font-size:24px">羽の色は？</h1>
+      <div style="margin:6px 0"><span id="colorPreview"></span></div>
+      <div class="color-row" id="colorRow"></div>
+      <button class="btn" id="toName">つぎへ</button>
+      <button class="btn ghost" id="backSpecies">もどる</button>
+    </div>
+
+    <!-- step3: 名前 -->
+    <div class="intro-step" data-step="3">
+      <h1 style="font-size:24px">なまえを つけてあげて</h1>
+      <div style="margin:4px 0"><span id="namePreview"></span></div>
+      <input class="name-input" id="nameInput" maxlength="6" placeholder="ぴよ" autocomplete="off">
+      <button class="btn" id="finishIntro" disabled>はじめまして</button>
+    </div>
+  </section>
+
+  <!-- ===== メイン ===== -->
+  <section id="main" class="screen">
+    <div class="topbar">
+      <div class="bird-name"><span id="hdName">ぴよ</span><span class="bond-badge" id="bondBadge">警戒</span></div>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="callBtn" title="名前をよぶ">📣</button>
+      <button class="icon-btn" id="soundBtn" title="サウンド">🔊</button>
+      <button class="icon-btn" id="setBtn" title="設定">⚙️</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="lab"><span>おなか</span><b id="vHunger">😋</b></div><div class="bar hunger"><i id="bHunger"></i></div></div>
+      <div class="stat"><div class="lab"><span>きげん</span><b id="vMood">🎵</b></div><div class="bar mood"><i id="bMood"></i></div></div>
+      <div class="stat"><div class="lab"><span>きれい</span><b id="vClean">✨</b></div><div class="bar clean"><i id="bClean"></i></div></div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="window" id="window">
+        <div class="sun" id="sun"></div>
+        <div class="cloud" style="width:50px;height:18px;top:30%;left:12%"></div>
+        <div class="cloud" style="width:38px;height:14px;top:55%;left:55%"></div>
+      </div>
+      <div class="floor"></div>
+      <div class="perch"></div>
+      <div id="birdStage"></div>
+      <div class="finger" id="finger">
+        <svg viewBox="0 0 80 90"><path d="M30 90 L30 38 Q30 18 45 18 Q60 18 60 38 L60 90 Z" fill="#ffe0c8"/><ellipse cx="45" cy="22" rx="15" ry="13" fill="#ffe8d4"/></svg>
+      </div>
+    </div>
+
+    <div class="hint" id="hint">ふれて、なでてあげよう</div>
+
+    <div class="actions" id="actions">
+      <button class="act" data-act="pet"><span class="emo">🫳</span><span class="lab">なでる</span></button>
+      <button class="act" data-act="feed"><span class="emo">🌾</span><span class="lab">ごはん</span></button>
+      <button class="act" data-act="bath"><span class="emo">💧</span><span class="lab">水あび</span></button>
+      <button class="act" data-act="sing"><span class="emo">🎵</span><span class="lab">うたう</span></button>
+      <button class="act" data-act="toy"><span class="emo">🔔</span><span class="lab">あそぶ</span></button>
+      <button class="act" data-act="window"><span class="emo">🪟</span><span class="lab">そとを</span></button>
+    </div>
+  </section>
+
+  <!-- トースト -->
+  <div class="toast" id="toast"></div>
+
+  <!-- おもちゃシート -->
+  <div class="sheet" id="toySheet">
+    <div class="sheet-inner">
+      <h3>なにで あそぶ？</h3>
+      <div class="sheet-grid">
+        <div class="choice" data-toy="bell"><span class="emo">🔔</span><span>すず</span></div>
+        <div class="choice" data-toy="swing"><span class="emo">🪅</span><span>ブランコ</span></div>
+        <div class="choice" data-toy="mirror"><span class="emo">🪞</span><span>かがみ</span></div>
+        <div class="choice" data-toy="ball"><span class="emo">⚽</span><span>ボール</span></div>
+      </div>
+      <div style="text-align:center;margin-top:14px"><button class="btn ghost" id="closeToy">とじる</button></div>
+    </div>
+  </div>
+
+  <!-- ごはんシート -->
+  <div class="sheet" id="feedSheet">
+    <div class="sheet-inner">
+      <h3>なにを あげる？</h3>
+      <div class="sheet-grid">
+        <div class="choice" data-food="seed"><span class="emo">🌾</span><span>たね</span></div>
+        <div class="choice" data-food="millet"><span class="emo">🌽</span><span>あわ穂</span></div>
+        <div class="choice" data-food="fruit"><span class="emo">🍓</span><span>くだもの</span></div>
+        <div class="choice" data-food="veggie"><span class="emo">🥬</span><span>やさい</span></div>
+      </div>
+      <div style="text-align:center;margin-top:14px"><button class="btn ghost" id="closeFeed">とじる</button></div>
+    </div>
+  </div>
+
+  <!-- 設定シート -->
+  <div class="sheet" id="setSheet">
+    <div class="sheet-inner">
+      <h3>せってい</h3>
+      <div class="set-row"><span>🔊 サウンド</span><div class="switch on" id="swSound"><i></i></div></div>
+      <div class="set-row"><span>🌿 環境音（朝の部屋）</span><div class="switch" id="swAmbient"><i></i></div></div>
+      <div class="set-row" id="infoRow" style="flex-direction:column;align-items:flex-start;gap:4px;font-weight:500;font-size:12px;color:var(--ink-soft)"></div>
+      <button class="danger" id="resetBtn">🥚 さいしょから やりなおす</button>
+      <div style="text-align:center;margin-top:10px"><button class="btn ghost" id="closeSet">とじる</button></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   ことり - ちいさな相棒  (Day 021)
+   1ファイル / localStorage / WebAudio / SVG bird
+============================================================ */
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const SAVE_KEY="kotori_day021_v1";
+const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* ---------- 鳥データ（種類） ---------- */
+const SPECIES={
+  bunchou:{name:"文鳥", base:"#b9bfc7", cheek:"#ffffff", beak:"#ff8aa0", belly:"#eef1f4", crown:"#5a5f66", colors:["#b9bfc7","#9aa0a8","#cdd3da","#e8d9c4"], tuft:false},
+  sakura :{name:"桜文鳥", base:"#c9b3aa", cheek:"#fff6f2", beak:"#ff8aa0", belly:"#f5e8e2", crown:"#7d6258", colors:["#c9b3aa","#dec3b6","#e8cfc6","#b89a8e"], tuft:false},
+  sekisei:{name:"セキセイ", base:"#a6d96a", cheek:"#fdfdf0", beak:"#d8c07a", belly:"#e7f3c6", crown:"#7bbf3f", colors:["#a6d96a","#86c8e8","#f0d65a","#b8a6e0"], tuft:false},
+  shima  :{name:"シマエナガ", base:"#ffffff", cheek:"#ffffff", beak:"#3a3a3a", belly:"#ffffff", crown:"#f0f0f5", colors:["#ffffff","#fbeef0","#eef4ff","#fff6e6"], tuft:true},
+  canary :{name:"カナリア", base:"#ffdb5c", cheek:"#fff2b0", beak:"#e8a85a", belly:"#fff0bc", crown:"#f0c63a", colors:["#ffdb5c","#ffc94a","#ffe88a","#ffb86b"], tuft:false},
+};
+const BONDS=[{n:"警戒",t:0},{n:"なかよし",t:25},{n:"だいすき",t:60},{n:"相棒",t:110}];
+const TRICKS=[
+  {id:"sit", at:25, name:"おすわり"},
+  {id:"mimic", at:60, name:"ものまね"},
+  {id:"hifive", at:90, name:"ハイタッチ"},
+  {id:"shoulder", at:110, name:"かたのり"},
+];
+
+/* ---------- 状態 ---------- */
+let S=null; // 全セーブ状態
+const tmp={species:null, color:null, name:""};
+
+function defaultState(){
+  return {
+    species:tmp.species, color:tmp.color, name:tmp.name||"ぴよ",
+    bond:0, hunger:70, mood:75, clean:80,
+    tricks:[], lastSeen:Date.now(), streak:1, lastDay:todayStr(),
+    sound:true, ambient:false, todayEvent:"", born:Date.now()
+  };
+}
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;}
+function save(){ if(S) localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }
+function load(){ try{return JSON.parse(localStorage.getItem(SAVE_KEY));}catch(e){return null;} }
+
+/* ============================================================
+   サウンド（Web Audio）
+============================================================ */
+let AC=null, masterGain=null, ambientNodes=null;
+function ac(){ if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)(); masterGain=AC.createGain(); masterGain.gain.value=.5; masterGain.connect(AC.destination);} if(AC.state==="suspended")AC.resume(); return AC; }
+function tone(freq, dur, when=0, type="triangle", vol=.18, glideTo=null){
+  if(!S||!S.sound) return;
+  const c=ac(), t=c.currentTime+when;
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,t);
+  if(glideTo) o.frequency.exponentialRampToValueAtTime(glideTo,t+dur);
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(vol,t+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(masterGain); o.start(t); o.stop(t+dur+.02);
+}
+// 懐き度で声色が変わる：高懐きほど明るく・装飾多め
+function chirp(){
+  if(!S) return;
+  const b=S.bond;
+  const base= b>=110?880 : b>=60?820 : b>=25?760 : 700;
+  tone(base, .12, 0, "triangle", .16, base*1.25);
+  tone(base*1.18, .1, .1, "triangle", .14, base*1.05);
+  if(b>=60) tone(base*1.4, .09, .2, "sine", .1, base*1.6);
+}
+function sfxFeed(){ tone(420,.05,0,"square",.08); tone(520,.05,.07,"square",.07); tone(460,.05,.14,"square",.07);}
+function sfxBath(){ for(let i=0;i<6;i++) tone(rnd(900,1700),.07,i*.08,"sine",.06); }
+function sfxHappy(){ [660,880,990,1180].forEach((f,i)=>tone(f,.14,i*.09,"triangle",.15)); }
+function sfxLevel(){ [523,659,784,1046].forEach((f,i)=>tone(f,.2,i*.12,"triangle",.18));}
+function sfxToy(){ tone(1500,.08,0,"sine",.1); tone(1900,.1,.06,"sine",.08); }
+function song(){ // さえずり：懐き度で長く綺麗に
+  if(!S) return;
+  const n=S.bond>=60?8:S.bond>=25?6:4;
+  const scale=[523,587,659,784,880,988,1175,1318];
+  let t=0;
+  for(let i=0;i<n;i++){ const f=pick(scale.slice(0, Math.min(scale.length, 4+Math.floor(S.bond/20)))); tone(f,.16,t,"triangle",.14,f*1.05); t+=.16; }
+}
+function startAmbient(){
+  if(ambientNodes||!S.ambient||!S.sound) return;
+  const c=ac();
+  // やわらかいパッド
+  const g=c.createGain(); g.gain.value=.0; g.connect(masterGain);
+  g.gain.linearRampToValueAtTime(.05,c.currentTime+2);
+  [392,494,587].forEach(f=>{const o=c.createOscillator();o.type="sine";o.frequency.value=f;o.connect(g);o.start();});
+  // たまの遠い小鳥
+  const tick=()=>{ if(!ambientNodes)return; if(S.sound&&S.ambient){ tone(rnd(1600,2400),.08,0,"sine",.03); tone(rnd(1600,2400),.08,.12,"sine",.025);} ambientNodes.timer=setTimeout(tick, rnd(4000,9000)); };
+  ambientNodes={gain:g, timer:setTimeout(tick,3000)};
+}
+function stopAmbient(){ if(!ambientNodes)return; try{ambientNodes.gain.gain.linearRampToValueAtTime(0,ac().currentTime+.6);}catch(e){} clearTimeout(ambientNodes.timer); ambientNodes=null; }
+
+/* ============================================================
+   小鳥SVG生成（史上最高に可愛く）
+============================================================ */
+function shade(hex, amt){
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)+amt, g=((n>>8)&255)+amt, b=(n&255)+amt;
+  r=clamp(r,0,255);g=clamp(g,0,255);b=clamp(b,0,255);
+  return `#${((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1)}`;
+}
+function birdSVG(){
+  const sp=SPECIES[S.species]; const body=S.color||sp.base;
+  const dark=shade(body,-30), light=shade(body,28), belly=sp.belly;
+  const id=Math.random().toString(36).slice(2,7);
+  const tuft = sp.tuft ? `<path class="tuftp" d="M85 24 q-6 -14 4 -20 q-4 12 6 16 q8 -10 16 -4 q-8 4 -6 14 z" fill="${light}"/>`:"";
+  return `
+  <svg viewBox="0 0 170 200">
+    <defs>
+      <radialGradient id="bg${id}" cx="40%" cy="32%" r="75%">
+        <stop offset="0%" stop-color="${light}"/><stop offset="70%" stop-color="${body}"/><stop offset="100%" stop-color="${dark}"/>
+      </radialGradient>
+      <radialGradient id="bel${id}" cx="50%" cy="40%" r="65%">
+        <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="${belly}"/>
+      </radialGradient>
+      <radialGradient id="ck${id}" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ffb6c8" stop-opacity=".85"/><stop offset="100%" stop-color="#ffb6c8" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <!-- 影 -->
+    <ellipse class="shadow" cx="85" cy="190" rx="46" ry="9" fill="rgba(150,110,70,.18)"/>
+
+    <g class="b-all">
+      <!-- しっぽ -->
+      <g class="b-tail"><path d="M58 150 q-30 18 -34 40 q22 -6 40 -18 z" fill="${dark}"/></g>
+
+      <!-- 後ろ翼 -->
+      <g class="b-wing-l"><path d="M40 92 q-26 6 -22 50 q18 6 34 -14 q-8 -22 -12 -36 z" fill="${dark}"/></g>
+
+      <!-- からだ（ぷっくりまんまる） -->
+      <ellipse cx="85" cy="118" rx="62" ry="64" fill="url(#bg${id})"/>
+      <!-- おなか -->
+      <ellipse cx="85" cy="130" rx="40" ry="46" fill="url(#bel${id})"/>
+
+      <!-- 前翼（動く） -->
+      <g class="b-wing-r"><path d="M132 92 q26 6 22 52 q-20 6 -36 -16 q8 -22 14 -36 z" fill="${shade(body,-12)}"/>
+        <path d="M138 104 q14 6 12 30" stroke="${dark}" stroke-width="2" fill="none" opacity=".5"/>
+      </g>
+
+      <!-- あたま -->
+      <g class="b-head">
+        ${tuft}
+        <circle cx="85" cy="66" r="50" fill="url(#bg${id})"/>
+        <!-- ほっぺ（チーク） -->
+        <circle cx="56" cy="78" r="15" fill="url(#ck${id})"/>
+        <circle cx="114" cy="78" r="15" fill="url(#ck${id})"/>
+        ${sp.cheek!==body?`<ellipse cx="60" cy="72" rx="15" ry="17" fill="${sp.cheek}" opacity=".55"/><ellipse cx="110" cy="72" rx="15" ry="17" fill="${sp.cheek}" opacity=".55"/>`:""}
+
+        <!-- 目（つぶら） -->
+        <g class="eye eye-l">
+          <circle cx="66" cy="64" r="11" fill="#3a2f2a"/>
+          <circle cx="62.5" cy="60" r="3.6" fill="#fff"/>
+          <circle cx="69" cy="68" r="1.8" fill="#fff" opacity=".7"/>
+          <rect class="eye-lid" x="54" y="51" width="24" height="14" rx="6" fill="${dark}"/>
+        </g>
+        <g class="eye eye-r">
+          <circle cx="104" cy="64" r="11" fill="#3a2f2a"/>
+          <circle cx="100.5" cy="60" r="3.6" fill="#fff"/>
+          <circle cx="107" cy="68" r="1.8" fill="#fff" opacity=".7"/>
+          <rect class="eye-lid" x="92" y="51" width="24" height="14" rx="6" fill="${dark}"/>
+        </g>
+
+        <!-- くちばし -->
+        <g class="b-beak">
+          <path d="M78 78 L92 78 L85 84 Z" fill="${sp.beak}"/>
+          <path class="b-beak-low" d="M79 82 L91 82 L85 87 Z" fill="${shade(sp.beak,-25)}"/>
+        </g>
+      </g>
+
+      <!-- あし -->
+      <g class="b-feet">
+        <path d="M74 176 l0 12 M70 192 l4 -4 4 4 M70 188 l4 0" stroke="${sp.beak}" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <path d="M96 176 l0 12 M92 192 l4 -4 4 4 M92 188 l4 0" stroke="${sp.beak}" stroke-width="3" stroke-linecap="round" fill="none"/>
+      </g>
+
+      <!-- zzz -->
+      <text class="zzz" x="120" y="40" font-size="20" fill="${dark}" font-weight="bold">z</text>
+    </g>
+  </svg>`;
+}
+
+/* ============================================================
+   描画・更新
+============================================================ */
+const stageEl=$("#birdStage");
+function renderBird(){ stageEl.innerHTML=birdSVG(); }
+
+function bondInfo(){
+  let b=BONDS[0];
+  for(const x of BONDS) if(S.bond>=x.t) b=x;
+  const idx=BONDS.indexOf(b);
+  return {name:b.n, idx};
+}
+
+function updateUI(){
+  $("#hdName").textContent=S.name;
+  const bi=bondInfo();
+  $("#bondBadge").textContent=bi.name;
+  $("#bHunger").style.width=S.hunger+"%";
+  $("#bMood").style.width=S.mood+"%";
+  $("#bClean").style.width=S.clean+"%";
+  $("#vHunger").textContent=S.hunger>60?"😋":S.hunger>30?"🙂":"😣";
+  $("#vMood").textContent=S.mood>60?"🎵":S.mood>30?"🙂":"😔";
+  $("#vClean").textContent=S.clean>60?"✨":S.clean>30?"🌬️":"💦";
+  // 距離（懐き度で中央へ寄り、近づく）
+  positionBird();
+  // ロック解除
+  updateActionLocks();
+  $("#soundBtn").textContent=S.sound?"🔊":"🔇";
+}
+
+function positionBird(){
+  if(stageEl.classList.contains("perching")) return;
+  const bi=bondInfo();
+  // 警戒=端っこで小さめ / 懐くほど中央・大きく
+  const map=[{x:32,b:30,s:.82},{x:44,b:30,s:.92},{x:50,b:30,s:1},{x:50,b:31,s:1.06}];
+  const p=map[bi.idx];
+  stageEl.style.left=p.x+"%";
+  stageEl.style.bottom=p.b+"%";
+  stageEl.style.transform=`translateX(-50%) scale(${p.s})`;
+}
+
+function updateActionLocks(){
+  // 手乗り・芸はボタンではなく自動演出。ここではヒント更新のみ。
+}
+
+/* ---------- 時間帯 ---------- */
+function applyTimeOfDay(){
+  const h=new Date().getHours();
+  let stageBg, winBg, sunBg, sunPos, sleepy=false, label;
+  if(h>=5&&h<10){ stageBg="linear-gradient(180deg,#fff3e0,#ffe6cf)"; winBg="linear-gradient(180deg,#ffd9a8,#ffeccb)"; sunBg="radial-gradient(circle at 40% 40%,#fff1c0,#ffd56b)"; sunPos="55%"; label="あさ"; }
+  else if(h>=10&&h<16){ stageBg="linear-gradient(180deg,#eaf6ff,#fdf3e6)"; winBg="linear-gradient(180deg,#aee0ff,#d8f0ff)"; sunBg="radial-gradient(circle at 40% 40%,#fffbe0,#ffe27a)"; sunPos="12%"; label="ひる"; }
+  else if(h>=16&&h<19){ stageBg="linear-gradient(180deg,#ffe9e0,#fff0dd)"; winBg="linear-gradient(180deg,#ffc59e,#ffe1b0)"; sunBg="radial-gradient(circle at 40% 40%,#ffd9a0,#ff9e6b)"; sunPos="60%"; label="ゆうがた"; }
+  else { stageBg="linear-gradient(180deg,#3a3a5c,#5a5170)"; winBg="linear-gradient(180deg,#2a2a4a,#4a4368)"; sunBg="radial-gradient(circle at 40% 40%,#fffdf0,#fff0b0)"; sunPos="15%"; sleepy=true; label="よる"; }
+  $("#stage").style.background=stageBg;
+  $("#window").style.background=winBg;
+  const sun=$("#sun"); sun.style.background=sunBg; sun.style.left=sunPos;
+  sun.style.boxShadow= h>=19||h<5 ? "0 0 16px 4px rgba(255,255,200,.6)" : "0 0 24px 8px rgba(255,220,120,.5)";
+  return {sleepy,label};
+}
+
+/* ============================================================
+   仕草アニメーション制御
+============================================================ */
+let busy=false;
+function setClass(c,ms){ stageEl.classList.add(c); setTimeout(()=>stageEl.classList.remove(c),ms); }
+function blink(){ if(busy)return; setClass("blink",140); }
+let idleTimer, blinkTimer;
+function ambientIdle(){
+  clearTimeout(idleTimer);
+  const tod=applyTimeOfDay();
+  if(tod.sleepy && S.mood<85 && !busy){
+    stageEl.classList.add("sleep");
+  } else {
+    stageEl.classList.remove("sleep");
+  }
+  if(!busy && !stageEl.classList.contains("sleep")){
+    const r=Math.random();
+    if(r<0.3) setClass("tilt",2400);
+    else if(r<0.5) setClass("preen",1400);
+    else if(r<0.65) setClass("fluff",2200);
+    else if(r<0.8){ stageEl.classList.add("hop"); chirp(); setTimeout(()=>stageEl.classList.remove("hop"),560); }
+  }
+  idleTimer=setTimeout(ambientIdle, rnd(3200,6000));
+}
+function startBlink(){ clearTimeout(blinkTimer); const t=()=>{ blink(); blinkTimer=setTimeout(t, rnd(2200,5200)); }; blinkTimer=setTimeout(t,2000); }
+
+/* ---------- パーティクル ---------- */
+function spawnFx(emoji, n=1){
+  const rect=stageEl.getBoundingClientRect(), st=$("#stage").getBoundingClientRect();
+  for(let i=0;i<n;i++){
+    const e=document.createElement("div"); e.className="fx"; e.textContent=emoji;
+    const cx=(rect.left-st.left)+rect.width*rnd(.3,.7);
+    const cy=(rect.top-st.top)+rect.height*rnd(.1,.4);
+    e.style.left=cx+"px"; e.style.top=cy+"px";
+    e.style.setProperty("--r",(rnd(-30,30))+"deg");
+    e.style.animationDelay=(i*.12)+"s";
+    e.style.fontSize=rnd(18,30)+"px";
+    $("#stage").appendChild(e);
+    setTimeout(()=>e.remove(),1700);
+  }
+}
+
+/* ---------- トースト ---------- */
+let toastT;
+function toast(msg, sub=""){
+  const t=$("#toast"); t.innerHTML=msg+(sub?`<small>${sub}</small>`:"");
+  t.classList.add("show"); clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove("show"),1900);
+}
+function hint(msg){ $("#hint").textContent=msg; }
+
+/* ============================================================
+   ふれあいアクション
+============================================================ */
+function gainBond(v){
+  const before=bondInfo().idx;
+  S.bond=clamp(S.bond+v,0,140);
+  const after=bondInfo().idx;
+  if(after>before){ onBondUp(after); }
+}
+function onBondUp(idx){
+  const name=BONDS[idx].n;
+  sfxLevel(); spawnFx("💖",6); spawnFx("✨",4);
+  setTimeout(()=>toast(`${S.name}と なかが ふかまった！`, `いまは「${name}」`),300);
+  // 芸の習得
+  const t=TRICKS.find(t=>S.bond>=t.at && !S.tricks.includes(t.id));
+  if(t){ S.tricks.push(t.id); setTimeout(()=>{ toast("あたらしいことが できたよ！", `「${t.name}」をおぼえた`); sfxHappy(); spawnFx("🌟",5); },2200); }
+}
+
+function flinchOrLove(onLove){
+  const bi=bondInfo();
+  if(bi.idx===0 && Math.random()<.55){
+    // 警戒：びくっと逃げる
+    stageEl.classList.add("flinch"); chirp();
+    hint("…まだ ちょっと こわいみたい");
+    setTimeout(()=>{ stageEl.classList.remove("flinch"); positionBird(); },700);
+    gainBond(2); // それでも少し慣れる
+    save();
+    return false;
+  }
+  onLove(); return true;
+}
+
+let petCount=0, petTimer;
+function doPet(){
+  flinchOrLove(()=>{
+    busy=true; stageEl.classList.remove("sleep");
+    stageEl.classList.add("snuggle"); stageEl.classList.add("content");
+    spawnFx("💗",1); chirp();
+    S.mood=clamp(S.mood+4); gainBond(1.4);
+    petCount++;
+    const msgs=["きもちよさそう…","目を ほそめてる","すりすり してくれた","うっとり"];
+    hint(pick(msgs));
+    clearTimeout(petTimer);
+    petTimer=setTimeout(()=>{ stageEl.classList.remove("snuggle"); setTimeout(()=>stageEl.classList.remove("content"),400); busy=false; },650);
+    save(); updateUI();
+  });
+}
+
+function openFeed(){ $("#feedSheet").classList.add("show"); }
+function doFeed(food){
+  $("#feedSheet").classList.remove("show");
+  flinchOrLove(()=>{
+    busy=true; stageEl.classList.remove("sleep");
+    const emojiMap={seed:"🌾",millet:"🌽",fruit:"🍓",veggie:"🥬"};
+    // ついばみ ×3
+    let i=0; const peck=()=>{ stageEl.classList.add("peck"); sfxFeed(); setTimeout(()=>{stageEl.classList.remove("peck"); if(++i<3)setTimeout(peck,260); else finish();},460); };
+    const finish=()=>{ stageEl.classList.add("content"); spawnFx("🍃",2); setTimeout(()=>{stageEl.classList.remove("content");busy=false;},800); };
+    peck();
+    S.hunger=clamp(S.hunger+ (food==="fruit"?22: food==="millet"?28:24));
+    S.mood=clamp(S.mood+5); gainBond(2);
+    hint("おいしそうに ついばんでる "+emojiMap[food]);
+    save(); updateUI();
+  });
+}
+
+function doBath(){
+  flinchOrLove(()=>{
+    busy=true; stageEl.classList.remove("sleep");
+    stageEl.classList.add("bath");
+    let n=0; const splash=()=>{ spawnFx("💧",3); sfxBath(); if(++n<5) setTimeout(splash,260); };
+    splash();
+    hint("パシャパシャ！ きもちよさそう");
+    setTimeout(()=>{ stageEl.classList.remove("bath"); stageEl.classList.add("fluff"); spawnFx("✨",4);
+      setTimeout(()=>{stageEl.classList.remove("fluff");busy=false;},2000); },1500);
+    S.clean=100; S.mood=clamp(S.mood+8); gainBond(2.5);
+    save(); updateUI();
+  });
+}
+
+function doSing(){
+  flinchOrLove(()=>{
+    busy=true; stageEl.classList.remove("sleep");
+    stageEl.classList.add("sing"); stageEl.classList.add("happy");
+    // プレイヤーの歌→小鳥が返す
+    let beat=0; const stimer=setInterval(()=>{ spawnFx(pick(["🎵","🎶","♪"]),1); if(++beat>5)clearInterval(stimer); },300);
+    song();
+    const bi=bondInfo();
+    hint(bi.idx>=2?"じょうずに うたいかえしてる！":"いっしょに うたってる");
+    setTimeout(()=>{ clearInterval(stimer); stageEl.classList.remove("sing","happy"); busy=false; },2200);
+    S.mood=clamp(S.mood+9); gainBond(2.5);
+    if(S.tricks.includes("mimic")){ setTimeout(()=>spawnFx("🎼",3),400); }
+    save(); updateUI();
+  });
+}
+
+function openToy(){ $("#toySheet").classList.add("show"); }
+function doToy(toy){
+  $("#toySheet").classList.remove("show");
+  flinchOrLove(()=>{
+    busy=true; stageEl.classList.remove("sleep");
+    stageEl.classList.add("happy");
+    const emo={bell:"🔔",swing:"🪅",mirror:"🪞",ball:"⚽"}[toy];
+    const msg={bell:"すずを つついて あそんでる",swing:"ブランコ ゆらゆら",mirror:"かがみの じぶんに くびかしげ",ball:"ボールを ころころ"}[toy];
+    let n=0; const play=()=>{ stageEl.classList.add("hop"); sfxToy(); spawnFx(emo,1); setTimeout(()=>{stageEl.classList.remove("hop"); if(++n<4)setTimeout(play,300); else {stageEl.classList.remove("happy");busy=false;}},560); };
+    play();
+    hint(msg); spawnFx("🎈",2);
+    S.mood=clamp(S.mood+10); gainBond(2.2);
+    save(); updateUI();
+  });
+}
+
+function doWindow(){
+  busy=true; stageEl.classList.remove("sleep");
+  stageEl.classList.add("lookup");
+  hint("そとを じーっと ながめてる…");
+  spawnFx("🌿",2);
+  const tod=applyTimeOfDay();
+  setTimeout(()=>{ stageEl.classList.remove("lookup"); busy=false; toast(tod.label==="よる"?"よぞらを みあげてる🌙":"おそとは いいきもち🍃"); },1800);
+  S.mood=clamp(S.mood+6); gainBond(1.6);
+  save(); updateUI();
+}
+
+/* ---------- 名前をよぶ ---------- */
+function callName(){
+  const bi=bondInfo();
+  busy=true; stageEl.classList.remove("sleep");
+  if(bi.idx>=1){
+    // 飛んでくる
+    stageEl.classList.add("flap");
+    stageEl.style.left="50%"; stageEl.style.bottom="34%";
+    stageEl.style.transform="translateX(-50%) scale(1.05)";
+    sfxHappy(); spawnFx("💕",3);
+    setTimeout(()=>{ stageEl.classList.remove("flap"); stageEl.classList.add("happy");
+      // 相棒なら肩のり（手乗り演出）
+      if(bi.idx>=3 && S.tricks.includes("shoulder")){ perchOnFinger(); }
+      setTimeout(()=>{ stageEl.classList.remove("happy"); busy=false; positionBird(); },900);
+    },800);
+    hint(bi.idx>=3?`${S.name}が とんできて かたに のった！`:`${S.name}が とんできた！`);
+    S.mood=clamp(S.mood+6); gainBond(1.5);
+  } else {
+    // 警戒：振り向くだけ
+    setClass("tilt",2400); chirp();
+    hint("ちらっと こっちを みた");
+    setTimeout(()=>busy=false,600);
+    gainBond(2);
+  }
+  save(); updateUI();
+}
+function perchOnFinger(){
+  const f=$("#finger"); f.classList.add("show");
+  stageEl.classList.add("perching");
+  stageEl.style.left="50%"; stageEl.style.bottom="14%"; stageEl.style.transform="translateX(-50%) scale(.78)";
+  setTimeout(()=>{ f.classList.remove("show"); stageEl.classList.remove("perching"); positionBird(); },2600);
+}
+
+/* ============================================================
+   時間経過によるステータス減衰（やさしい）
+============================================================ */
+function applyDecay(){
+  const now=Date.now();
+  const hrs=(now-(S.lastSeen||now))/3600000;
+  if(hrs>0.05){
+    // 放置しても死なない：ゆるやかに減る、下限あり
+    S.hunger=clamp(S.hunger - hrs*4, 10);
+    S.clean=clamp(S.clean - hrs*3, 15);
+    S.mood=clamp(S.mood - hrs*2.5, 20);
+  }
+  S.lastSeen=now;
+  // 連続日数
+  const td=todayStr();
+  if(S.lastDay!==td){
+    const d=new Date(); const ld=S.lastDay? S.lastDay.split("-").map(Number):null;
+    // 単純化：日付が変わったら +1（前回が昨日想定）。会えた喜び。
+    S.streak=(S.streak||0)+1;
+    S.lastDay=td;
+    S.todayEvent=pick([
+      "けさは ごきげんで さえずってた🎵",
+      "あたらしい はねが はえてきたみたい",
+      "ねぼけまなこで あくび してた",
+      "おひさまを あびて ふくらんでた☀️",
+      "あなたを まってたみたい💕",
+    ]);
+  }
+}
+
+/* ---------- 帰還メッセージ ---------- */
+function welcomeBack(){
+  applyDecay();
+  const bi=bondInfo();
+  let msg, sub;
+  if(S.todayEvent){ msg=S.todayEvent; sub=`れんぞく ${S.streak}にちめ`; }
+  else { msg = bi.idx>=2?`${S.name}が よろこんでる！`: bi.idx>=1?`${S.name}が きづいてくれた`:`${S.name}は すこし けいかいしてる`; }
+  setTimeout(()=>{ if(S.todayEvent){ toast(msg,sub); spawnFx("✨",3);} },600);
+  if(bi.idx>=1){ setTimeout(()=>{ stageEl.classList.add("hop"); chirp(); setTimeout(()=>stageEl.classList.remove("hop"),560); },800); }
+}
+
+/* ============================================================
+   ゲームループ（軽い）
+============================================================ */
+let tickT;
+function gameTick(){
+  // 1分ごとにわずかに減衰＋時間帯反映
+  S.hunger=clamp(S.hunger-0.6,10);
+  S.clean=clamp(S.clean-0.4,15);
+  S.mood=clamp(S.mood-0.5,20);
+  applyTimeOfDay();
+  updateUI(); save();
+}
+
+/* ============================================================
+   イントロ フロー
+============================================================ */
+function buildIntroChoices(){
+  // 種類
+  const grid=$("#speciesGrid"); grid.innerHTML="";
+  Object.entries(SPECIES).forEach(([k,sp])=>{
+    const c=document.createElement("div"); c.className="choice"; c.dataset.k=k;
+    c.innerHTML=miniBird(sp.base,sp)+`<span>${sp.name}</span>`;
+    c.onclick=()=>{ $$("#speciesGrid .choice").forEach(x=>x.classList.remove("sel")); c.classList.add("sel"); tmp.species=k; tmp.color=sp.base; $("#toColor").disabled=false; chirpPreview(); };
+    grid.appendChild(c);
+  });
+}
+function chirpPreview(){ tone(800,.12,0,"triangle",.14,1000); }
+function miniBird(color,sp){
+  const dark=shade(color,-30), light=shade(color,28);
+  return `<svg viewBox="0 0 60 60"><ellipse cx="30" cy="38" rx="22" ry="21" fill="${color}"/><circle cx="30" cy="22" r="17" fill="${light}"/><circle cx="24" cy="22" r="3.6" fill="#2a2a2a"/><circle cx="36" cy="22" r="3.6" fill="#2a2a2a"/><circle cx="23" cy="20.5" r="1.2" fill="#fff"/><circle cx="35" cy="20.5" r="1.2" fill="#fff"/><path d="M27 26 L33 26 L30 30 Z" fill="${sp.beak}"/><circle cx="18" cy="27" r="5" fill="#ffb6c8" opacity=".6"/><circle cx="42" cy="27" r="5" fill="#ffb6c8" opacity=".6"/>${sp.tuft?`<path d="M30 6 q-3 -5 1 -7 q-1 4 3 5 z" fill="${light}"/>`:""}</svg>`;
+}
+function buildColorRow(){
+  const sp=SPECIES[tmp.species]; const row=$("#colorRow"); row.innerHTML="";
+  $("#colorPreview").innerHTML=miniBig(tmp.color);
+  sp.colors.forEach((col,i)=>{
+    const s=document.createElement("div"); s.className="swatch"+(col===tmp.color?" sel":""); s.style.background=col;
+    s.onclick=()=>{ tmp.color=col; $$("#colorRow .swatch").forEach(x=>x.classList.remove("sel")); s.classList.add("sel"); $("#colorPreview").innerHTML=miniBig(col); chirpPreview(); };
+    row.appendChild(s);
+  });
+}
+function miniBig(color){ const sp=SPECIES[tmp.species]; const dark=shade(color,-30),light=shade(color,28); return `<svg viewBox="0 0 120 120" style="width:120px;height:120px;filter:drop-shadow(0 8px 12px rgba(180,150,120,.3))"><ellipse cx="60" cy="76" rx="44" ry="42" fill="${color}"/><ellipse cx="60" cy="82" rx="28" ry="30" fill="#fff" opacity=".55"/><circle cx="60" cy="44" r="34" fill="${light}"/><circle cx="48" cy="44" r="7" fill="#2a2a2a"/><circle cx="72" cy="44" r="7" fill="#2a2a2a"/><circle cx="45.5" cy="41" r="2.4" fill="#fff"/><circle cx="69.5" cy="41" r="2.4" fill="#fff"/><path d="M54 52 L66 52 L60 60 Z" fill="${sp.beak}"/><circle cx="36" cy="54" r="10" fill="#ffb6c8" opacity=".55"/><circle cx="84" cy="54" r="10" fill="#ffb6c8" opacity=".55"/>${sp.tuft?`<path d="M60 10 q-5 -10 2 -14 q-2 8 5 10 z" fill="${light}"/>`:""}</svg>`; }
+
+function showStep(n){ $$(".intro-step").forEach(s=>s.classList.toggle("show", +s.dataset.step===n)); }
+
+function hatchEgg(){
+  let taps=0;
+  const egg=$("#egg"), crack=egg.querySelector("#crack");
+  const cracks=[
+    "M40 70 l12 10 l-8 12",
+    "M40 70 l12 10 l-8 12 l14 8 l-6 14",
+    "M40 70 l12 10 l-8 12 l14 8 l-6 14 l16 4",
+  ];
+  $("#eggWrap").onclick=()=>{
+    taps++;
+    egg.classList.remove("wob"); void egg.offsetWidth; egg.classList.add("wob");
+    tone(rnd(500,700),.08,0,"sine",.12);
+    if(taps<=3){ crack.style.opacity="1"; crack.setAttribute("d", cracks[Math.min(taps-1,2)]); }
+    if(taps>=5){
+      $("#eggHint").textContent="";
+      $("#eggWrap").onclick=null;
+      egg.classList.add("wob");
+      sfxHappy();
+      // 殻が割れる演出
+      egg.style.transition=".5s"; egg.style.transform="scale(1.2)"; egg.style.opacity="0";
+      setTimeout(()=>{ showStep(1); buildIntroChoices(); },600);
+    } else if(taps>=3){ $("#eggHint").textContent="もうすこし…！"; }
+  };
+}
+
+/* ============================================================
+   起動
+============================================================ */
+function startMainScreen(){
+  $("#intro").classList.remove("active");
+  $("#main").classList.add("active");
+  renderBird();
+  updateUI();
+  applyTimeOfDay();
+  ambientIdle();
+  startBlink();
+  welcomeBack();
+  clearInterval(tickT); tickT=setInterval(gameTick,60000);
+  // 設定スイッチ反映
+  $("#swSound").classList.toggle("on",S.sound);
+  $("#swAmbient").classList.toggle("on",S.ambient);
+  updateInfoRow();
+  if(S.ambient) startAmbient();
+  save();
+}
+function updateInfoRow(){
+  const days=Math.floor((Date.now()-(S.born||Date.now()))/86400000);
+  $("#infoRow").innerHTML=`<span>🐣 ${SPECIES[S.species].name}・${BONDS[bondInfo().idx].n}</span><span>📅 いっしょに ${days+1}にちめ ／ れんぞく ${S.streak}にち</span><span>🎓 おぼえた芸：${S.tricks.length?S.tricks.map(id=>TRICKS.find(t=>t.id===id).name).join("・"):"まだないよ"}</span>`;
+}
+
+function init(){
+  S=load();
+  if(S && S.species){
+    startMainScreen();
+  } else {
+    // イントロ
+    $("#intro").classList.add("active");
+    hatchEgg();
+    // ステップのイベント
+    $("#toColor").onclick=()=>{ buildColorRow(); showStep(2); };
+    $("#backSpecies").onclick=()=>{ showStep(1); };
+    $("#toName").onclick=()=>{ $("#namePreview").innerHTML=miniBig(tmp.color); showStep(3); $("#nameInput").focus(); };
+    $("#nameInput").oninput=e=>{ tmp.name=e.target.value.trim(); $("#finishIntro").disabled=!tmp.name; };
+    $("#finishIntro").onclick=()=>{ tmp.name=$("#nameInput").value.trim()||"ぴよ"; S=defaultState(); save(); startMainScreen(); sfxHappy(); spawnFx("🎉",5); setTimeout(()=>toast(`${S.name}、よろしくね！`),700); };
+  }
+}
+
+/* ---------- イベント結線 ---------- */
+$("#actions").addEventListener("click",e=>{
+  const b=e.target.closest(".act"); if(!b||busy)return;
+  ac();
+  const a=b.dataset.act;
+  if(a==="pet")doPet();
+  else if(a==="feed")openFeed();
+  else if(a==="bath")doBath();
+  else if(a==="sing")doSing();
+  else if(a==="toy")openToy();
+  else if(a==="window")doWindow();
+});
+// なで：ステージを直接さわっても反応
+stageEl.addEventListener("pointerdown",()=>{ if(busy)return; ac(); doPet(); });
+
+$("#feedSheet").addEventListener("click",e=>{ const c=e.target.closest("[data-food]"); if(c)doFeed(c.dataset.food); });
+$("#closeFeed").onclick=()=>$("#feedSheet").classList.remove("show");
+$("#toySheet").addEventListener("click",e=>{ const c=e.target.closest("[data-toy]"); if(c)doToy(c.dataset.toy); });
+$("#closeToy").onclick=()=>$("#toySheet").classList.remove("show");
+
+$("#callBtn").onclick=()=>{ if(busy)return; ac(); callName(); };
+$("#soundBtn").onclick=()=>{ S.sound=!S.sound; if(!S.sound)stopAmbient(); else if(S.ambient)startAmbient(); $("#swSound").classList.toggle("on",S.sound); updateUI(); save(); };
+
+$("#setBtn").onclick=()=>{ updateInfoRow(); $("#setSheet").classList.add("show"); };
+$("#closeSet").onclick=()=>$("#setSheet").classList.remove("show");
+$("#swSound").onclick=()=>{ S.sound=!S.sound; $("#swSound").classList.toggle("on",S.sound); if(!S.sound)stopAmbient(); else if(S.ambient)startAmbient(); updateUI(); save(); };
+$("#swAmbient").onclick=()=>{ ac(); S.ambient=!S.ambient; $("#swAmbient").classList.toggle("on",S.ambient); if(S.ambient&&S.sound)startAmbient(); else stopAmbient(); save(); };
+$("#resetBtn").onclick=()=>{ if(confirm("すべての きろくを けして、さいしょから やりなおしますか？")){ localStorage.removeItem(SAVE_KEY); location.reload(); } };
+
+// 復帰時に減衰反映
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden && S && S.species){ applyDecay(); applyTimeOfDay(); updateUI(); save(); } });
+
+init();
+</script>
+</body>
+</html>
