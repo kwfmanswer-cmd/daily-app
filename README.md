@@ -29,6 +29,7 @@
 | 021 | ことり - ちいさな相棒 | [day021-kotori](./day021-kotori/) |
 | 022 | Momentum - 今日を、進める | [day022-momentum](./day022-momentum/) |
 | 023 | あと何回、 - あなたの人生を、数えてみる | [day023-howmany](./day023-howmany/) |
+| 024 | Bloom - ふれると、咲く | [day024-bloom](./day024-bloom/) |
 
 ## ルール
 

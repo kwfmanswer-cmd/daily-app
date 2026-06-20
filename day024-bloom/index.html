@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0c0e22">
+<title>Bloom — ふれると、咲く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Shippori+Mincho:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0c0e22}
+body{
+  font-family:'Outfit','Shippori Mincho',sans-serif;
+  position:fixed;inset:0;
+  touch-action:none;-webkit-user-select:none;user-select:none;
+  overscroll-behavior:none;
+}
+#stage{display:block;width:100%;height:100%;position:absolute;inset:0}
+
+/* hint */
+#hint{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  color:rgba(255,255,255,.82);text-align:center;pointer-events:none;z-index:5;
+  transition:opacity 1.2s ease;font-family:'Shippori Mincho',serif;
+}
+#hint .jp{font-size:clamp(22px,6vw,34px);letter-spacing:.32em;font-weight:600;text-shadow:0 2px 30px rgba(0,0,0,.5)}
+#hint .en{font-size:12px;letter-spacing:.45em;opacity:.6;margin-top:14px;font-family:'Outfit',sans-serif;text-transform:uppercase}
+#hint .pulse{display:inline-block;width:46px;height:46px;border-radius:50%;margin-top:26px;
+  border:1px solid rgba(255,255,255,.5);animation:ph 2.4s ease-out infinite}
+@keyframes ph{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.7);opacity:0}}
+#hint.gone{opacity:0}
+
+/* UI bar */
+#ui{
+  position:absolute;left:0;right:0;bottom:0;z-index:10;
+  display:flex;justify-content:center;align-items:center;gap:14px;
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+  pointer-events:none;transition:opacity .6s ease;
+}
+#ui.dim{opacity:.22}
+.cluster{
+  display:flex;align-items:center;gap:8px;pointer-events:auto;
+  background:rgba(20,22,40,.42);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.12);border-radius:30px;padding:8px 10px;
+  box-shadow:0 8px 32px rgba(0,0,0,.32);
+}
+.dot{
+  width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;
+  position:relative;transition:transform .25s cubic-bezier(.34,1.56,.64,1),border-color .25s;
+  background-clip:padding-box;
+}
+.dot:active{transform:scale(.86)}
+.dot.sel{border-color:rgba(255,255,255,.95);transform:scale(1.12)}
+.dot[data-t="flowers"]{background:radial-gradient(circle at 35% 30%,#ffd38c,#ff8aaa 60%,#d68ce0)}
+.dot[data-t="cosmos"]{background:radial-gradient(circle at 35% 30%,#fff4d6,#b4d2ff 55%,#1a1c40)}
+.dot[data-t="water"]{background:radial-gradient(circle at 35% 30%,#c8ffff,#78c8eb 60%,#0c2846)}
+.dot[data-t="light"]{background:radial-gradient(circle at 35% 30%,#78ffdc,#c88cff 60%,#0a0a14)}
+.dot[data-t="sound"]{background:radial-gradient(circle at 35% 30%,#ffc878,#b4a0ff 60%,#140a28)}
+
+.divider{width:1px;height:24px;background:rgba(255,255,255,.16)}
+.btn{
+  width:34px;height:34px;border-radius:50%;cursor:pointer;border:none;
+  background:rgba(255,255,255,.08);display:grid;place-items:center;
+  color:rgba(255,255,255,.86);transition:transform .2s,background .2s;pointer-events:auto;
+}
+.btn:active{transform:scale(.86)}
+.btn:hover{background:rgba(255,255,255,.16)}
+.btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.btn.off{color:rgba(255,255,255,.34)}
+
+/* toast */
+#toast{
+  position:absolute;left:50%;top:24px;transform:translate(-50%,-16px);z-index:20;
+  background:rgba(20,22,40,.7);backdrop-filter:blur(10px);color:#fff;
+  padding:9px 18px;border-radius:20px;font-size:13px;letter-spacing:.05em;
+  border:1px solid rgba(255,255,255,.14);opacity:0;pointer-events:none;transition:opacity .4s,transform .4s;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.theme-name{
+  position:absolute;left:50%;top:calc(20px + env(safe-area-inset-top));transform:translateX(-50%);
+  z-index:6;color:rgba(255,255,255,.5);font-family:'Shippori Mincho',serif;
+  font-size:13px;letter-spacing:.5em;pointer-events:none;opacity:0;transition:opacity .5s;padding-left:.5em;
+}
+.theme-name.show{opacity:.55}
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div id="hint">
+  <div class="jp">ふれてみて</div>
+  <div class="en">touch to bloom</div>
+  <div><span class="pulse"></span></div>
+</div>
+
+<div class="theme-name" id="themeName"></div>
+<div id="toast"></div>
+
+<div id="ui">
+  <div class="cluster">
+    <div class="dot sel" data-t="flowers" aria-label="花畑"></div>
+    <div class="dot" data-t="cosmos" aria-label="宇宙"></div>
+    <div class="dot" data-t="water" aria-label="水面"></div>
+    <div class="dot" data-t="light" aria-label="光"></div>
+    <div class="dot" data-t="sound" aria-label="音"></div>
+    <div class="divider"></div>
+    <button class="btn" id="soundBtn" aria-label="sound">
+      <svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 6a8 8 0 0 1 0 12"/></svg>
+    </button>
+    <button class="btn" id="saveBtn" aria-label="save">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+    </button>
+    <button class="btn" id="resetBtn" aria-label="reset">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   Bloom — ふれると、咲く   (Day 024)
+   Canvas + Web Audio interactive art. Touch anywhere → something blooms,
+   light spreads, a harmonious note sounds. Designed so that any touch,
+   by anyone, always produces something beautiful.
+   ===================================================================== */
+
+const cv = document.getElementById('stage');
+const ctx = cv.getContext('2d');
+let W=0,H=0,DPR=1;
+
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  W=window.innerWidth; H=window.innerHeight;
+  cv.width=Math.floor(W*DPR); cv.height=Math.floor(H*DPR);
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+resize();
+window.addEventListener('resize',resize);
+
+/* ---------------- Palettes (limited & curated = guaranteed harmony) ---- */
+const THEMES = {
+  flowers:{ name:'花 畑', bg:[[250,246,238],[224,234,212]], additive:false,
+    pal:[[255,138,170],[255,176,138],[255,214,140],[214,150,224],[255,160,200],[180,214,150],[245,130,150]] },
+  cosmos:{ name:'宇 宙', bg:[[12,14,34],[20,18,48]], additive:true,
+    pal:[[255,244,214],[180,210,255],[160,232,255],[255,220,160],[210,184,255],[255,184,212]] },
+  water:{ name:'水 面', bg:[[26,86,118],[10,38,66]], additive:true,
+    pal:[[160,238,236],[126,206,236],[180,242,222],[206,240,250],[140,196,234],[120,180,222]] },
+  light:{ name:'光', bg:[[8,8,14],[16,10,26]], additive:true,
+    pal:[[120,255,220],[124,200,255],[202,140,255],[255,140,200],[255,232,128],[140,255,168]] },
+  sound:{ name:'音', bg:[[26,16,44],[12,8,28]], additive:true,
+    pal:[[255,200,124],[255,140,162],[182,160,255],[140,222,255],[160,255,206],[255,168,200]] }
+};
+const THEME_KEYS=Object.keys(THEMES);
+let theme='flowers';
+
+/* ---------------- Pre-render sprites (fast particle blitting) ---------- */
+function mk(size){const c=document.createElement('canvas');c.width=c.height=size;return c;}
+function makeGlow(rgb){
+  const S=128,c=mk(S),g=c.getContext('2d'),r=S/2;
+  const grd=g.createRadialGradient(r,r,0,r,r,r);
+  const[R,G,B]=rgb;
+  grd.addColorStop(0,`rgba(${R},${G},${B},1)`);
+  grd.addColorStop(.18,`rgba(${R},${G},${B},.85)`);
+  grd.addColorStop(.45,`rgba(${R},${G},${B},.32)`);
+  grd.addColorStop(1,`rgba(${R},${G},${B},0)`);
+  g.fillStyle=grd;g.fillRect(0,0,S,S);
+  return c;
+}
+function makeFlower(rgb,petals,variant){
+  const S=128,c=mk(S),g=c.getContext('2d'),cx=S/2,cy=S/2;
+  const[R,G,B]=rgb;
+  // soft outer halo
+  const halo=g.createRadialGradient(cx,cy,0,cx,cy,S/2);
+  halo.addColorStop(0,`rgba(${R},${G},${B},.28)`);
+  halo.addColorStop(1,`rgba(${R},${G},${B},0)`);
+  g.fillStyle=halo;g.fillRect(0,0,S,S);
+  const petalLen=variant?44:40, petalW=variant?17:21;
+  for(let i=0;i<petals;i++){
+    const a=(i/petals)*Math.PI*2;
+    g.save();g.translate(cx,cy);g.rotate(a);
+    const grd=g.createLinearGradient(0,0,0,-petalLen);
+    grd.addColorStop(0,`rgba(${Math.min(255,R+30)},${Math.min(255,G+30)},${Math.min(255,B+30)},.96)`);
+    grd.addColorStop(1,`rgba(${R},${G},${B},.92)`);
+    g.fillStyle=grd;
+    g.beginPath();
+    g.moveTo(0,0);
+    g.quadraticCurveTo(petalW,-petalLen*0.55,0,-petalLen);
+    g.quadraticCurveTo(-petalW,-petalLen*0.55,0,0);
+    g.fill();
+    g.restore();
+  }
+  // center
+  const cg=g.createRadialGradient(cx,cy,0,cx,cy,15);
+  cg.addColorStop(0,'rgba(255,250,225,.98)');
+  cg.addColorStop(1,`rgba(${Math.min(255,R+40)},${Math.min(255,G+20)},120,.5)`);
+  g.fillStyle=cg;g.beginPath();g.arc(cx,cy,13,0,7);g.fill();
+  return c;
+}
+const SPR={glow:{},flower:[]};
+for(const k of THEME_KEYS) SPR.glow[k]=THEMES[k].pal.map(makeGlow);
+SPR.flower=THEMES.flowers.pal.map(rgb=>[makeFlower(rgb,5,0),makeFlower(rgb,6,1),makeFlower(rgb,5,1)]);
+
+/* ---------------- World state ---------------------------------------- */
+let blooms=[];   // persistent
+let lines=[];    // constellation links (cosmos)
+let fx=[];       // transient ripples / flashes
+const MAX_BLOOMS=520;
+let curBg=[THEMES.flowers.bg[0].slice(),THEMES.flowers.bg[1].slice()];
+
+function rand(a,b){return a+Math.random()*(b-a);}
+function pick(arr){return arr[(Math.random()*arr.length)|0];}
+
+function spawnBloom(x,y,th,sizeMul,quiet){
+  const T=THEMES[th];
+  const ci=(Math.random()*T.pal.length)|0;
+  const b={
+    x,y, theme:th, ci,
+    variant:(Math.random()*3)|0,
+    base: rand(26,50)*(sizeMul||1),
+    target:1, g:0, gv:rand(.045,.075),
+    rot:rand(0,Math.PI*2), spin:rand(-.0016,.0016),
+    seed:rand(0,1000), tw:rand(.5,1),
+    born:performance.now(), fa:1, fade:false
+  };
+  blooms.push(b);
+  // constellation for cosmos: link to nearest existing cosmos star
+  if(th==='cosmos'){
+    let best=null,bd=180*180;
+    for(let i=blooms.length-2;i>=0 && i>blooms.length-40;i--){
+      const o=blooms[i]; if(o.theme!=='cosmos'||o.fade)continue;
+      const dx=o.x-x,dy=o.y-y,d=dx*dx+dy*dy;
+      if(d<bd){bd=d;best=o;}
+    }
+    if(best) lines.push({a:b,b2:best});
+  }
+  // immediate "ふわり" feedback ring
+  const rgb=T.pal[ci];
+  if(th==='water'){
+    for(let r=0;r<3;r++) fx.push({x,y,r:8,maxR:rand(120,200),age:0,life:rand(1.4,2.2),rgb,kind:'ring',delay:r*0.16,w:2.4});
+  }else{
+    fx.push({x,y,r:6,maxR:rand(70,120)*(sizeMul||1),age:0,life:rand(.7,1.1),rgb,kind:'flash',delay:0,w:3});
+  }
+  if(blooms.length>MAX_BLOOMS){
+    const dead=blooms.shift();
+    lines=lines.filter(l=>l.a!==dead&&l.b2!==dead);
+  }
+  if(!quiet) hapticTiny();
+  return b;
+}
+
+/* ---------------- AUDIO --------------------------------------------- */
+let AC=null, master=null, comp=null, reverbWet=null, droneGain=null, audioOn=true, started=false;
+const SCALE=[0,2,4,7,9]; // major pentatonic
+let scaleFreqs=[];
+function buildScale(){
+  scaleFreqs=[];
+  const root=220; // A3
+  for(let oct=0;oct<4;oct++) for(const s of SCALE)
+    scaleFreqs.push(root*Math.pow(2,(oct*12+s)/12));
+}
+buildScale();
+
+function makeReverb(ctx){
+  const len=ctx.sampleRate*2.6, buf=ctx.createBuffer(2,len,ctx.sampleRate);
+  for(let ch=0;ch<2;ch++){
+    const d=buf.getChannelData(ch);
+    for(let i=0;i<len;i++){
+      const t=i/len;
+      d[i]=(Math.random()*2-1)*Math.pow(1-t,2.6);
+    }
+  }
+  const c=ctx.createConvolver();c.buffer=buf;return c;
+}
+function startAudio(){
+  if(started) return;
+  try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+  started=true;
+  comp=AC.createDynamicsCompressor();
+  comp.threshold.value=-14;comp.knee.value=24;comp.ratio.value=4;comp.attack.value=.004;comp.release.value=.25;
+  comp.connect(AC.destination);
+  master=AC.createGain();master.gain.value=audioOn?0.9:0.0;master.connect(comp);
+  const rev=makeReverb(AC);
+  reverbWet=AC.createGain();reverbWet.gain.value=.5;
+  rev.connect(reverbWet);reverbWet.connect(master);
+  // voice bus → dry(master) + reverb send
+  voiceBus=AC.createGain();voiceBus.gain.value=1;
+  voiceBus.connect(master);voiceBus.connect(rev);
+  // ambient drone
+  startDrone();
+}
+let voiceBus=null;
+function startDrone(){
+  droneGain=AC.createGain();droneGain.gain.value=0;
+  droneGain.connect(voiceBus);
+  const root=110;
+  [1,1.5,2].forEach((mult,i)=>{
+    const o=AC.createOscillator();o.type=i===0?'sine':'triangle';
+    o.frequency.value=root*mult;
+    const og=AC.createGain();og.gain.value=i===0?.5:.18;
+    const lfo=AC.createOscillator();lfo.type='sine';lfo.frequency.value=0.05+i*0.03;
+    const lg=AC.createGain();lg.gain.value=root*mult*0.006;
+    lfo.connect(lg);lg.connect(o.frequency);lfo.start();
+    o.connect(og);og.connect(droneGain);o.start();
+  });
+  droneGain.gain.linearRampToValueAtTime(0.12,AC.currentTime+4);
+}
+
+const TIMBRE={
+  flowers:{type:'triangle',a:.012,d:1.1,filt:2600,gain:.34},
+  cosmos:{type:'sine',a:.02,d:2.4,filt:3200,gain:.30},
+  water:{type:'sine',a:.006,d:1.0,filt:1700,gain:.34},
+  light:{type:'sawtooth',a:.01,d:1.4,filt:2400,gain:.22},
+  sound:{type:'triangle',a:.004,d:.9,filt:3000,gain:.40}
+};
+function freqForY(y){
+  const t=1-Math.max(0,Math.min(1,y/H));            // top=high
+  let idx=Math.floor(t*(scaleFreqs.length-1)+0.5);
+  idx=Math.max(0,Math.min(scaleFreqs.length-1,idx));
+  return scaleFreqs[idx];
+}
+function playNote(y,th,vol){
+  if(!started||!audioOn) return;
+  const tb=TIMBRE[th]||TIMBRE.flowers;
+  const f=freqForY(y);
+  const t=AC.currentTime;
+  const o=AC.createOscillator();o.type=tb.type;o.frequency.value=f;
+  const filt=AC.createBiquadFilter();filt.type='lowpass';filt.frequency.value=tb.filt;filt.Q.value=.6;
+  const g=AC.createGain();
+  const peak=tb.gain*(vol==null?1:vol);
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(peak,t+tb.a);
+  g.gain.exponentialRampToValueAtTime(.0001,t+tb.a+tb.d);
+  o.connect(filt);filt.connect(g);g.connect(voiceBus);
+  o.start(t);o.stop(t+tb.a+tb.d+.05);
+  // sparkle harmonic for light/cosmos
+  if(th==='cosmos'||th==='light'){
+    const o2=AC.createOscillator();o2.type='sine';o2.frequency.value=f*2;
+    const g2=AC.createGain();g2.gain.setValueAtTime(.0001,t);
+    g2.gain.exponentialRampToValueAtTime(peak*.4,t+tb.a);
+    g2.gain.exponentialRampToValueAtTime(.0001,t+tb.a+tb.d*.6);
+    o2.connect(g2);g2.connect(voiceBus);o2.start(t);o2.stop(t+tb.d+.1);
+  }
+}
+// sustained voice for long-press / drag glide
+function makeHeld(y,th){
+  if(!started||!audioOn) return null;
+  const tb=TIMBRE[th]||TIMBRE.flowers;
+  const t=AC.currentTime;
+  const o=AC.createOscillator();o.type=tb.type;
+  o.frequency.value=freqForY(y);
+  const filt=AC.createBiquadFilter();filt.type='lowpass';filt.frequency.value=tb.filt;filt.Q.value=.7;
+  const g=AC.createGain();g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(tb.gain*.55,t+.25);
+  const vib=AC.createOscillator();vib.type='sine';vib.frequency.value=5.2;
+  const vg=AC.createGain();vg.gain.value=freqForY(y)*0.004;
+  vib.connect(vg);vg.connect(o.frequency);vib.start();
+  o.connect(filt);filt.connect(g);g.connect(voiceBus);o.start();
+  return {o,g,vib,vg,th};
+}
+function glideHeld(hv,y){
+  if(!hv) return;
+  const f=freqForY(y),t=AC.currentTime;
+  hv.o.frequency.cancelScheduledValues(t);
+  hv.o.frequency.linearRampToValueAtTime(f,t+0.08);
+  hv.vg.gain.setTargetAtTime(f*0.004,t,.1);
+}
+function swellHeld(hv,amt){
+  if(!hv) return;const t=AC.currentTime;
+  hv.g.gain.setTargetAtTime(Math.min(0.5,(TIMBRE[hv.th].gain*.55)+amt),t,.3);
+}
+function stopHeld(hv){
+  if(!hv) return;const t=AC.currentTime;
+  hv.g.gain.cancelScheduledValues(t);
+  hv.g.gain.setValueAtTime(hv.g.gain.value,t);
+  hv.g.gain.exponentialRampToValueAtTime(.0001,t+.7);
+  hv.o.stop(t+.8);hv.vib.stop(t+.8);
+}
+
+function hapticTiny(){ if(navigator.vibrate){try{navigator.vibrate(6);}catch(e){}} }
+
+/* ---------------- Pointer interaction (multi-touch) ------------------ */
+const pointers=new Map();
+const SPAWN_GAP=34;       // min px between trail blooms
+let lastUiActivity=performance.now();
+
+function pos(e){return {x:e.clientX,y:e.clientY};}
+function onDown(e){
+  if(!started) startAudio();
+  if(AC&&AC.state==='suspended') AC.resume();
+  hideHint();
+  const p=pos(e);
+  const b=spawnBloom(p.x,p.y,theme,1);
+  playNote(p.y,theme,1);
+  const hv=makeHeld(p.y,theme);
+  pointers.set(e.pointerId,{x:p.x,y:p.y,lx:p.x,ly:p.y,b,hv,start:performance.now(),moved:0});
+  try{cv.setPointerCapture(e.pointerId);}catch(_){}
+}
+function onMove(e){
+  const st=pointers.get(e.pointerId);
+  if(!st) return;
+  // coalesced events for smooth fast drags
+  const evs=(e.getCoalescedEvents&&e.getCoalescedEvents().length)?e.getCoalescedEvents():[e];
+  for(const ev of evs){
+    const x=ev.clientX,y=ev.clientY;
+    const dx=x-st.lx,dy=y-st.ly,d=Math.hypot(dx,dy);
+    st.moved+=d;
+    if(d>=SPAWN_GAP){
+      spawnBloom(x,y,theme,rand(.55,.85),false);
+      playNote(y,theme,.5);
+      st.lx=x;st.ly=y;
+    }
+    st.x=x;st.y=y;
+  }
+  glideHeld(st.hv,st.y);
+}
+function onUp(e){
+  const st=pointers.get(e.pointerId);
+  if(!st) return;
+  stopHeld(st.hv);
+  pointers.delete(e.pointerId);
+}
+cv.addEventListener('pointerdown',onDown);
+cv.addEventListener('pointermove',onMove);
+window.addEventListener('pointerup',onUp);
+window.addEventListener('pointercancel',onUp);
+
+/* ---------------- Render loop ---------------------------------------- */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(2,(now-last)/16.67); last=now;
+  const t=now/1000;
+
+  // long-press growth + swell
+  pointers.forEach(st=>{
+    const held=(now-st.start)>180 && st.moved<14;
+    if(held && st.b){
+      st.b.target=Math.min(2.6,st.b.target+0.012*dt);
+      swellHeld(st.hv,(st.b.target-1)*0.06);
+    }
+  });
+
+  // background lerp
+  const bg=THEMES[theme].bg;
+  for(let i=0;i<2;i++) for(let c=0;c<3;c++)
+    curBg[i][c]+=(bg[i][c]-curBg[i][c])*Math.min(1,0.05*dt);
+  const grd=ctx.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,`rgb(${curBg[0][0]|0},${curBg[0][1]|0},${curBg[0][2]|0})`);
+  grd.addColorStop(1,`rgb(${curBg[1][0]|0},${curBg[1][1]|0},${curBg[1][2]|0})`);
+  ctx.globalCompositeOperation='source-over';
+  ctx.globalAlpha=1;
+  ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+
+  // constellation lines
+  if(lines.length){
+    ctx.globalCompositeOperation='lighter';
+    ctx.lineWidth=1;
+    for(const l of lines){
+      const a=l.a,b=l.b2;
+      const al=Math.min(a.g,b.g)*Math.min(a.fa,b.fa)*0.5;
+      if(al<=0.01)continue;
+      const fl=0.6+0.4*Math.sin(t*0.7+a.seed);
+      ctx.strokeStyle=`rgba(190,210,255,${al*fl})`;
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    }
+  }
+
+  // blooms
+  for(let i=0;i<blooms.length;i++){
+    const b=blooms[i];
+    // animate growth
+    if(b.g<b.target) b.g+=Math.min(b.gv*dt, b.target-b.g);
+    else if(b.g>b.target) b.g+=(b.target-b.g)*0.1;
+    if(b.fade){ b.fa-=0.035*dt; }
+    b.rot+=b.spin*dt;
+    const ease=b.g<1?(1-Math.pow(1-b.g,3)):b.g; // overshoot-ish
+    const additive=THEMES[b.theme].additive;
+    ctx.globalCompositeOperation=additive?'lighter':'source-over';
+
+    if(b.theme==='flowers'){
+      const sway=Math.sin(t*0.9+b.seed)*0.06;
+      const s=b.base*ease/64;
+      const sz=128*s;
+      ctx.globalAlpha=Math.max(0,b.fa)*Math.min(1,b.g+.1);
+      ctx.save();
+      ctx.translate(b.x,b.y);
+      ctx.rotate(b.rot+sway);
+      ctx.scale(s,s);
+      ctx.drawImage(SPR.flower[b.ci][b.variant],-64,-64);
+      ctx.restore();
+    } else {
+      // glow-type: twinkle / breathe
+      const breathe= b.theme==='cosmos' ? (0.6+0.4*Math.sin(t*1.6*b.tw+b.seed))
+                   : (0.82+0.18*Math.sin(t*1.1*b.tw+b.seed));
+      const r=b.base*ease*(b.theme==='water'?1.15:1);
+      ctx.globalAlpha=Math.max(0,b.fa)*breathe*0.92;
+      const sp=SPR.glow[b.theme][b.ci];
+      ctx.drawImage(sp,b.x-r,b.y-r,r*2,r*2);
+      // bright core for stars / light
+      if(b.theme==='cosmos'||b.theme==='light'||b.theme==='sound'){
+        ctx.globalAlpha=Math.max(0,b.fa)*breathe;
+        const cr=r*0.34;
+        ctx.drawImage(sp,b.x-cr,b.y-cr,cr*2,cr*2);
+      }
+    }
+  }
+  // cull faded
+  if(blooms.some(b=>b.fa<=0)){
+    blooms=blooms.filter(b=>b.fa>0);
+    lines=lines.filter(l=>l.a.fa>0&&l.b2.fa>0);
+  }
+
+  // transient fx (rings / flashes)
+  for(let i=fx.length-1;i>=0;i--){
+    const f=fx[i];
+    if(f.delay>0){f.delay-=dt/60;continue;}
+    f.age+=dt/60;
+    const p=f.age/f.life;
+    if(p>=1){fx.splice(i,1);continue;}
+    const r=f.r+(f.maxR-f.r)*(1-Math.pow(1-p,2));
+    const a=(1-p)*(f.kind==='ring'?0.5:0.6);
+    ctx.globalCompositeOperation='lighter';
+    const[R,G,B]=f.rgb;
+    if(f.kind==='ring'){
+      ctx.globalAlpha=a;ctx.lineWidth=f.w*(1-p)+0.6;
+      ctx.strokeStyle=`rgb(${R},${G},${B})`;
+      ctx.beginPath();ctx.arc(f.x,f.y,r,0,7);ctx.stroke();
+    }else{
+      ctx.globalAlpha=a;
+      const sp=makeGlowCached(f.rgb);
+      ctx.drawImage(sp,f.x-r,f.y-r,r*2,r*2);
+    }
+  }
+
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+
+  // auto-dim UI when idle
+  const ui=document.getElementById('ui');
+  if(now-lastUiActivity>3200) ui.classList.add('dim'); else ui.classList.remove('dim');
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// small cache for flash glow sprites (reuse theme glow by nearest color not needed)
+const glowCache=new Map();
+function makeGlowCached(rgb){
+  const key=rgb.join(',');
+  let s=glowCache.get(key);
+  if(!s){s=makeGlow(rgb);glowCache.set(key,s);}
+  return s;
+}
+
+/* ---------------- UI ------------------------------------------------- */
+const hintEl=document.getElementById('hint');
+let hintGone=false;
+function hideHint(){ if(!hintGone){hintGone=true;hintEl.classList.add('gone');setTimeout(()=>hintEl.style.display='none',1300);} }
+
+const themeNameEl=document.getElementById('themeName');
+let nameTimer=null;
+function showThemeName(){
+  themeNameEl.textContent=THEMES[theme].name;
+  themeNameEl.classList.add('show');
+  clearTimeout(nameTimer);
+  nameTimer=setTimeout(()=>themeNameEl.classList.remove('show'),1600);
+}
+
+document.querySelectorAll('.dot').forEach(d=>{
+  d.addEventListener('click',()=>{
+    if(!started) startAudio();
+    document.querySelectorAll('.dot').forEach(x=>x.classList.remove('sel'));
+    d.classList.add('sel');
+    theme=d.dataset.t;
+    document.querySelector('meta[name=theme-color]')
+      .setAttribute('content',`rgb(${THEMES[theme].bg[1].join(',')})`);
+    showThemeName();
+    lastUiActivity=performance.now();
+  });
+});
+
+const soundBtn=document.getElementById('soundBtn');
+soundBtn.addEventListener('click',()=>{
+  audioOn=!audioOn;
+  soundBtn.classList.toggle('off',!audioOn);
+  soundBtn.innerHTML = audioOn
+    ? '<svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 6a8 8 0 0 1 0 12"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+  if(started&&master){
+    if(AC.state==='suspended')AC.resume();
+    master.gain.setTargetAtTime(audioOn?0.9:0.0,AC.currentTime,0.1);
+  }
+  lastUiActivity=performance.now();
+  toast(audioOn?'sound on':'sound off');
+});
+
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  blooms.forEach(b=>b.fade=true);
+  fx.length=0;
+  setTimeout(()=>{lines=[];},700);
+  lastUiActivity=performance.now();
+  toast('真っさらに');
+});
+
+document.getElementById('saveBtn').addEventListener('click',saveImage);
+
+let toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),1700);
+}
+
+document.addEventListener('pointerdown',()=>lastUiActivity=performance.now(),true);
+
+/* ---------------- Save / Share --------------------------------------- */
+function saveImage(){
+  lastUiActivity=performance.now();
+  try{
+    cv.toBlob(async (blob)=>{
+      if(!blob){toast('保存できませんでした');return;}
+      const nm=THEMES[theme].name.replace(/\s/g,'');
+      const file=new File([blob],`bloom-${theme}.png`,{type:'image/png'});
+      const shareText=`触れて咲かせる ${nm} — Bloom`;
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        try{ await navigator.share({files:[file],text:shareText}); toast('シェアしました'); return; }
+        catch(err){ if(err&&err.name==='AbortError')return; }
+      }
+      // fallback: download + open X intent
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download=`bloom-${theme}.png`;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),4000);
+      toast('画像を保存しました');
+      const tw='https://twitter.com/intent/tweet?text='+encodeURIComponent(shareText+'\n#Bloom');
+      window.open(tw,'_blank','noopener');
+    },'image/png');
+  }catch(e){ toast('保存できませんでした'); }
+}
+
+/* prevent gesture zoom */
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault());
+window.addEventListener('contextmenu',e=>e.preventDefault());
+
+/* auto-evolve hint pulse already CSS; initial theme name */
+document.querySelector('meta[name=theme-color]')
+  .setAttribute('content',`rgb(${THEMES.flowers.bg[1].join(',')})`);
+</script>
+</body>
+</html>
