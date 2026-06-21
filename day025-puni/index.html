@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#f3efe8">
+<title>ぷに — さわって、とろける</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:'M PLUS Rounded 1c',sans-serif;
+  position:fixed;inset:0;touch-action:none;
+  -webkit-user-select:none;user-select:none;overscroll-behavior:none;
+  background:#f3efe8;color:#6a6256;
+  transition:background .8s ease,color .8s ease;
+}
+body.dark{background:#1a1c26;color:#b8b6c8}
+#stage{display:block;width:100%;height:100%;position:absolute;inset:0}
+
+/* hint */
+#hint{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);
+  text-align:center;pointer-events:none;z-index:4;transition:opacity 1s ease}
+#hint .t{font-size:15px;letter-spacing:.28em;opacity:.5;font-weight:500}
+#hint.gone{opacity:0}
+
+/* top-right controls */
+#tools{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:10;display:flex;gap:10px}
+.tbtn{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  display:grid;place-items:center;color:#8a8170;box-shadow:0 4px 16px rgba(0,0,0,.08);
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),background .3s}
+body.dark .tbtn{background:rgba(255,255,255,.08);color:#cfcde0}
+.tbtn:active{transform:scale(.88)}
+.tbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tbtn.off{opacity:.45}
+
+/* settings sheet */
+#scrim{position:fixed;inset:0;background:rgba(40,36,30,.32);backdrop-filter:blur(2px);z-index:20;
+  opacity:0;pointer-events:none;transition:opacity .35s}
+#scrim.open{opacity:1;pointer-events:auto}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:520px;margin:0 auto;
+  background:#faf7f1;border-radius:28px 28px 0 0;padding:8px 24px calc(28px + env(safe-area-inset-bottom));
+  transform:translateY(112%);transition:transform .42s cubic-bezier(.34,1.4,.5,1);
+  box-shadow:0 -10px 40px rgba(0,0,0,.16)}
+body.dark #sheet{background:#23252f}
+#sheet.open{transform:translateY(0)}
+.grip{width:42px;height:5px;border-radius:5px;background:#cfc8ba;opacity:.7;margin:8px auto 16px}
+body.dark .grip{background:#4a4d5c}
+.s-title{font-weight:700;font-size:17px;margin-bottom:4px}
+.s-sub{font-size:12px;opacity:.55;margin-bottom:18px}
+.s-label{font-size:12px;font-weight:700;opacity:.6;margin:18px 0 10px;letter-spacing:.08em}
+.swatches{display:flex;gap:12px;flex-wrap:wrap}
+.sw{width:46px;height:46px;border-radius:50%;cursor:pointer;border:3px solid transparent;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.sw:active{transform:scale(.88)}
+.sw.sel{border-color:rgba(120,110,90,.6);transform:scale(1.08)}
+body.dark .sw.sel{border-color:rgba(255,255,255,.8)}
+.row{display:flex;align-items:center;justify-content:space-between;padding:12px 2px;border-top:1px solid rgba(150,140,120,.14)}
+.row span{font-weight:500;font-size:15px}
+.sw-toggle{width:52px;height:30px;border-radius:18px;background:#ddd6c8;cursor:pointer;position:relative;transition:background .25s}
+body.dark .sw-toggle{background:#3a3d4a}
+.sw-toggle.on{background:#9fd9bd}
+.sw-toggle::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;
+  background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.2);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.sw-toggle.on::after{transform:translateX(22px)}
+.time-card{margin-top:20px;text-align:center;background:rgba(159,217,189,.16);border-radius:18px;padding:16px}
+.time-card .big{font-size:22px;font-weight:700;color:#5aa783}
+body.dark .time-card .big{color:#9fd9bd}
+.time-card .lbl{font-size:12px;opacity:.6;margin-top:2px}
+.hearts{margin-top:8px;font-size:15px;letter-spacing:2px}
+.foot{text-align:center;font-size:11px;opacity:.4;margin-top:22px}
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div id="hint"><div class="t">そっと、さわってみて</div></div>
+
+<div id="tools">
+  <button class="tbtn" id="addBtn" aria-label="なかま">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+  <button class="tbtn" id="gearBtn" aria-label="せってい">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</div>
+
+<div id="scrim"></div>
+<div id="sheet">
+  <div class="grip"></div>
+  <div class="s-title">ぷに</div>
+  <div class="s-sub">さわって、とろける。それだけ。</div>
+
+  <div class="s-label">いろ</div>
+  <div class="swatches" id="swatches"></div>
+
+  <div class="row"><span>🔊 こえ</span><div class="sw-toggle on" data-k="sound"></div></div>
+  <div class="row"><span>🌙 よる</span><div class="sw-toggle" data-k="dark"></div></div>
+  <div class="row"><span>🌿 かんきょう音</span><div class="sw-toggle" data-k="ambient"></div></div>
+
+  <div class="time-card">
+    <div class="big" id="timeBig">0分</div>
+    <div class="lbl">ぷにと いっしょに すごした じかん</div>
+    <div class="hearts" id="bondHearts"></div>
+  </div>
+  <div class="foot">Day 025 · ぷに — さわって、とろける</div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   ぷに — さわって、とろける  (Day 025)
+   A soft-body healing creature. Touch it: pet / poke / hold / tickle.
+   Spring-jelly physics, expressive face, cute synthesized voice.
+   No tasks, no goals — just a squishy little being that loves to be touched.
+   ===================================================================== */
+
+const cv=document.getElementById('stage'), ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  W=innerWidth;H=innerHeight;
+  cv.width=W*DPR|0;cv.height=H*DPR|0;cv.style.width=W+'px';cv.style.height=H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+resize();addEventListener('resize',resize);
+
+const rand=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+const now=()=>performance.now();
+
+/* ---------------- persistence ---------------- */
+const LS='puni_v1';
+let store={bond:0, secs:0, color:0, sound:true, dark:false, ambient:false};
+try{const j=JSON.parse(localStorage.getItem(LS));if(j)store=Object.assign(store,j);}catch(e){}
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LS,JSON.stringify(store));}catch(e){}},400);}
+
+/* ---------------- colors ---------------- */
+const COLORS=[
+  {n:'mint',  in:'#e2fff4', mid:'#aff0d6', out2:'#6fd3b8', glow:'160,230,200', cheek:'#ff9fb6'},
+  {n:'peach', in:'#fff0ea', mid:'#ffcbbd', out2:'#ff9f8e', glow:'255,170,150', cheek:'#ff7f9c'},
+  {n:'lav',   in:'#f5ecff', mid:'#ddc4f5', out2:'#c49ce8', glow:'200,160,235', cheek:'#ff9fce'},
+  {n:'lemon', in:'#fff8e0', mid:'#ffe6a8', out2:'#ffcf6e', glow:'255,215,130', cheek:'#ffae8a'},
+  {n:'sky',   in:'#eaf6ff', mid:'#c2e4ff', out2:'#94cdf5', glow:'160,205,245', cheek:'#ffa6c0'},
+  {n:'rose',  in:'#fff0f4', mid:'#ffc9da', out2:'#ff9dbe', glow:'255,165,195', cheek:'#ff85a6'},
+];
+
+/* ---------------- AUDIO ---------------- */
+let AC=null,master=null,comp=null,revSend=null,ambGain=null,started=false;
+function startAudio(){
+  if(started)return;
+  try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+  started=true;
+  comp=AC.createDynamicsCompressor();
+  comp.threshold.value=-12;comp.ratio.value=4;comp.attack.value=.004;comp.release.value=.2;
+  comp.connect(AC.destination);
+  master=AC.createGain();master.gain.value=store.sound?0.9:0;master.connect(comp);
+  // gentle reverb
+  const len=AC.sampleRate*1.8,buf=AC.createBuffer(2,len,AC.sampleRate);
+  for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);}
+  const conv=AC.createConvolver();conv.buffer=buf;
+  revSend=AC.createGain();revSend.gain.value=.32;
+  conv.connect(revSend);revSend.connect(master);
+  voiceBus=AC.createGain();voiceBus.connect(master);voiceBus.connect(conv);
+  if(store.ambient)startAmbient();
+}
+let voiceBus=null;
+function startAmbient(){
+  if(!started||ambGain)return;
+  ambGain=AC.createGain();ambGain.gain.value=0;ambGain.connect(master);
+  [196,294,392].forEach((f,i)=>{
+    const o=AC.createOscillator();o.type='sine';o.frequency.value=f;
+    const g=AC.createGain();g.gain.value=i===0?.5:.22;
+    const lfo=AC.createOscillator();lfo.type='sine';lfo.frequency.value=.04+i*.02;
+    const lg=AC.createGain();lg.gain.value=f*.005;lfo.connect(lg);lg.connect(o.frequency);lfo.start();
+    o.connect(g);g.connect(ambGain);o.start();
+  });
+  ambGain.gain.linearRampToValueAtTime(.06,AC.currentTime+3);
+}
+function stopAmbient(){ if(ambGain){ambGain.gain.setTargetAtTime(0,AC.currentTime,.4);} }
+
+// cute voice synth — pitch scaled by size (smaller puni = higher)
+function voice(type,pitch){
+  if(!started||!store.sound)return;
+  const t=AC.currentTime, p=pitch||1;
+  const mk=(wave,f0,f1,dur,peak,vibR,vibD)=>{
+    const o=AC.createOscillator();o.type=wave;
+    const fl=AC.createBiquadFilter();fl.type='lowpass';fl.frequency.value=2400;fl.Q.value=.8;
+    const g=AC.createGain();
+    o.frequency.setValueAtTime(f0,t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(40,f1),t+dur);
+    g.gain.setValueAtTime(.0001,t);
+    g.gain.exponentialRampToValueAtTime(peak,t+0.02);
+    g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    if(vibR){const v=AC.createOscillator();v.type='sine';v.frequency.value=vibR;
+      const vg=AC.createGain();vg.gain.value=vibD;v.connect(vg);vg.connect(o.frequency);v.start();v.stop(t+dur+.05);}
+    o.connect(fl);fl.connect(g);g.connect(voiceBus);o.start(t);o.stop(t+dur+.05);
+  };
+  switch(type){
+    case 'poke':   mk('triangle',660*p,980*p,.10,.34,0,0); break;       // きゅっ
+    case 'pet':    mk('sine',560*p,470*p,.34,.30,0,0); break;           // ぷにゅ〜
+    case 'tickle': mk('triangle',720*p,860*p,.07,.28,0,0);
+                   setTimeout(()=>voice2('triangle',880*p,1000*p,.07,.26),70); break; // ふふっ
+    case 'squish': mk('triangle',360*p,300*p,.42,.30,9,18*p); break;    // むにゅ〜
+    case 'happy':  mk('sine',540*p,820*p,.22,.30,0,0);
+                   setTimeout(()=>voice2('sine',1040*p,1240*p,.12,.18),60); break; // きゅん
+    case 'yawn':   mk('sine',430*p,300*p,.7,.22,0,0); break;            // ふぁ〜
+    case 'wake':   mk('triangle',500*p,900*p,.12,.30,0,0); break;
+  }
+}
+function voice2(wave,f0,f1,dur,peak){
+  if(!started||!store.sound)return;const t=AC.currentTime;
+  const o=AC.createOscillator();o.type=wave;const g=AC.createGain();
+  const fl=AC.createBiquadFilter();fl.type='lowpass';fl.frequency.value=2600;
+  o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(fl);fl.connect(g);g.connect(voiceBus);o.start(t);o.stop(t+dur+.05);
+}
+function haptic(ms){if(navigator.vibrate){try{navigator.vibrate(ms);}catch(e){}}}
+
+/* ---------------- FX (ripples / hearts / sparkles / Z) ---------------- */
+let fx=[];
+function addRipple(x,y,col){fx.push({k:'ripple',x,y,r:6,mr:rand(50,90),age:0,life:.9,col});}
+function addHeart(x,y){fx.push({k:'heart',x,y,vx:rand(-.3,.3),vy:rand(-1.6,-1.0),age:0,life:rand(1.3,1.9),rot:rand(-.3,.3),sz:rand(12,20)});}
+function addSpark(x,y,col){for(let i=0;i<5;i++){const a=rand(0,7);fx.push({k:'spark',x,y,vx:Math.cos(a)*rand(1,3),vy:Math.sin(a)*rand(1,3)-1,age:0,life:rand(.5,.9),col,sz:rand(2,4)});}}
+function addZ(x,y){fx.push({k:'z',x,y,vx:rand(.2,.5),vy:rand(-.7,-.4),age:0,life:rand(1.8,2.4),sz:rand(14,22)});}
+
+/* ---------------- PUNI (soft body) ---------------- */
+const N=34;
+class Puni{
+  constructor(x,y,r){
+    this.cx=x;this.cy=y;this.vx=0;this.vy=0;
+    this.hx=x;this.hy=y;             // home target
+    this.baseR=r;this.R=r;
+    this.nodes=[];
+    for(let i=0;i<N;i++)this.nodes.push({ang:i/N*Math.PI*2,off:0,voff:0});
+    this.breath=rand(0,7);
+    this.mood='idle';this.moodEnd=0;
+    // face params (current / target)
+    this.f={eye:1,happy:0,mOpen:0,mSmile:.25,blush:.06,heart:0,droop:0};
+    this.ft={eye:1,happy:0,mOpen:0,mSmile:.25,blush:.06,heart:0,droop:0};
+    this.blink=1;this.nextBlink=now()+rand(1500,4000);
+    this.look={x:0,y:0,tx:0,ty:0};
+    this.lastInteract=now();this.lastVoice=0;
+    this.wanderT=now()+rand(2000,5000);
+    this.jiggle=0;
+    this.pitch=clamp(120/r*1.0,.8,1.7);
+    this.seed=rand(0,1000);
+  }
+  setMood(m,dur){
+    this.mood=m;this.moodEnd=now()+dur;
+    const f=this.ft;
+    f.eye=1;f.happy=0;f.mOpen=0;f.mSmile=.25;f.blush=.06;f.heart=0;f.droop=0;
+    const bonded=store.bond>40;
+    switch(m){
+      case 'melt':    f.happy=1;f.eye=.35;f.mSmile=.55;f.blush=.6;f.droop=.5;f.heart=bonded?.5:0; break;
+      case 'surprise':f.eye=1.5;f.mOpen=.85;f.mSmile=0;f.blush=.25; break;
+      case 'giggle':  f.happy=1;f.mOpen=.45;f.mSmile=1;f.blush=.75; break;
+      case 'squish':  f.happy=.7;f.eye=.5;f.mOpen=.35;f.mSmile=.1;f.blush=.45; break;
+      case 'love':    f.heart=.95;f.mSmile=.8;f.blush=.85;f.happy=.4; break;
+      case 'sleepy':  f.eye=.4;f.mSmile=.12;f.blush=.05; break;
+      case 'sleep':   f.eye=.06;f.mSmile=.06; break;
+      case 'happy':   f.happy=.7;f.mSmile=.7;f.blush=.5;f.heart=bonded?.4:0; break;
+    }
+  }
+  say(type){
+    const t=now();
+    if(t-this.lastVoice<90)return;
+    this.lastVoice=t;voice(type,this.pitch);
+  }
+  // inject ripply shiver
+  shiver(amt){for(const n of this.nodes)n.voff+=rand(-1,1)*amt;this.jiggle=Math.max(this.jiggle,amt);}
+  // a finger pressing — dent the surface near p
+  press(px,py,strength){
+    for(const n of this.nodes){
+      const nx=this.cx+(this.R+n.off)*Math.cos(n.ang);
+      const ny=this.cy+(this.R+n.off)*Math.sin(n.ang);
+      const dx=nx-px,dy=ny-py,d=Math.hypot(dx,dy);
+      const infl=this.R*0.85;
+      if(d<infl){
+        const pen=(1-d/infl);
+        n.voff-=pen*pen*strength;       // push inward
+      }
+    }
+  }
+  contains(px,py){return Math.hypot(px-this.cx,py-this.cy) < this.R*1.05;}
+
+  update(dt,t){
+    // ---- home / wander / idle AI ----
+    const idle=t-this.lastInteract;
+    if(this.mood!=='melt'&&this.mood!=='giggle'&&this.mood!=='squish'){
+      if(idle>16000){ if(this.mood!=='sleep'){this.setMood('sleep',999999);} }
+      else if(idle>9000){ if(this.mood!=='sleepy'&&this.mood!=='sleep'){this.setMood('sleepy',999999);} }
+    }
+    if(now()>this.wanderT && idle>2500){
+      const m=Math.min(W,H)*0.5-this.baseR-30;
+      const cxm=W/2, cym=H/2;
+      this.hx=clamp(cxm+rand(-m,m)*0.6, this.baseR+20, W-this.baseR-20);
+      this.hy=clamp(cym+rand(-m,m)*0.45, this.baseR+30, H-this.baseR-40);
+      this.wanderT=now()+rand(2600,6000);
+      if(idle>8000&&Math.random()<.5){ this.say('yawn'); for(let i=0;i<2;i++)setTimeout(()=>addZ(this.cx+rand(-10,10),this.cy-this.R*0.6),i*350); }
+    }
+    // ---- center spring toward home ----
+    this.vx+=(this.hx-this.cx)*0.012;
+    this.vy+=(this.hy-this.cy)*0.012;
+    this.vx*=0.90;this.vy*=0.90;
+    this.cx+=this.vx*dt;this.cy+=this.vy*dt;
+
+    // ---- breathing ----
+    this.breath+=0.018*dt;
+    const breathe=Math.sin(this.breath)*0.02 + (this.mood==='sleep'?Math.sin(this.breath*0.6)*0.04:0);
+    this.R=this.baseR*(1+breathe - this.ft.droop*0.02);
+
+    // ---- node spring + neighbor smoothing + volume preserve ----
+    const ns=this.nodes;
+    let avg=0;
+    for(let i=0;i<N;i++){
+      const n=ns[i];
+      const prev=ns[(i-1+N)%N].off, next=ns[(i+1)%N].off;
+      const smooth=(prev+next)*0.5 - n.off;
+      n.voff += (-n.off)*0.20 + smooth*0.30;
+      n.voff *= 0.80;
+      n.off  += n.voff*dt;
+      avg+=n.off;
+    }
+    avg/=N;
+    // volume preservation: redistribute so dents bulge elsewhere (mochi feel)
+    for(let i=0;i<N;i++) ns[i].off -= avg*0.6;
+    this.jiggle*=0.92;
+
+    // ---- velocity squash/stretch (added at draw) ----
+    const sp=Math.hypot(this.vx,this.vy);
+    this.stretch=clamp(sp*0.06,0,0.32);
+    this.stretchAng=Math.atan2(this.vy,this.vx);
+
+    // ---- face lerp ----
+    const f=this.f,ftt=this.ft;
+    for(const k in f) f[k]=lerp(f[k],ftt[k],0.16*dt);
+    // blink
+    if(now()>this.nextBlink && this.mood!=='sleep' && this.mood!=='melt'){
+      this.blink=0;this.nextBlink=now()+rand(1800,5000);
+    }
+    this.blink=lerp(this.blink,1,0.4*dt);
+    if(this.blink<0.06)this.blink=0.06;
+    // look easing
+    this.look.x=lerp(this.look.x,this.look.tx,0.12*dt);
+    this.look.y=lerp(this.look.y,this.look.ty,0.12*dt);
+
+    // ---- mood expiry ----
+    if(now()>this.moodEnd && this.mood!=='idle' && this.mood!=='sleep' && this.mood!=='sleepy'){
+      this.setMood('idle',0);this.moodEnd=Infinity;
+    }
+  }
+
+  nodePos(i){
+    const n=this.nodes[i];
+    let r=this.R+n.off;
+    // stretch term: elongate along velocity axis
+    r += this.stretch*this.R*Math.cos(2*(n.ang-this.stretchAng));
+    return [this.cx+r*Math.cos(n.ang), this.cy+r*Math.sin(n.ang)];
+  }
+
+  draw(ctx,t){
+    const C=COLORS[store.color];
+    // shadow
+    ctx.save();
+    ctx.globalAlpha=0.16;
+    ctx.fillStyle=document.body.classList.contains('dark')?'#000':'#8a7d66';
+    ctx.beginPath();
+    ctx.ellipse(this.cx, this.cy+this.R*0.96, this.R*0.8*(1+this.stretch*0.3), this.R*0.22, 0,0,7);
+    ctx.fill();
+    ctx.restore();
+
+    // body path (smooth closed curve through node positions)
+    const pts=[];for(let i=0;i<N;i++)pts.push(this.nodePos(i));
+    ctx.beginPath();
+    let mx=(pts[N-1][0]+pts[0][0])/2, my=(pts[N-1][1]+pts[0][1])/2;
+    ctx.moveTo(mx,my);
+    for(let i=0;i<N;i++){
+      const p=pts[i],np=pts[(i+1)%N];
+      ctx.quadraticCurveTo(p[0],p[1],(p[0]+np[0])/2,(p[1]+np[1])/2);
+    }
+    ctx.closePath();
+
+    // glow
+    ctx.save();
+    ctx.shadowColor=`rgba(${C.glow},0.55)`;
+    ctx.shadowBlur=28;
+    // fill gradient
+    const g=ctx.createRadialGradient(
+      this.cx-this.R*0.3,this.cy-this.R*0.4,this.R*0.1,
+      this.cx,this.cy,this.R*1.15);
+    g.addColorStop(0,C.in);
+    g.addColorStop(0.5,C.mid);
+    g.addColorStop(1,C.out2);
+    ctx.fillStyle=g;
+    ctx.globalAlpha=0.96;
+    ctx.fill();
+    ctx.restore();
+
+    // inner rim light
+    ctx.save();ctx.clip();
+    const rim=ctx.createRadialGradient(this.cx,this.cy,this.R*0.55,this.cx,this.cy,this.R*1.05);
+    rim.addColorStop(0,'rgba(255,255,255,0)');
+    rim.addColorStop(1,'rgba(255,255,255,0.22)');
+    ctx.fillStyle=rim;ctx.fillRect(this.cx-this.R*1.3,this.cy-this.R*1.3,this.R*2.6,this.R*2.6);
+    // top highlight blob
+    ctx.globalAlpha=0.55;
+    ctx.fillStyle='rgba(255,255,255,0.65)';
+    ctx.beginPath();
+    ctx.ellipse(this.cx-this.R*0.32,this.cy-this.R*0.4,this.R*0.22,this.R*0.13,-0.5,0,7);
+    ctx.fill();
+    ctx.restore();
+
+    this.drawFace(ctx,t,C);
+  }
+
+  drawFace(ctx,t,C){
+    const f=this.f;
+    const eyeDX=this.R*0.34, eyeY=this.cy-this.R*0.06 + f.droop*this.R*0.08;
+    const lx=this.cx-eyeDX+this.look.x*this.R*0.12;
+    const rx=this.cx+eyeDX+this.look.x*this.R*0.12;
+    const ey=eyeY+this.look.y*this.R*0.1;
+    const eyeR=this.R*0.115;
+    const open=clamp(f.eye*this.blink,0.04,1.6);
+
+    const dark=document.body.classList.contains('dark');
+    const eyeCol=dark?'#2a2740':'#473f57';
+
+    // blush
+    if(f.blush>0.02){
+      ctx.save();ctx.globalAlpha=f.blush*0.7;
+      ctx.fillStyle=C.cheek;
+      ctx.beginPath();ctx.ellipse(this.cx-this.R*0.5,ey+this.R*0.22,this.R*0.13,this.R*0.09,0,0,7);ctx.fill();
+      ctx.beginPath();ctx.ellipse(this.cx+this.R*0.5,ey+this.R*0.22,this.R*0.13,this.R*0.09,0,0,7);ctx.fill();
+      ctx.restore();
+    }
+
+    // eyes
+    if(f.heart>0.5){
+      this.drawHeartEye(ctx,lx,ey,eyeR*1.3,C.cheek);
+      this.drawHeartEye(ctx,rx,ey,eyeR*1.3,C.cheek);
+    } else if(f.happy>0.55){
+      // happy upward arcs ^ ^
+      ctx.strokeStyle=eyeCol;ctx.lineWidth=this.R*0.05;ctx.lineCap='round';
+      const w=eyeR*1.2;
+      ctx.beginPath();ctx.arc(lx,ey+eyeR*0.5,w,Math.PI*1.15,Math.PI*1.85);ctx.stroke();
+      ctx.beginPath();ctx.arc(rx,ey+eyeR*0.5,w,Math.PI*1.15,Math.PI*1.85);ctx.stroke();
+    } else {
+      // round cute eyes with shine
+      for(const ex of [lx,rx]){
+        ctx.save();ctx.translate(ex,ey);ctx.scale(1,open);
+        ctx.fillStyle=eyeCol;
+        ctx.beginPath();ctx.arc(0,0,eyeR,0,7);ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.9)';
+        ctx.beginPath();ctx.arc(-eyeR*0.3,-eyeR*0.35,eyeR*0.32,0,7);ctx.fill();
+        ctx.beginPath();ctx.arc(eyeR*0.25,eyeR*0.3,eyeR*0.14,0,7);ctx.fill();
+        ctx.restore();
+      }
+      // sleepy eyelids
+      if(f.eye<0.45){
+        ctx.fillStyle=C.mid;
+        const lid=(0.45-f.eye)/0.45;
+        for(const ex of [lx,rx]){
+          ctx.beginPath();
+          ctx.ellipse(ex,ey-eyeR*(1-lid)+ -eyeR*0.0,eyeR*1.25,eyeR*1.2*lid+0.1,0,0,7);
+          ctx.fill();
+        }
+      }
+    }
+
+    // mouth
+    const my=this.cy+this.R*0.30+f.droop*this.R*0.05;
+    ctx.strokeStyle=eyeCol;ctx.fillStyle=eyeCol;
+    ctx.lineWidth=this.R*0.045;ctx.lineCap='round';ctx.lineJoin='round';
+    if(f.mOpen>0.3){
+      // open mouth (cute)
+      ctx.beginPath();
+      const mw=this.R*0.16*(0.6+f.mOpen*0.6), mh=this.R*0.13*f.mOpen+this.R*0.04;
+      ctx.ellipse(this.cx,my+mh*0.3,mw,mh,0,0,7);
+      ctx.fillStyle=dark?'#5a3a4a':'#c9697f';ctx.fill();
+      // tongue
+      ctx.fillStyle=C.cheek;
+      ctx.beginPath();ctx.ellipse(this.cx,my+mh*0.7,mw*0.6,mh*0.5,0,0,Math.PI);ctx.fill();
+    } else {
+      const s=f.mSmile;
+      ctx.beginPath();
+      const mw=this.R*0.16;
+      ctx.moveTo(this.cx-mw,my);
+      ctx.quadraticCurveTo(this.cx,my+s*this.R*0.16, this.cx+mw,my);
+      ctx.stroke();
+    }
+
+    // sleep Z near
+    if(this.mood==='sleep'&&Math.random()<0.012)addZ(this.cx+this.R*0.5,this.cy-this.R*0.7);
+  }
+  drawHeartEye(ctx,x,y,s,col){
+    ctx.save();ctx.translate(x,y);ctx.fillStyle=col;
+    ctx.beginPath();
+    ctx.moveTo(0,s*0.3);
+    ctx.bezierCurveTo(0,-s*0.1,-s,-s*0.1,-s,s*0.35);
+    ctx.bezierCurveTo(-s,s*0.7,0,s,0,s*1.1);
+    ctx.bezierCurveTo(0,s,s,s*0.7,s,s*0.35);
+    ctx.bezierCurveTo(s,-s*0.1,0,-s*0.1,0,s*0.3);
+    ctx.fill();ctx.restore();
+  }
+}
+
+/* ---------------- world ---------------- */
+let punis=[];
+function makeMain(){ punis=[new Puni(W/2,H*0.5,Math.min(W,H)*0.19)]; }
+makeMain();
+
+/* ---------------- pointer interaction ---------------- */
+const pmap=new Map();
+let engaged=false, engagedSince=0;
+
+function findPuni(x,y){
+  for(let i=punis.length-1;i>=0;i--) if(punis[i].contains(x,y)) return punis[i];
+  return null;
+}
+function nearestPuni(x,y){
+  let best=punis[0],bd=1e9;
+  for(const p of punis){const d=Math.hypot(p.cx-x,p.cy-y);if(d<bd){bd=d;best=p;}}
+  return best;
+}
+
+function onDown(e){
+  if(!started){startAudio();}
+  if(AC&&AC.state==='suspended')AC.resume();
+  hideHint();
+  const x=e.clientX,y=e.clientY;
+  let p=findPuni(x,y);
+  const onBody=!!p;
+  if(!p){ p=nearestPuni(x,y); p.hx=x;p.hy=y; }      // curious: come toward tap
+  // wake if sleeping
+  if(p.mood==='sleep'||p.mood==='sleepy'){p.setMood('surprise',700);p.say('wake');p.shiver(7);}
+  p.lastInteract=now();
+  pmap.set(e.pointerId,{x,y,px:x,py:y,down:now(),onBody,puni:p,moved:0,sp:0,rub:0,longFired:false});
+  try{cv.setPointerCapture(e.pointerId);}catch(_){}
+}
+function onMove(e){
+  const st=pmap.get(e.pointerId);if(!st)return;
+  const evs=(e.getCoalescedEvents&&e.getCoalescedEvents().length)?e.getCoalescedEvents():[e];
+  for(const ev of evs){
+    const x=ev.clientX,y=ev.clientY;
+    const d=Math.hypot(x-st.px,y-st.py);
+    st.moved+=d;st.px=x;st.py=y;st.x=x;st.y=y;
+  }
+}
+function onUp(e){
+  const st=pmap.get(e.pointerId);if(!st)return;
+  const dur=now()-st.down, p=st.puni;
+  if(st.onBody && dur<240 && st.moved<14){
+    // POKE
+    p.setMood('surprise',650);p.say('poke');p.shiver(11);
+    p.vx+=(p.cx-st.x)*0.04;p.vy+=(p.cy-st.y)*0.04;
+    addRipple(st.x,st.y,COLORS[store.color].glow);
+    addSpark(st.x,st.y,COLORS[store.color].glow);
+    haptic(12);
+  }
+  pmap.delete(e.pointerId);
+}
+cv.addEventListener('pointerdown',onDown);
+cv.addEventListener('pointermove',onMove);
+addEventListener('pointerup',onUp);
+addEventListener('pointercancel',onUp);
+
+/* ---------------- main loop ---------------- */
+let last=now(), petRippleT=0, heartT=0;
+function frame(tn){
+  const dt=clamp((tn-last)/16.67,0,2.4);last=tn;
+  const t=tn/1000;
+
+  // engaged time tracking
+  const anyDown=pmap.size>0;
+  if(anyDown && !engaged){engaged=true;engagedSince=tn;}
+  if(!anyDown && engaged){engaged=false;store.secs+=Math.round((tn-engagedSince)/1000);save();}
+
+  // process pointers -> interactions
+  pmap.forEach(st=>{
+    const p=st.puni;
+    // smoothed speed
+    const inst=Math.hypot(st.x-(st._lx??st.x),st.y-(st._ly??st.y));
+    st._lx=st.x;st._ly=st.y;
+    st.sp=lerp(st.sp,inst,0.4);
+    st.rub=st.rub*0.90+inst;
+    p.lastInteract=now();
+    // look toward finger
+    p.look.tx=clamp((st.x-p.cx)/p.R,-1,1);
+    p.look.ty=clamp((st.y-p.cy)/p.R,-1,1);
+
+    if(st.onBody){
+      // press / dent
+      const strength = clamp(0.6+st.sp*0.04,0.6,2.2);
+      p.press(st.x,st.y,strength*dt);
+      // drag the body if moving fast & far
+      if(st.moved>20){ p.hx=st.x;p.hy=st.y; }
+
+      const held=now()-st.down;
+      if(st.rub>26){
+        // TICKLE
+        if(p.mood!=='giggle')p.setMood('giggle',500);
+        p.moodEnd=now()+500;
+        if(Math.random()<0.06){p.say('tickle');}
+        p.shiver(1.6);
+      } else if(st.sp>1.1 && st.sp<14){
+        // PET (gentle stroke)
+        if(p.mood!=='melt')p.setMood('melt',900);
+        p.moodEnd=now()+900;
+        if(tn-petRippleT>120){petRippleT=tn;p.say('pet');addRipple(st.x,st.y,COLORS[store.color].glow);}
+        // bonding grows from gentle love
+        store.bond=clamp(store.bond+0.02*dt,0,100);
+        if(store.bond>40 && tn-heartT>700){heartT=tn;addHeart(p.cx+rand(-p.R*0.4,p.R*0.4),p.cy-p.R*0.5);}
+        save();
+      } else if(held>360 && st.sp<1.0){
+        // LONG PRESS squish
+        if(p.mood!=='squish')p.setMood('squish',400);
+        p.moodEnd=now()+400;
+        p.press(st.x,st.y,1.8*dt);   // deeper sink, springs push back
+        if(!st.longFired){st.longFired=true;p.say('squish');haptic(20);}
+        store.bond=clamp(store.bond+0.01*dt,0,100);
+      }
+    } else {
+      // finger on empty space — the puni curiously follows
+      p.hx=lerp(p.hx,st.x,0.12);p.hy=lerp(p.hy,st.y,0.12);
+      p.wanderT=now()+1500;
+    }
+  });
+
+  // love burst at high bonding occasionally when petting handled above; idle hearts when very bonded & happy
+  // update punis
+  for(const p of punis)p.update(dt,t);
+
+  // ---- draw ----
+  ctx.clearRect(0,0,W,H);
+  // soft vignette background accent
+  drawBg(t);
+  // fx behind? draw ripples behind body, hearts/sparks above
+  drawFx(ctx,dt,'back');
+  for(const p of punis)p.draw(ctx,t);
+  drawFx(ctx,dt,'front');
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+function drawBg(t){
+  const dark=document.body.classList.contains('dark');
+  const g=ctx.createRadialGradient(W/2,H*0.42,0,W/2,H*0.42,Math.max(W,H)*0.7);
+  if(dark){g.addColorStop(0,'#262838');g.addColorStop(1,'#15161f');}
+  else{g.addColorStop(0,'#fbf8f2');g.addColorStop(1,'#ece6da');}
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+}
+
+function drawFx(ctx,dt,layer){
+  const C=COLORS[store.color];
+  for(let i=fx.length-1;i>=0;i--){
+    const f=fx[i];f.age+=dt/60;
+    const p=f.age/f.life;
+    if(p>=1){fx.splice(i,1);continue;}
+    if(f.k==='ripple'){
+      if(layer!=='back')continue;
+      const r=f.r+(f.mr-f.r)*(1-Math.pow(1-p,2));
+      ctx.save();ctx.globalAlpha=(1-p)*0.4;ctx.lineWidth=2;
+      ctx.strokeStyle=`rgba(${f.col},1)`;
+      ctx.beginPath();ctx.arc(f.x,f.y,r,0,7);ctx.stroke();ctx.restore();
+    } else if(layer==='front'){
+      if(f.k==='heart'){
+        f.x+=f.vx*dt;f.y+=f.vy*dt;f.vy*=0.99;
+        ctx.save();ctx.globalAlpha=(1-p);ctx.translate(f.x,f.y);ctx.rotate(f.rot);
+        ctx.fillStyle=C.cheek;heartPath(ctx,f.sz*(0.6+p*0.5));ctx.fill();ctx.restore();
+      } else if(f.k==='spark'){
+        f.x+=f.vx*dt;f.y+=f.vy*dt;f.vy+=0.05*dt;
+        ctx.save();ctx.globalAlpha=(1-p);ctx.fillStyle=`rgba(${f.col},1)`;
+        ctx.beginPath();ctx.arc(f.x,f.y,f.sz,0,7);ctx.fill();ctx.restore();
+      } else if(f.k==='z'){
+        f.x+=f.vx*dt;f.y+=f.vy*dt;
+        ctx.save();ctx.globalAlpha=(1-p)*0.7;
+        ctx.fillStyle=document.body.classList.contains('dark')?'#cfcde0':'#9a9282';
+        ctx.font=`700 ${f.sz}px 'M PLUS Rounded 1c'`;ctx.fillText('Z',f.x,f.y);ctx.restore();
+      }
+    }
+  }
+}
+function heartPath(ctx,s){
+  ctx.beginPath();
+  ctx.moveTo(0,s*0.3);
+  ctx.bezierCurveTo(0,-s*0.1,-s,-s*0.1,-s,s*0.35);
+  ctx.bezierCurveTo(-s,s*0.7,0,s,0,s*1.1);
+  ctx.bezierCurveTo(0,s,s,s*0.7,s,s*0.35);
+  ctx.bezierCurveTo(s,-s*0.1,0,-s*0.1,0,s*0.3);
+}
+
+/* ---------------- UI ---------------- */
+const hintEl=document.getElementById('hint');let hintGone=false;
+function hideHint(){if(!hintGone){hintGone=true;hintEl.classList.add('gone');setTimeout(()=>hintEl.style.display='none',1100);}}
+
+// swatches
+const swWrap=document.getElementById('swatches');
+COLORS.forEach((c,i)=>{
+  const d=document.createElement('div');d.className='sw'+(i===store.color?' sel':'');
+  d.style.background=`radial-gradient(circle at 35% 30%, ${c.in}, ${c.out2})`;
+  d.addEventListener('click',()=>{
+    store.color=i;save();
+    swWrap.querySelectorAll('.sw').forEach(s=>s.classList.remove('sel'));
+    d.classList.add('sel');
+  });
+  swWrap.appendChild(d);
+});
+
+// toggles
+function applyDark(){document.body.classList.toggle('dark',store.dark);
+  document.querySelector('meta[name=theme-color]').setAttribute('content',store.dark?'#1a1c26':'#f3efe8');}
+function syncToggles(){
+  document.querySelectorAll('.sw-toggle').forEach(tg=>{
+    const k=tg.dataset.k;tg.classList.toggle('on',!!store[k]);
+  });
+}
+document.querySelectorAll('.sw-toggle').forEach(tg=>{
+  tg.addEventListener('click',()=>{
+    const k=tg.dataset.k;store[k]=!store[k];tg.classList.toggle('on',store[k]);save();
+    if(k==='dark')applyDark();
+    if(k==='sound'&&started&&master){if(AC.state==='suspended')AC.resume();master.gain.setTargetAtTime(store.sound?0.9:0,AC.currentTime,0.1);}
+    if(k==='ambient'){ if(!started)startAudio(); if(store.ambient)startAmbient(); else stopAmbient(); }
+  });
+});
+
+// settings sheet
+const scrim=document.getElementById('scrim'),sheet=document.getElementById('sheet');
+function openSheet(){updateTimeCard();scrim.classList.add('open');sheet.classList.add('open');}
+function closeSheet(){scrim.classList.remove('open');sheet.classList.remove('open');}
+document.getElementById('gearBtn').addEventListener('click',openSheet);
+scrim.addEventListener('click',closeSheet);
+// swipe to close
+let shY=null;
+sheet.addEventListener('pointerdown',e=>{if(e.target.closest('.sw,.sw-toggle'))return;shY=e.clientY;});
+sheet.addEventListener('pointermove',e=>{if(shY==null)return;const d=e.clientY-shY;if(d>0)sheet.style.transform=`translateY(${d}px)`;});
+sheet.addEventListener('pointerup',e=>{if(shY==null)return;const d=e.clientY-shY;sheet.style.transform='';if(d>80)closeSheet();shY=null;});
+
+function updateTimeCard(){
+  let s=store.secs|0;
+  let txt = s<60 ? s+'秒' : Math.floor(s/60)+'分';
+  if(s>=3600) txt=Math.floor(s/3600)+'時間'+Math.floor((s%3600)/60)+'分';
+  document.getElementById('timeBig').textContent=txt;
+  const hearts=Math.min(10,Math.floor(store.bond/10));
+  document.getElementById('bondHearts').textContent='💛'.repeat(hearts)+'🤍'.repeat(10-hearts);
+}
+
+// add companion (group of puni)
+document.getElementById('addBtn').addEventListener('click',()=>{
+  if(punis.length>=4){ makeMain(); return; }   // cycles back to solo
+  const r=Math.min(W,H)*rand(0.10,0.14);
+  const np=new Puni(clamp(rand(W*0.2,W*0.8),r,W-r), clamp(rand(H*0.3,H*0.7),r,H-r), r);
+  np.setMood('happy',1000);np.say('happy');
+  punis.push(np);
+});
+
+/* gestures off */
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault());
+addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(engaged){store.secs+=Math.round((now()-engagedSince)/1000);engaged=false;}save();}});
+
+// init
+applyDark();syncToggles();
+</script>
+</body>
+</html>
