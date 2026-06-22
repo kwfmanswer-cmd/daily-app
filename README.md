@@ -31,6 +31,7 @@
 | 023 | あと何回、 - あなたの人生を、数えてみる | [day023-howmany](./day023-howmany/) |
 | 024 | Bloom - ふれると、咲く | [day024-bloom](./day024-bloom/) |
 | 025 | ぷに - さわって、とろける | [day025-puni](./day025-puni/) |
+| 026 | まよなかカフェ - Midnight Café | [day026-midnightcafe](./day026-midnightcafe/) |
 
 ## ルール
 
